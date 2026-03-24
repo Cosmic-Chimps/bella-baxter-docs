@@ -63,11 +63,57 @@ bella context init myapp dev # direct
 
 ```toml
 # .bella
+org = "acme-corp"
 project = "myapp"
 environment = "dev"
 ```
 
+The `org` field is written automatically by `bella context init`. If your `.bella` file was created before multi-org support, re-run `bella context init` to add it.
+
 Safe to commit. When using an API key, it's auto-created for you.
+
+---
+
+## Organizations (Multi-Org)
+
+If you belong to more than one org (e.g. a freelancer working across multiple clients), you can manage which org is active without logging out.
+
+### See your active org
+
+```sh
+bella whoami        # shows org alongside user info
+bella org current   # show active org name, slug, and ID
+```
+
+### List all orgs you belong to
+
+```sh
+bella org list
+```
+
+```
+Organizations
+ Name          Slug          Role    Active
+ Acme Corp     acme-corp     OWNER   ✓
+ My Startup    my-startup    MEMBER
+```
+
+### Switch org
+
+```sh
+bella org switch acme-corp   # switch by slug
+bella org switch <guid>      # switch by org ID
+```
+
+After switching, your token is silently refreshed to reflect the new org. Run `bella context init` to update your `.bella` file with the new org context.
+
+::: tip
+Switching orgs does **not** require logging out. The refresh happens in the background.
+:::
+
+::: warning API keys can't switch orgs
+API keys are bound to one org at creation time. `bella org switch` is for OAuth (human) sessions only.
+:::
 
 ---
 
@@ -130,6 +176,10 @@ bella login                   Log in (OAuth browser or API key)
 bella logout                  Log out
 bella whoami                  Show logged-in user
 bella auth status / refresh
+
+bella org current             Show active org
+bella org list                List all orgs you belong to
+bella org switch <slug>       Switch to a different org
 
 bella projects list/get/create/update/delete/default
 bella environments list/get/create/update/delete/default
