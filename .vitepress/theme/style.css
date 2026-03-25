@@ -51,7 +51,7 @@
 }
 
 /* "Console →" nav link — compact filled pill CTA */
-.VPNavBar a[href="https://app.bella-baxter.io"] {
+.VPNavBar a[href="https://console.bella-baxter.io"] {
   background: var(--vp-c-brand-1) !important;
   color: #fff !important;
   border-radius: 20px;
@@ -67,7 +67,7 @@
   transition: background 0.15s;
 }
 
-.VPNavBar a[href="https://app.bella-baxter.io"]:hover {
+.VPNavBar a[href="https://console.bella-baxter.io"]:hover {
   background: var(--vp-c-brand-2) !important;
   color: #fff !important;
 }

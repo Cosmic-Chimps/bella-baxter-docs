@@ -35,7 +35,7 @@ bella run -- ./deploy.sh
 ## Key Format
 
 ```
-bax-{keyId}{signingSecret}
+bax-{keyId}-{signingSecret}
 ```
 
 Keys are prefixed with `bax-` for easy identification in logs and `git grep`.
