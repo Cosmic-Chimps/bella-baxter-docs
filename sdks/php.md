@@ -49,6 +49,41 @@ Secrets are injected into `$_ENV` via a `Kernel::REQUEST` event subscriber befor
 
 → [Full Symfony sample](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/php/samples/04-symfony)
 
+## Zero-Knowledge Encryption (ZKE)
+
+By default the SDK generates a fresh P-256 keypair per request (ephemeral E2EE). With ZKE you supply a **persistent device key** — the server audits which host fetched each secret and the SDK caches the wrapped DEK.
+
+**Generate your device key once:**
+
+```sh
+bella auth setup   # stores in OS keychain; copy the printed PEM
+```
+
+**Use it in your app:**
+
+```php
+use BellaBaxter\BaxterClient;
+use BellaBaxter\BaxterClientOptions;
+
+$client = new BaxterClient(new BaxterClientOptions(
+    baxterUrl: $_ENV['BELLA_BAXTER_URL'],
+    apiKey:    $_ENV['BELLA_BAXTER_API_KEY'],
+    // Optional — reads BELLA_BAXTER_PRIVATE_KEY env var automatically
+    privateKey: getenv('BELLA_BAXTER_PRIVATE_KEY') ?: null,
+    onWrappedDekReceived: function(string $project, string $env, string $wrappedDek, ?string $leaseExpires) {
+        error_log("DEK for {$project}/{$env} expires {$leaseExpires}");
+    },
+));
+```
+
+**Laravel:** just set the environment variable — the Service Provider reads `BELLA_BAXTER_PRIVATE_KEY` automatically via `config/bella.php`:
+
+```sh
+BELLA_BAXTER_PRIVATE_KEY="..."   # in .env or server environment
+```
+
+If the variable is not set the SDK falls back to ephemeral E2EE — fully backward-compatible.
+
 ## Typed Secrets
 
 ```sh

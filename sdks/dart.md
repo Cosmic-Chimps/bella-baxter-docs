@@ -60,6 +60,46 @@ await io.serve(handler, 'localhost', 8080);
 
 → [Full Shelf sample](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/samples/04-dart-shelf)
 
+## Zero-Knowledge Encryption (ZKE)
+
+By default the SDK generates a fresh P-256 keypair per request (ephemeral E2EE). With ZKE you supply a **persistent device key** — the server audits which host fetched each secret and the SDK caches the wrapped DEK.
+
+**Generate your device key once:**
+
+```sh
+bella auth setup   # stores in OS keychain; copy the PKCS#8 PEM
+```
+
+**Load the key bytes and pass them in:**
+
+```dart
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:bella_baxter/bella_baxter.dart';
+
+// Decode PKCS#8 PEM → raw bytes
+Uint8List _pemToBytes(String pem) {
+  final b64 = pem
+      .replaceAll('-----BEGIN PRIVATE KEY-----', '')
+      .replaceAll('-----END PRIVATE KEY-----', '')
+      .replaceAll(RegExp(r'\s'), '');
+  return Uint8List.fromList(base64.decode(b64));
+}
+
+final keyPem = Platform.environment['BELLA_BAXTER_PRIVATE_KEY'];
+
+final client = BaxterClient(
+  baxterUrl: Platform.environment['BELLA_BAXTER_URL']!,
+  apiKey: Platform.environment['BELLA_BAXTER_API_KEY']!,
+  privateKey: keyPem != null ? _pemToBytes(keyPem) : null,
+  onWrappedDekReceived: (project, env, wrappedDek, leaseExpires) {
+    debugPrint('DEK for $project/$env expires $leaseExpires');
+  },
+);
+```
+
+If `privateKey` is null the SDK falls back to ephemeral E2EE — fully backward-compatible.
+
 ## Typed Secrets
 
 ```sh

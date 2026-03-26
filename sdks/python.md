@@ -66,6 +66,40 @@ app = FastAPI(lifespan=lifespan)
 
 → [Full FastAPI sample](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/python/samples/05-fastapi)
 
+## Zero-Knowledge Encryption (ZKE)
+
+By default the SDK generates a fresh P-256 keypair per request (ephemeral E2EE). With ZKE you supply a **persistent device key** — the server audits which host fetched each secret and the SDK caches the wrapped DEK.
+
+**Generate your device key once:**
+
+```sh
+bella auth setup   # stores in OS keychain; copy the printed PEM
+```
+
+**Use it in your app:**
+
+```python
+from bella_baxter import BaxterClient, BaxterClientOptions
+
+client = BaxterClient(BaxterClientOptions(
+    baxter_url="https://your-instance.bella-baxter.io",
+    api_key="bax-...",
+    # Optional — reads BELLA_BAXTER_PRIVATE_KEY env var automatically
+    private_key=os.environ.get("BELLA_BAXTER_PRIVATE_KEY"),
+    on_wrapped_dek_received=lambda project, env, wrapped_dek, lease_expires: (
+        print(f"DEK for {project}/{env} expires {lease_expires}")
+    ),
+))
+```
+
+Or just set the environment variable — **Django, FastAPI, and Flask** integrations all read it automatically:
+
+```sh
+export BELLA_BAXTER_PRIVATE_KEY="$(cat ~/.bella/device-key.pem)"
+```
+
+If the variable is not set the SDK falls back to ephemeral E2EE — no behavior change.
+
 ## Typed Secrets
 
 ```sh

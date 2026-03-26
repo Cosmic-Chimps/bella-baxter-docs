@@ -74,6 +74,38 @@ var api = builder.AddProject<Projects.MyApi>("api")
 
 → [Full self-hosted Aspire sample](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dotnet/samples/05-aspire-selfhosted)
 
+## Zero-Knowledge Encryption (ZKE)
+
+By default each poll generates a fresh P-256 keypair (ephemeral E2EE). With ZKE you supply a **persistent device key** so the server can audit which host fetched secrets and the SDK caches the wrapped DEK between polls.
+
+**Generate your device key once:**
+
+```sh
+bella auth setup   # stores in OS keychain; copy the printed PEM
+```
+
+**ASP.NET Core (via env var — recommended):**
+
+```sh
+export BELLA_BAXTER_PRIVATE_KEY="$(cat ~/.bella/device-key.pem)"
+```
+
+The SDK reads `BELLA_BAXTER_PRIVATE_KEY` automatically. No code change required.
+
+**Or set it in `appsettings.json` / options (non-production only):**
+
+```csharp
+builder.Services.AddBaxterSecrets(options =>
+{
+    options.BaxterUrl = builder.Configuration["BELLA_BAXTER_URL"];
+    options.ApiKey    = builder.Configuration["BELLA_BAXTER_API_KEY"];
+    // Optional — use persistent ZKE key instead of ephemeral E2EE
+    options.PrivateKey = builder.Configuration["BELLA_BAXTER_PRIVATE_KEY"];
+});
+```
+
+If `PrivateKey` is not set the SDK falls back to ephemeral E2EE — fully backward-compatible.
+
 ## Source Generator (Typed Secrets)
 
 ```sh

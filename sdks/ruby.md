@@ -41,6 +41,38 @@ end
 
 → [Full Rails sample](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/ruby/samples/04-rails)
 
+## Zero-Knowledge Encryption (ZKE)
+
+By default the SDK generates a fresh P-256 keypair per request (ephemeral E2EE). With ZKE you supply a **persistent device key** — the server audits which host fetched each secret and the SDK caches the wrapped DEK.
+
+**Generate your device key once:**
+
+```sh
+bella auth setup   # stores in OS keychain; copy the printed PEM
+```
+
+**Use it in your app:**
+
+```ruby
+client = BellaBaxter::Client.new(
+  baxter_url:  ENV["BELLA_BAXTER_URL"],
+  api_key:     ENV["BELLA_BAXTER_API_KEY"],
+  # Optional — reads BELLA_BAXTER_PRIVATE_KEY env var automatically
+  private_key: ENV["BELLA_BAXTER_PRIVATE_KEY"],
+  on_wrapped_dek_received: ->(project, env, wrapped_dek, lease_expires) {
+    puts "DEK for #{project}/#{env} expires #{lease_expires}"
+  }
+)
+```
+
+**Rails:** just set the environment variable — the Railtie reads `BELLA_BAXTER_PRIVATE_KEY` automatically. No code changes needed.
+
+```sh
+export BELLA_BAXTER_PRIVATE_KEY="$(cat ~/.bella/device-key.pem)"
+```
+
+If the variable is not set the SDK falls back to ephemeral E2EE — fully backward-compatible.
+
 ## Typed Secrets
 
 ```sh

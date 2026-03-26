@@ -78,6 +78,41 @@ fastify.get('/db', (req, reply) => reply.send({ url: fastify.secrets.DATABASE_UR
 
 → [Full Fastify sample](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/js/samples/06-fastify)
 
+## Zero-Knowledge Encryption (ZKE)
+
+By default the SDK generates a fresh P-256 keypair for every secrets request (ephemeral E2EE over TLS). With ZKE you supply a **persistent device key** — the server can then audit _which device_ fetched each secret and the SDK caches the wrapped DEK to reduce round-trips.
+
+**Generate your device key once:**
+
+```sh
+bella auth setup   # stores key in OS keychain and prints the PEM
+```
+
+**Use it in your app:**
+
+```typescript
+import { BaxterClient } from '@bella-baxter/sdk'
+
+const client = new BaxterClient({
+  baxterUrl: process.env.BELLA_BAXTER_URL!,
+  apiKey: process.env.BELLA_BAXTER_API_KEY!,
+  // Optional — reads BELLA_BAXTER_PRIVATE_KEY env var automatically
+  privateKey: process.env.BELLA_BAXTER_PRIVATE_KEY,
+  onWrappedDekReceived(project, env, wrappedDek, leaseExpires) {
+    // Optional: cache the wrapped DEK for faster re-auth
+    console.log(`DEK for ${project}/${env} expires ${leaseExpires}`)
+  },
+})
+```
+
+Or via environment variable (recommended):
+
+```sh
+export BELLA_BAXTER_PRIVATE_KEY="$(cat ~/.bella/device-key.pem)"
+```
+
+The SDK auto-reads `BELLA_BAXTER_PRIVATE_KEY` — no code change needed. If the variable is not set the SDK falls back to ephemeral E2EE, so this is fully backward-compatible.
+
 ## Typed Secrets
 
 ```sh

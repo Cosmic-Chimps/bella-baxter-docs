@@ -3,6 +3,8 @@
 Official Bella Baxter SDKs for every major platform. Each SDK provides:
 - Secret loading at application startup
 - HMAC-signed requests with automatic retry
+- **End-to-end encrypted transport** (E2EE) — secrets are encrypted between server and SDK before TLS
+- **Zero-Knowledge Encryption (ZKE)** — optional persistent device key for audit trails and DEK caching
 - `bella exec` / `bella run` compatibility (no SDK required for basic use)
 - Typed secret code generation via `bella secrets generate <lang>`
 - `User-Agent: bella-{lang}-sdk/1.0` on every request (visible in your audit log)
@@ -30,18 +32,20 @@ Official Bella Baxter SDKs for every major platform. Each SDK provides:
 
 ## Comparison
 
-| Language | Package | Framework Integrations | Typed Secrets |
-|----------|---------|----------------------|---------------|
-| [JavaScript / TypeScript](/sdks/javascript) | `@bella-baxter/sdk` | Express, NestJS, Next.js, Fastify, AdonisJS | ✅ |
-| [.NET](/sdks/dotnet) | `BellaBaxter.Sdk` | ASP.NET Core, Aspire | ✅ Source Generator |
-| [Python](/sdks/python) | `bella-baxter` | Flask, Django, FastAPI | ✅ |
-| [Go](/sdks/go) | `github.com/cosmic-chimps/bella-baxter-go` | stdlib, Gin | ✅ |
-| [Ruby](/sdks/ruby) | `bella_baxter` | Rails (Railtie) | ✅ |
-| [PHP](/sdks/php) | `cosmic-chimps/bella-baxter` | Laravel, Symfony | ✅ |
-| [Swift](/sdks/swift) | `BellaBaxterSwift` (SPM) | iOS / SwiftUI, CLI | ✅ |
-| [Java](/sdks/java) | Maven: `io.bellabaxter:bella-baxter-sdk` | Spring Boot, Quarkus | ✅ |
-| [Dart](/sdks/dart) | `bella_baxter` (pub.dev) | Flutter, Dart CLI, Shelf | ✅ |
-| [Ansible](/sdks/ansible) | `cosmic_chimps.bella` | Playbooks, lookup plugins | — |
+| Language | Package | Framework Integrations | Typed Secrets | ZKE |
+|----------|---------|----------------------|---------------|-----|
+| [JavaScript / TypeScript](/sdks/javascript) | `@bella-baxter/sdk` | Express, NestJS, Next.js, Fastify, AdonisJS | ✅ | ✅ |
+| [.NET](/sdks/dotnet) | `BellaBaxter.Sdk` | ASP.NET Core, Aspire | ✅ Source Generator | ✅ |
+| [Python](/sdks/python) | `bella-baxter` | Flask, Django, FastAPI | ✅ | ✅ |
+| [Go](/sdks/go) | `github.com/cosmic-chimps/bella-baxter-go` | stdlib, Gin | ✅ | ✅ |
+| [Ruby](/sdks/ruby) | `bella_baxter` | Rails (Railtie) | ✅ | ✅ |
+| [PHP](/sdks/php) | `cosmic-chimps/bella-baxter` | Laravel, Symfony | ✅ | ✅ |
+| [Swift](/sdks/swift) | `BellaBaxterSwift` (SPM) | iOS / SwiftUI, CLI | ✅ | ✅ |
+| [Java](/sdks/java) | Maven: `io.bellabaxter:bella-baxter-sdk` | Spring Boot, Quarkus | ✅ | ✅ |
+| [Dart](/sdks/dart) | `bella_baxter` (pub.dev) | Flutter, Dart CLI, Shelf | ✅ | ✅ |
+| [Ansible](/sdks/ansible) | `cosmic_chimps.bella` | Playbooks, lookup plugins | — | — |
+
+→ [Zero-Knowledge Encryption (ZKE)](/features/e2ee-zke) — how E2EE transport and persistent device keys work
 
 ---
 

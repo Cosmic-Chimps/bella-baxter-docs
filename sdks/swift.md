@@ -43,6 +43,42 @@ struct MyApp: App {
 
 → [Full iOS sample](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/swift/samples/04-ios-app)
 
+## Zero-Knowledge Encryption (ZKE)
+
+By default the SDK generates a fresh P-256 keypair per request (ephemeral E2EE). With ZKE you supply a **persistent device key** — the server audits which host fetched each secret and the SDK caches the wrapped DEK.
+
+**Generate your device key once:**
+
+```sh
+bella auth setup   # stores in OS keychain; copy the PKCS#8 PEM
+```
+
+**Use it in your Swift app:**
+
+```swift
+import BellaBaxterSwift
+import CryptoKit
+
+// Load from a PEM string (e.g. from environment or secure storage)
+let privateKey = try BellaClient.loadPrivateKey(
+    pkcs8Pem: ProcessInfo.processInfo.environment["BELLA_BAXTER_PRIVATE_KEY"] ?? ""
+)
+
+let options = BellaClientOptions(
+    baxterURL: URL(string: ProcessInfo.processInfo.environment["BELLA_BAXTER_URL"]!)!,
+    apiKey: ProcessInfo.processInfo.environment["BELLA_BAXTER_API_KEY"]!,
+    privateKey: privateKey,
+    onWrappedDekReceived: { project, env, wrappedDek, leaseExpires in
+        print("DEK for \(project)/\(env) expires \(leaseExpires as Any)")
+    }
+)
+
+let client = BellaClient(options: options)
+let secrets = try await client.getAllSecrets()
+```
+
+If `privateKey` is nil the SDK falls back to ephemeral E2EE — fully backward-compatible.
+
 ## Typed Secrets
 
 ```sh
