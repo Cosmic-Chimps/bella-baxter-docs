@@ -45,25 +45,31 @@ These are gated because they're only relevant at **organisational scale** — sm
 
 The Bella Baxter managed cloud runs on a **pay-as-you-go** model:
 
-- **Free**: 10,000 API requests per month, no credit card required
-- **Overage**: $0.005 per request beyond 10,000 (~$5 per 1,000 requests)
+- **Free**: 2,000 API requests per month, no credit card required
+- **Overage**: $0.005 per request beyond 2,000 (~$5 per 1,000 requests)
 - **Enterprise**: Contact us — flat monthly, custom volume, SLA, dedicated support
 
-A "request" = one HTTP call to the secrets API. `bella pull` always counts as **one request** regardless of how many secrets are returned.
+A "request" = one HTTP call to the secrets API made by a machine identity (API key). This includes:
+- `bella pull` / `bella run` — counts as **one request** regardless of how many secrets are returned
+- CI/CD pipeline fetches (each deploy = one request)
+- AI agent / MCP tool calls (each `get_secret` or `list_secret_keys` = one request)
 
-Human workflows (WebApp, project management, CLI setup) are **never metered**.
+The CLI MCP server uses ETag-based caching — when secrets haven't changed, subsequent AI tool calls return cached results without hitting the API, so a long AI session typically burns only 1–2 metered requests.
+
+Human workflows (WebApp, project management, user management) are **never metered**.
 
 ### What typical usage costs
 
 | Team | Activity | Monthly requests | Cost |
 |------|----------|-----------------|------|
-| Solo developer | Active development | ~800 | $0 |
-| 3-person startup | Dev + CI/CD (20 deploys/day) | ~1,800 | $0 |
-| 10-person team | Heavy CI/CD (100 deploys/day) | ~8,000 | $0 |
-| 10-person team | 500 deploys/day | ~45,000 | $0.18 |
-| 50-person company | 2,000 deploys/day | ~180,000 | $0.85 |
+| Solo developer | Active development | ~200 | $0 |
+| 3-person startup | Dev + CI/CD (20 deploys/day) | ~600 | $0 |
+| 3-person startup + AI | CI/CD + daily MCP sessions | ~1,800 | $0 |
+| 10-person team | Heavy CI/CD (100 deploys/day) | ~3,000 | $0.005 |
+| 10-person team | 500 deploys/day | ~15,000 | $0.065 |
+| 50-person company | 2,000 deploys/day | ~60,000 | $0.29 |
 
-You pay more when you ship more to production. The bill growing is a signal that the business is growing.
+You pay more when you ship more (or your AI agents are very busy). The bill growing is a signal that the team is growing.
 
 ## Self-Hosted vs Cloud
 
