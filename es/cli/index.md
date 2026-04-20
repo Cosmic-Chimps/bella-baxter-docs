@@ -24,6 +24,7 @@ curl -sSL https://install.bella-baxter.io | sh
 | `bella pull` | Escribir secretos en `.env` |
 | `bella run -- <cmd>` | Ejecutar proceso con secretos inyectados |
 | `bella exec -- <cmd>` | Similar a run (sin gestión de ciclo de vida) |
+| `bella usage` | Ver uso de API y estado de facturación del mes actual |
 | `bella context use <project/env>` | Cambiar contexto activo |
 
 ## Organizaciones (Multi-Org)
@@ -36,5 +37,14 @@ bella org switch acme-corp   # cambiar a otra org
 ```
 
 Después de cambiar, ejecuta `bella context init` para actualizar tu archivo `.bella` con el nuevo contexto de org.
+
+## Uso y Facturación
+
+```sh
+bella usage          # ver uso de API y estado de facturación del mes actual
+bella usage --json   # salida JSON para scripts
+```
+
+Muestra el plan activo, las solicitudes utilizadas frente a la cuota gratuita mensual, el coste estimado de los excesos y el estado de la suscripción.
 
 [→ Ver referencia completa en inglés](/cli/)

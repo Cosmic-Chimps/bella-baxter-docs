@@ -169,6 +169,45 @@ The context segment (`bella: myapp/dev`) appears only in directories that have a
 
 ---
 
+## Usage & Billing
+
+```sh
+bella usage          # show API usage and billing status for the current month
+bella usage --json   # machine-readable JSON output
+```
+
+Sample output:
+
+```
+Bella Baxter Usage — 2026-04
+Plan:    PayAsYouGo
+Billing: Active subscription
+
+Requests: 1,243 / 2,000 free  (757 remaining)
+[████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]
+```
+
+Fields returned:
+
+| Field | Description |
+|-------|-------------|
+| `plan` | `PayAsYouGo` or `Enterprise` |
+| `currentMonth` | Billing period (e.g. `2026-04`) |
+| `requestsUsed` | Total API requests this month |
+| `freeMonthlyQuota` | Free request allowance (default: 2,000) |
+| `requestsRemaining` | Free requests left |
+| `isUnlimited` | `true` for Enterprise plans |
+| `isOperatorManaged` | `true` when your instance is operated by Cosmic Chimps (no billing) |
+| `hasActiveSubscription` | `true` if a Stripe subscription is active |
+| `overageRatePerRequest` | Overage price per request above quota |
+| `estimatedOverageCost` | Estimated overage charge for the current month |
+
+::: tip
+To manage your subscription or view invoices, visit the **Billing** page in the Bella Baxter web app → **Settings → Billing**.
+:::
+
+---
+
 ## Commands Reference
 
 ```
@@ -202,6 +241,9 @@ bella issue --scope <names>   Issue short-lived scoped token
 bella run -- <cmd>            Inject secrets, run command
 bella run --watch -- <cmd>    Auto-restart on secret changes
 bella exec -- <cmd>           Inject API key only
+
+bella usage                   Show API usage and billing status
+bella usage --json            Machine-readable JSON output
 
 bella ssh configure/ca-key/sign/connect
 bella ssh roles list/create/delete
