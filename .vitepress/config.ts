@@ -14,6 +14,7 @@ const enNav = [
       { text: 'API Keys', link: '/features/api-keys' },
       { text: 'Groups', link: '/features/groups' },
       { text: 'SSH Certificate Authority', link: '/features/ssh-ca' },
+      { text: 'PKI Certificates', link: '/features/pki-certificates' },
       { text: 'TOTP', link: '/features/totp' },
       { text: 'Keyless / Workload Identity', link: '/features/keyless' },
       { text: 'Secret Leases', link: '/features/secret-leases' },
@@ -92,6 +93,7 @@ const enSidebar = {
       text: 'Advanced Features',
       items: [
         { text: 'SSH Certificate Authority', link: '/features/ssh-ca' },
+        { text: 'PKI Certificates', link: '/features/pki-certificates' },
         { text: 'TOTP / 2FA Keys', link: '/features/totp' },
         { text: 'Keyless / Workload Identity', link: '/features/keyless' },
         { text: 'Secret Leases', link: '/features/secret-leases' },
