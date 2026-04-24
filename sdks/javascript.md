@@ -23,9 +23,9 @@ yarn add @bella-baxter/sdk
 ## Quick Start
 
 ```typescript
-import { BaxterClient } from '@bella-baxter/sdk'
+import { createBaxterClient } from '@bella-baxter/sdk'
 
-const client = new BaxterClient({
+const client = await createBaxterClient({
   baxterUrl: process.env.BELLA_BAXTER_URL!,
   apiKey: process.env.BELLA_BAXTER_API_KEY!,
 })
@@ -91,9 +91,9 @@ bella auth setup   # stores key in OS keychain and prints the PEM
 **Use it in your app:**
 
 ```typescript
-import { BaxterClient } from '@bella-baxter/sdk'
+import { createBaxterClient } from '@bella-baxter/sdk'
 
-const client = new BaxterClient({
+const client = await createBaxterClient({
   baxterUrl: process.env.BELLA_BAXTER_URL!,
   apiKey: process.env.BELLA_BAXTER_API_KEY!,
   // Optional — reads BELLA_BAXTER_PRIVATE_KEY env var automatically

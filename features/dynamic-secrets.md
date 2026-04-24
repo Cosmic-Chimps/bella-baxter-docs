@@ -54,7 +54,7 @@ With any Bella SDK, configure a refresh interval and the SDK periodically re-fet
 ::: code-group
 
 ```typescript [JavaScript / TypeScript]
-const client = new BaxterClient({
+const client = await createBaxterClient({
   baxterUrl: process.env.BELLA_BAXTER_URL!,
   apiKey: process.env.BELLA_BAXTER_API_KEY!,
   refreshInterval: 60,  // seconds

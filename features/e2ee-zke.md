@@ -83,7 +83,7 @@ export BELLA_BAXTER_PRIVATE_KEY="$(cat ~/.bella/device-key.pem)"
 If you want to log or cache the DEK lease, add a callback. Example in TypeScript:
 
 ```typescript
-const client = new BaxterClient({
+const client = await createBaxterClient({
   baxterUrl: process.env.BELLA_BAXTER_URL!,
   apiKey: process.env.BELLA_BAXTER_API_KEY!,
   onWrappedDekReceived(project, env, wrappedDek, leaseExpires) {

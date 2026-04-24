@@ -19,13 +19,28 @@ dart pub get
 ```dart
 import 'package:bella_baxter/bella_baxter.dart';
 
-final client = BaxterClient(
-  baxterUrl: Platform.environment['BELLA_BAXTER_URL']!,
-  apiKey: Platform.environment['BELLA_BAXTER_API_KEY']!,
-);
+// Recommended: read config from environment (injected by `bella exec`)
+final client = BellaClient.fromEnv();
 
-final secrets = await client.getAllSecrets();
+final secrets = await client.pullSecrets(
+  projectSlug: 'my-project',
+  environmentSlug: 'production',
+);
 print(secrets['DATABASE_URL']);
+```
+
+Or construct explicitly:
+
+```dart
+final client = BellaClient(BellaClientOptions(
+  baseUrl: Platform.environment['BELLA_BAXTER_URL']!,
+  apiKey: Platform.environment['BELLA_BAXTER_API_KEY']!,
+));
+
+final secrets = await client.pullSecrets(
+  projectSlug: 'my-project',
+  environmentSlug: 'production',
+);
 ```
 
 ## Flutter Integration
@@ -35,10 +50,15 @@ print(secrets['DATABASE_URL']);
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final secrets = await BaxterClient(
-    baxterUrl: const String.fromEnvironment('BELLA_BAXTER_URL'),
+  final client = BellaClient(BellaClientOptions(
+    baseUrl: const String.fromEnvironment('BELLA_BAXTER_URL'),
     apiKey: const String.fromEnvironment('BELLA_BAXTER_API_KEY'),
-  ).getAllSecrets();
+  ));
+
+  final secrets = await client.pullSecrets(
+    projectSlug: 'my-project',
+    environmentSlug: 'production',
+  );
 
   runApp(MyApp(secrets: secrets));
 }
@@ -50,7 +70,12 @@ void main() async {
 
 ```dart
 // Inject secrets before starting the server
-final secrets = await client.getAllSecrets();
+final client = BellaClient.fromEnv();
+final secrets = await client.pullSecrets(
+  projectSlug: 'my-project',
+  environmentSlug: 'production',
+);
+
 final handler = Pipeline()
     .addMiddleware(secretsMiddleware(secrets))
     .addHandler(_router);
@@ -77,7 +102,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:bella_baxter/bella_baxter.dart';
 
-// Decode PKCS#8 PEM → raw bytes
+// Decode PKCS#8 PEM → raw DER bytes
 Uint8List _pemToBytes(String pem) {
   final b64 = pem
       .replaceAll('-----BEGIN PRIVATE KEY-----', '')
@@ -88,17 +113,30 @@ Uint8List _pemToBytes(String pem) {
 
 final keyPem = Platform.environment['BELLA_BAXTER_PRIVATE_KEY'];
 
-final client = BaxterClient(
-  baxterUrl: Platform.environment['BELLA_BAXTER_URL']!,
+final client = BellaClient(BellaClientOptions(
+  baseUrl: Platform.environment['BELLA_BAXTER_URL']!,
   apiKey: Platform.environment['BELLA_BAXTER_API_KEY']!,
   privateKey: keyPem != null ? _pemToBytes(keyPem) : null,
   onWrappedDekReceived: (project, env, wrappedDek, leaseExpires) {
     debugPrint('DEK for $project/$env expires $leaseExpires');
   },
-);
+));
 ```
 
 If `privateKey` is null the SDK falls back to ephemeral E2EE — fully backward-compatible.
+
+## `BellaClientOptions` Reference
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `baseUrl` | `https://api.bella-baxter.io` | Bella API base URL |
+| `apiKey` | — | `bax-...` consumer key (mutually exclusive with `accessToken`) |
+| `accessToken` | — | Short-lived JWT (injected by `bella exec` in SSO mode) |
+| `appClient` | `null` | Sent as `X-App-Client` header; falls back to `BELLA_BAXTER_APP_CLIENT` env var |
+| `connectTimeout` | `10s` | HTTP connection timeout |
+| `receiveTimeout` | `30s` | HTTP receive timeout |
+| `cache` | `null` | Optional `SecretCache` for offline-first fallback |
+| `privateKey` | `null` | PKCS#8 DER bytes for ZKE; `null` = ephemeral E2EE |
 
 ## Typed Secrets
 
@@ -113,7 +151,7 @@ Generates a typed `AppSecrets` class with final fields.
 | Sample | Pattern | Link |
 |--------|---------|------|
 | `01-dart-dotenv` | `bella pull` → dotenv Dart | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/samples/01-dart-dotenv) |
-| `02-process-inject` | `bella run -- dart run main.dart` | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/samples/02-process-inject) |
+| `02-process-inject` | `bella exec -- dart run main.dart` | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/samples/02-process-inject) |
 | `03-dart-cli` | SDK in Dart CLI tool | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/samples/03-dart-cli) |
 | `04-dart-shelf` | SDK in Shelf server | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/samples/04-dart-shelf) |
 | `05-flutter-app` | SDK in Flutter app | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/samples/05-flutter-app) |

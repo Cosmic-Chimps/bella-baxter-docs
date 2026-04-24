@@ -1,17 +1,13 @@
 # .NET SDK
 
-`BellaBaxter.Sdk` provides first-class integration with ASP.NET Core, .NET Aspire, and the .NET hosting model.
+`BellaBaxter.AspNet.Configuration` provides first-class integration with ASP.NET Core, .NET Aspire, and the .NET hosting model.
 
 ## Installation
 
-```sh
-dotnet add package BellaBaxter.Sdk
-```
-
-For ASP.NET Core dependency injection:
+For ASP.NET Core / configuration API:
 
 ```sh
-dotnet add package BellaBaxter.Extensions.DependencyInjection
+dotnet add package BellaBaxter.AspNet.Configuration
 ```
 
 For .NET Aspire:
@@ -20,31 +16,57 @@ For .NET Aspire:
 dotnet add package BellaBaxter.Aspire.Configuration
 ```
 
-## Quick Start
+For the source generator (typed secrets):
 
-```csharp
-var client = new BaxterClient(new BaxterClientOptions
-{
-    BaxterUrl = "https://your-instance.bella-baxter.io",
-    ApiKey = "bax-...",
-});
-
-var secrets = await client.GetAllSecretsAsync();
-Console.WriteLine(secrets["DATABASE_URL"]);
+```sh
+dotnet add package BellaBaxter.SourceGenerator
 ```
 
-## ASP.NET Core Integration
+## Quick Start (ASP.NET Core)
 
 ```csharp
 // Program.cs
-builder.Services.AddBaxterSecrets(options =>
+builder.Configuration.AddBellaSecrets(o =>
 {
-    options.BaxterUrl = builder.Configuration["BELLA_BAXTER_URL"];
-    options.ApiKey = builder.Configuration["BELLA_BAXTER_API_KEY"];
+    o.BaxterUrl      = "https://your-instance.bella-baxter.io";
+    o.ApiKey         = "bax-...";
+    o.ProjectSlug    = "my-project";
+    o.EnvironmentSlug = "production";
 });
+
+// Secrets are available through IConfiguration / IOptions<T> like any other config source
+var dbUrl = builder.Configuration["DATABASE_URL"];
+```
+
+Or configure from `appsettings.json` — no code needed:
+
+```json
+{
+  "BellaBaxter": {
+    "BaxterUrl": "https://your-instance.bella-baxter.io",
+    "ApiKey": "bax-...",
+    "ProjectSlug": "my-project",
+    "EnvironmentSlug": "production"
+  }
+}
+```
+
+```csharp
+// appsettings.json section is read automatically
+builder.Configuration.AddBellaSecrets();
 ```
 
 → [Full ASP.NET Core sample](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dotnet/samples/03-aspnet)
+
+## `bella exec` (Zero-Config)
+
+The simplest approach — no code changes at all:
+
+```sh
+bella exec -- dotnet run
+```
+
+`bella exec` injects `BELLA_BAXTER_URL`, `BELLA_BAXTER_API_KEY`, and all your secrets directly into the process environment. `AddBellaSecrets()` auto-reads the injected env vars.
 
 ## .NET Aspire Integration
 
@@ -92,15 +114,17 @@ export BELLA_BAXTER_PRIVATE_KEY="$(cat ~/.bella/device-key.pem)"
 
 The SDK reads `BELLA_BAXTER_PRIVATE_KEY` automatically. No code change required.
 
-**Or set it in `appsettings.json` / options (non-production only):**
+**Or set it in options:**
 
 ```csharp
-builder.Services.AddBaxterSecrets(options =>
+builder.Configuration.AddBellaSecrets(o =>
 {
-    options.BaxterUrl = builder.Configuration["BELLA_BAXTER_URL"];
-    options.ApiKey    = builder.Configuration["BELLA_BAXTER_API_KEY"];
+    o.BaxterUrl       = builder.Configuration["BELLA_BAXTER_URL"]!;
+    o.ApiKey          = builder.Configuration["BELLA_BAXTER_API_KEY"]!;
+    o.ProjectSlug     = "my-project";
+    o.EnvironmentSlug = "production";
     // Optional — use persistent ZKE key instead of ephemeral E2EE
-    options.PrivateKey = builder.Configuration["BELLA_BAXTER_PRIVATE_KEY"];
+    o.PrivateKey      = builder.Configuration["BELLA_BAXTER_PRIVATE_KEY"];
 });
 ```
 
@@ -110,20 +134,30 @@ If `PrivateKey` is not set the SDK falls back to ephemeral E2EE — fully backwa
 
 ```sh
 dotnet add package BellaBaxter.SourceGenerator
-```
-
-```sh
 bella secrets generate csharp
 ```
 
 Generates a strongly-typed `AppSecrets` record. Full IDE autocomplete, no magic strings.
+
+## `BellaOptions` Reference
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `BaxterUrl` | `https://api.bella-baxter.io` | Bella API base URL |
+| `ApiKey` | — | `bax-...` consumer key |
+| `ProjectSlug` | — | Project slug |
+| `EnvironmentSlug` | — | Environment slug |
+| `PollingInterval` | `60s` | How often to reload secrets |
+| `FallbackOnError` | `true` | Serve cached values on transient errors |
+| `PrivateKey` | `null` | PKCS#8 PEM for ZKE; `null` = ephemeral E2EE |
+| `AppClient` | `null` | Sent as `X-App-Client` header for audit logs |
 
 ## All Samples
 
 | Sample | Pattern | Link |
 |--------|---------|------|
 | `01-dotenv-file` | `bella pull` → read `.env` | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dotnet/samples/01-dotenv-file) |
-| `02-process-inject` | `bella run -- dotnet run` | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dotnet/samples/02-process-inject) |
-| `03-aspnet` | SDK in ASP.NET Core DI | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dotnet/samples/03-aspnet) |
+| `02-process-inject` | `bella exec -- dotnet run` | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dotnet/samples/02-process-inject) |
+| `03-aspnet` | `AddBellaSecrets()` in ASP.NET Core | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dotnet/samples/03-aspnet) |
 | `04-aspire` | Aspire + external Bella instance | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dotnet/samples/04-aspire) |
 | `05-aspire-selfhosted` | Aspire + self-hosted Bella stack | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dotnet/samples/05-aspire-selfhosted) |
