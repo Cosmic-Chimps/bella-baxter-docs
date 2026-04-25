@@ -11,19 +11,18 @@ pip install bella-baxter
 ## Quick Start
 
 ```python
-import asyncio
-from bella_baxter import BaxterClient
+from bella_baxter import BaxterClient, BaxterClientOptions
 
-async def main():
-    client = BaxterClient(
-        baxter_url="https://your-instance.bella-baxter.io",
-        api_key="bax-...",
-    )
-    secrets = await client.get_all_secrets()
-    print(secrets["DATABASE_URL"])
+client = BaxterClient(BaxterClientOptions(
+    baxter_url="https://your-instance.bella-baxter.io",
+    api_key="bax-...",
+))
 
-asyncio.run(main())
+secrets = client.get_all_secrets()
+print(secrets["DATABASE_URL"])
 ```
+
+All methods are **synchronous** by default. Async variants (e.g. `get_all_secrets_async()`) are available for use inside async frameworks.
 
 ## Framework Integrations
 
@@ -32,7 +31,7 @@ asyncio.run(main())
 ```python
 # app/__init__.py
 def create_app():
-    secrets = asyncio.run(client.get_all_secrets())
+    secrets = client.get_all_secrets()
     app = Flask(__name__)
     app.config["DATABASE_URL"] = secrets["DATABASE_URL"]
     return app
@@ -46,7 +45,7 @@ def create_app():
 # apps.py
 class MyAppConfig(AppConfig):
     def ready(self):
-        secrets = asyncio.run(client.get_all_secrets())
+        secrets = client.get_all_secrets()
         os.environ.setdefault("DATABASE_URL", secrets["DATABASE_URL"])
 ```
 
@@ -58,7 +57,7 @@ class MyAppConfig(AppConfig):
 # main.py
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.secrets = await client.get_all_secrets()
+    app.state.secrets = await client.get_all_secrets_async()
     yield
 
 app = FastAPI(lifespan=lifespan)
