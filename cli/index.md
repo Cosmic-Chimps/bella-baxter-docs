@@ -128,19 +128,30 @@ bella run --watch -- node server.js   # auto-restart on secret changes
 bella run --watch --signal sighup -- gunicorn app:app   # reload without restart
 ```
 
-### `bella exec` — inject API key only, SDK fetches inside the app
+### `bella sdk run` — SDK-powered: inject credentials only, SDK fetches inside the app
+
+Use this when your app has a Bella SDK installed (e.g. `@bella-baxter/express`, `BellaBaxter.AspNetCore`).
+The CLI injects `BELLA_BAXTER_API_KEY`, `BELLA_BAXTER_URL`, and (if configured) `BELLA_BAXTER_PRIVATE_KEY`
+for [Zero-Knowledge Encryption](/features/zke). The SDK handles the actual secret fetching at runtime.
 
 ```sh
-bella exec -- node server.js
-bella exec -- ./deploy.sh
+bella sdk run -- node server.js
+bella sdk run -- dotnet run
+bella sdk run -p myapp -e production -- ./start.sh
 ```
 
-| | `bella run` | `bella exec` |
+::: tip Why not `bella exec`?
+`bella exec` still works as an alias. `bella sdk run` is the recommended name — it makes clear that
+the child process must have a Bella SDK installed.
+:::
+
+| | `bella run` | `bella sdk run` |
 |---|---|---|
 | SDK required in child | No | Yes |
-| What's injected | All secrets as env vars | `BELLA_BAXTER_API_KEY` + `BELLA_BAXTER_URL` only |
+| What's injected | All secrets as env vars | `BELLA_BAXTER_API_KEY` + `BELLA_BAXTER_URL` (+ ZKE key) |
+| ZKE support | ❌ | ✅ |
 | Watch / auto-reload | ✅ `--watch` | ❌ |
-| Best for | Scripts, legacy apps | SDK-powered apps |
+| Best for | Scripts, legacy apps | SDK-powered apps, ZKE workloads |
 
 ### `bella pull`
 
@@ -240,13 +251,21 @@ bella issue --scope <names>   Issue short-lived scoped token
 
 bella run -- <cmd>            Inject secrets, run command
 bella run --watch -- <cmd>    Auto-restart on secret changes
-bella exec -- <cmd>           Inject API key only
+bella sdk run -- <cmd>        Inject credentials only (SDK fetches inside app, enables ZKE)
+bella exec -- <cmd>           Alias for bella sdk run
 
 bella usage                   Show API usage and billing status
 bella usage --json            Machine-readable JSON output
 
 bella ssh configure/ca-key/sign/connect
 bella ssh roles list/create/delete
+
+bella pki configure               Configure CA for an environment
+bella pki ca                      View CA certificate and ACME directory URL
+bella pki roles create/list/delete
+bella pki issue                   Issue a TLS/X.509 certificate
+bella pki revoke --serial <sn>    Revoke a certificate by serial number
+bella pki tidy                    Remove expired / revoked cert storage
 
 bella agent                   Sidecar: watch secrets, write files, signal process
 bella agent --init            Scaffold bella-agent.yaml
@@ -263,7 +282,7 @@ bella config show/set-server
 
 ## Workload Identity (Keyless)
 
-In GitHub Actions (with `id-token: write`) or Kubernetes, `bella run`/`bella exec` automatically exchange the platform OIDC token for a short-lived Bella key — no stored credentials needed.
+In GitHub Actions (with `id-token: write`) or Kubernetes, `bella run`/`bella sdk run` automatically exchange the platform OIDC token for a short-lived Bella key — no stored credentials needed.
 
 ```yaml
 # .github/workflows/deploy.yml
@@ -273,7 +292,7 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - run: bella exec -p my-project -e production -- ./deploy.sh
+      - run: bella sdk run -p my-project -e production -- ./deploy.sh
 ```
 
 See [Keyless / Workload Identity](/features/keyless) for full setup.
@@ -316,6 +335,55 @@ process:
 bella agent --init    # scaffold config
 bella agent           # start sidecar
 ```
+
+---
+
+## PKI Certificates
+
+Issue TLS/X.509 certificates from Bella's internal CA (backed by OpenBao PKI engine).
+
+```sh
+# 1. Configure the CA (one-time per environment)
+bella pki configure \
+  --environment staging \
+  --common-name "Acme Corp Staging CA" \
+  --organization "Acme Corp" \
+  --country US
+
+# 2. Create a role (controls what CNs/SANs can be issued)
+bella pki roles create \
+  --name web-server \
+  --allowed-domains internal.example.com \
+  --allow-subdomains \
+  --max-ttl 720h \
+  --default-ttl 24h
+
+# 3. Issue a certificate
+bella pki issue \
+  --environment staging \
+  --role web-server \
+  --cn api.internal.example.com \
+  --alt-names "www.internal.example.com" \
+  --ttl 24h \
+  --out ./certs/api.staging
+# Writes: api.staging.crt  api.staging.key  api.staging-chain.pem
+
+# 4. View CA cert and ACME directory URL
+bella pki ca --environment staging
+bella pki ca --output /etc/ssl/certs/acme-corp-ca.pem   # save to trust store
+
+# 5. Revoke a certificate
+bella pki revoke --serial "1a:2b:3c:..."
+
+# Other
+bella pki roles list
+bella pki roles delete --name web-server
+bella pki tidy       # remove expired / revoked cert storage from OpenBao
+```
+
+> The CA private key is generated inside OpenBao and **never leaves it**. Bella never stores private keys.
+
+See [PKI Certificates](/features/pki-certificates) for CA setup, ACME auto-renewal (Caddy, certbot, cert-manager), and security notes.
 
 ---
 
