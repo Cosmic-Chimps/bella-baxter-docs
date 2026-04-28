@@ -67,7 +67,7 @@ Bella Baxter was built differently:
 
 ```sh
 # Install the CLI
-curl -sSL https://install.bella-baxter.io | sh
+curl -sSfL https://raw.githubusercontent.com/cosmic-chimps/bella-baxter-cli/main/scripts/install-bella.sh | bash
 
 # Log in
 bella login

@@ -9,7 +9,7 @@ La CLI de Bella Baxter proporciona todos los comandos necesarios para gestionar 
 ## Instalación
 
 ```sh
-curl -sSL https://install.bella-baxter.io | sh
+curl -sSfL https://raw.githubusercontent.com/cosmic-chimps/bella-baxter-cli/main/scripts/install-bella.sh | bash
 ```
 
 ## Comandos Principales

@@ -23,7 +23,7 @@ bella upgrade
 bella upgrade --check   # check without installing
 ```
 
-Binary downloads for all platforms are available on the [Releases page](https://github.com/cosmic-chimps/bella-baxter/releases).
+Binary downloads for all platforms are available on the [Releases page](https://github.com/cosmic-chimps/bella-baxter-cli/releases).
 
 ## Authentication
 
