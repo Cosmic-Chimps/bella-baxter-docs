@@ -92,3 +92,5 @@ Made with ❤️ by **[Cosmic Chimps](https://cosmic-chimps.com)**
 
 </div>
 
+---
+
