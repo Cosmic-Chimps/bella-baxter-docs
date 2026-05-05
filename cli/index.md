@@ -132,7 +132,7 @@ bella run --watch --signal sighup -- gunicorn app:app   # reload without restart
 
 Use this when your app has a Bella SDK installed (e.g. `@bella-baxter/express`, `BellaBaxter.AspNetCore`).
 The CLI injects `BELLA_BAXTER_API_KEY`, `BELLA_BAXTER_URL`, and (if configured) `BELLA_BAXTER_PRIVATE_KEY`
-for [Zero-Knowledge Encryption](/features/zke). The SDK handles the actual secret fetching at runtime.
+for [Zero-Knowledge Encryption](/features/e2ee-zke). The SDK handles the actual secret fetching at runtime.
 
 ```sh
 bella sdk run -- node server.js
