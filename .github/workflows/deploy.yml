@@ -31,10 +31,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Copy latest OpenAPI spec
-        run: cp ../apps/api/baxter-dotnet/BellaBaxter.WebApp/openapi.json public/openapi.json
-        working-directory: public-docs
-
       - name: Build VitePress site
         run: pnpm docs:build
 
