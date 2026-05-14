@@ -207,6 +207,96 @@ bella pull -o json   # write secrets.json
 
 ---
 
+## Secret Drift Detection
+
+`bella secrets drift` shows a cross-environment matrix of which secret keys are present (or missing) in each environment of a project. Useful for catching configuration drift before it causes a production incident.
+
+```sh
+bella secrets drift                    # uses project from .bella / context
+bella secrets drift -p my-project      # explicit project slug
+bella secrets drift --json             # machine-readable JSON
+```
+
+Sample output:
+
+```
+╭────────────────────────────── Secret Drift — my-project ──────────────────────────────╮
+│ KEY                    │   dev    │  staging  │  production │
+├────────────────────────┼──────────┼───────────┼─────────────┤
+│ DATABASE_URL           │   ✓      │    ✓      │      ✓      │
+│ STRIPE_SECRET_KEY 🌐   │   🌐     │    🌐     │      🌐     │
+│ FEATURE_FLAG_X         │   ✓      │    ✗      │      ✗      │
+│ NEW_RELIC_LICENSE_KEY  │   ✓      │    ✓      │      ✓      │
+╰────────────────────────┴──────────┴───────────┴─────────────╯
+Drift detected: 1 key missing in 2 environments.
+```
+
+Legend:
+
+| Symbol | Meaning |
+|--------|---------|
+| `✓` (green) | Present in this environment |
+| `✗` (red) | Missing — drift detected |
+| `🌐` (blue) | Inherited from global scope |
+| `✓ (override)` | Global key overridden in this environment |
+| `~ key` (dim) | Environment-specific key (not expected in all envs) |
+
+Keys highlighted in **yellow** are drifted (missing in at least one environment).
+
+::: tip CI integration
+`bella secrets drift` exits with code `1` when drift is detected, making it a ready-made CI gate:
+
+```yaml
+- run: bella secrets drift -p my-project
+```
+:::
+
+---
+
+## Secret Scan
+
+`bella secrets scan` checks which secret keys defined in Bella are actually referenced in your local source code. Helps you find unused secrets and catch hardcoded key names before they become a problem.
+
+```sh
+bella secrets scan                              # scan cwd, use .bella for project/env
+bella secrets scan -p my-project -e dev         # explicit project and environment
+bella secrets scan --path ./src                 # scan a specific directory
+bella secrets scan --json                       # machine-readable JSON
+```
+
+Sample output:
+
+```
+╭──────────────────────────────────────────────────────────────────────────╮
+│ KEY                   │ STATUS        │ FOUND IN                         │
+├───────────────────────┼───────────────┼──────────────────────────────────┤
+│ DATABASE_URL          │ ✓ 3 file(s)   │ src/db.ts, config/db.ts, ...     │
+│ STRIPE_SECRET_KEY     │ ✓ 1 file(s)   │ src/payments/stripe.ts           │
+│ LEGACY_API_KEY        │ ⚠ not found   │                                  │
+╰───────────────────────┴───────────────┴──────────────────────────────────╯
+1 key not referenced in source. It may be unused or loaded dynamically.
+```
+
+**How it works:**
+
+- Fetches key **names only** from the secrets manifest — no secret values are ever downloaded
+- Uses `git ls-files` to enumerate files, which automatically respects `.gitignore` (skips `node_modules`, `dist`, `vendor`, etc.)
+- Falls back to a directory walk skipping common build/dependency directories if git is not available
+- Skips binary files and files larger than 2 MB
+- Searches file contents for exact key name matches (case-sensitive)
+
+::: tip CI integration
+`bella secrets scan` exits with code `1` if any keys are not found in source, making it usable as an advisory CI check:
+
+```yaml
+- run: bella secrets scan -p my-project -e dev --path ./src
+```
+
+The "not found" result is advisory — a key might be loaded dynamically at runtime. Review results before treating this as a hard failure.
+:::
+
+---
+
 ## Shell Integration
 
 Show your active context in your terminal prompt:
@@ -285,6 +375,8 @@ bella secrets get             Download all secrets as .env / JSON
 bella secrets set <key>       Create or update a secret
 bella secrets delete <key>    Delete a secret
 bella secrets push            Push from a .env file
+bella secrets drift           Cross-environment key presence matrix (CI gate)
+bella secrets scan            Scan source files for secret key references (CI gate)
 bella secrets generate <lang> Generate typed accessor class
 
 bella context init/show/get/use/clear
