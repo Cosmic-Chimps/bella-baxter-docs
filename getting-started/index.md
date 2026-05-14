@@ -32,12 +32,13 @@ This opens your browser for secure authentication via your organisation's identi
 
 ## 3. Select Your Context
 
-After login, Bella shows the projects and environments you have access to:
+Run the interactive setup in your project directory to pick a project and environment:
 
 ```sh
-bella context list
-bella context use my-project/dev
+bella context init
 ```
+
+This creates a `.bella` file that pins the project/environment for that directory. You can also use the shortcut `bella init`.
 
 Or set context non-interactively using an API key:
 

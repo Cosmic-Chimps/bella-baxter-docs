@@ -7,7 +7,7 @@ The `bella` CLI is a self-contained binary with zero runtime dependencies. No No
 ::: code-group
 
 ```sh [Linux / macOS]
-curl -sSfL https://raw.githubusercontent.com/cosmic-chimps/bella-baxter-cli/main/scripts/install-bella.sh | sh
+curl -sSfL https://raw.githubusercontent.com/cosmic-chimps/bella-baxter-cli/main/scripts/install-bella.sh | bash
 ```
 
 ```powershell [Windows (PowerShell)]
@@ -71,6 +71,51 @@ environment = "dev"
 The `org` field is written automatically by `bella context init`. If your `.bella` file was created before multi-org support, re-run `bella context init` to add it.
 
 Safe to commit. When using an API key, it's auto-created for you.
+
+---
+
+## Environment Variables
+
+The CLI reads the following environment variables. They take precedence over stored config and `.bella` files as described in the [resolution order](#context-resolution-order) below.
+
+| Variable | Purpose | Notes |
+|----------|---------|-------|
+| `BELLA_BAXTER_URL` | API server URL | Overrides `bella config set-server` and stored config |
+| `BELLA_BAXTER_API_KEY` | API key for authentication | `bax-...` format; takes priority over stored credentials |
+| `BELLA_BAXTER_ACCESS_TOKEN` | OAuth JWT bearer token | Injected into child processes by `bella sdk run` |
+| `BELLA_BAXTER_PROJECT` | Project slug (session override) | Set by `bella context use` via shell function |
+| `BELLA_BAXTER_ENV` | Environment slug (session override) | Set by `bella context use` via shell function |
+| `BELLA_BAXTER_TENANT` | Org/tenant slug (session override) | Used alongside `BELLA_BAXTER_PROJECT`/`BELLA_BAXTER_ENV` |
+| `BELLA_BAXTER_PRIVATE_KEY` | ZKE private key (PEM) | Required for [Zero-Knowledge Encryption](/features/e2ee-zke) |
+| `BELLA_BAXTER_APP_CLIENT` | App client identifier | Forwarded as a context header; useful for MCP/SDK integrations |
+| `BELLA_BAXTER_DEBUG` | Enable debug HTTP logging | Set to any non-empty value |
+
+::: details Deprecated variables
+| Old variable | Replaced by |
+|-------------|------------|
+| `BAXTER_URL` | `BELLA_BAXTER_URL` |
+| `BELLA_PROJECT` | `BELLA_BAXTER_PROJECT` |
+| `BELLA_ENV` | `BELLA_BAXTER_ENV` |
+:::
+
+### Authentication Precedence
+
+When connecting to the API, the CLI selects credentials in this order (first match wins):
+
+1. `BELLA_BAXTER_API_KEY` env var
+2. `BELLA_BAXTER_ACCESS_TOKEN` env var (injected into subprocesses by `bella sdk run`)
+3. Stored API key (saved with `bella login --api-key`)
+4. Stored OAuth token (saved with `bella login`)
+
+### Context Resolution Order
+
+When a command needs to know which project and environment to target, the CLI resolves them in this order (first match wins):
+
+1. **`--project` / `--environment` flags** — explicit per-command override (highest priority)
+2. **API key scope** — scoped API keys encode their project+environment; resolved via `GET /api/v1/keys/me`
+3. **`BELLA_BAXTER_PROJECT` + `BELLA_BAXTER_ENV`** — session override set by `bella context use` (requires shell function from `bella shell init`)
+4. **`.bella` file** — walked up from the current directory to the filesystem root (like `.git`)
+5. **Interactive picker** — shown only on a human terminal when no other source is found
 
 ---
 

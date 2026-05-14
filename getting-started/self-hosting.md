@@ -57,7 +57,7 @@ volumes:
 
 ```sh
 docker compose up -d
-bella config set url http://localhost:5522
+bella config set-server http://localhost:5522
 bella login
 ```
 

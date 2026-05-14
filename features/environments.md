@@ -108,3 +108,7 @@ To switch environments temporarily without editing the file, use a session conte
 ```sh
 bella context use my-api/production   # sets $BELLA_BAXTER_PROJECT / $BELLA_BAXTER_ENV for the session
 ```
+
+::: tip
+`bella context use` requires the shell function installed by `bella shell init`. Without it, the env vars are set only in the CLI subprocess and don't affect your current shell session.
+:::

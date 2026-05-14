@@ -11,7 +11,7 @@ curl -sSfL https://raw.githubusercontent.com/cosmic-chimps/bella-baxter-cli/main
 ```
 
 ```powershell [Windows (PowerShell)]
-iwr https://raw.githubusercontent.com/cosmic-chimps/bella-baxter-cli/main/scripts/install-bella.ps1 | iex
+irm https://raw.githubusercontent.com/cosmic-chimps/bella-baxter-cli/main/scripts/install-bella.ps1 | iex
 ```
 
 :::
@@ -32,12 +32,13 @@ Esto abre tu navegador para la autenticación segura a través del proveedor de 
 
 ## 3. Seleccionar tu Contexto
 
-Después del inicio de sesión, Bella muestra los proyectos y entornos a los que tienes acceso:
+Ejecuta la configuración interactiva en el directorio de tu proyecto para elegir un proyecto y entorno:
 
 ```sh
-bella context list
-bella context use mi-proyecto/dev
+bella context init
 ```
+
+Esto crea un archivo `.bella` que fija el proyecto/entorno para ese directorio. También puedes usar el atajo `bella init`.
 
 O establece el contexto de forma no interactiva usando una clave API:
 
