@@ -36,6 +36,10 @@ Or from the WebApp: **Project → Settings → Webhooks → Add Webhook**
 | `MemberAdded` | A user was added to a project or environment |
 | `MemberRemoved` | A user was removed |
 | `SecurityScanFailed` | A security intelligence scan detected an issue |
+| `secret.rotation.succeeded` | A secret was rotated successfully by a rotation policy |
+| `secret.rotation.failed` | A rotation attempt failed (error details in `metadata.errorMessage`) |
+| `secret.expiry.warning` | A secret is expiring within the configured warning window (days in `metadata.daysUntilExpiry`) |
+| `secret.expired` | A secret has passed its expiry date |
 
 ---
 

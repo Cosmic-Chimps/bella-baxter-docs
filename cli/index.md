@@ -176,14 +176,32 @@ bella run --watch --signal sighup -- gunicorn app:app   # reload without restart
 ### `bella sdk run` — SDK-powered: inject credentials only, SDK fetches inside the app
 
 Use this when your app has a Bella SDK installed (e.g. `@bella-baxter/express`, `BellaBaxter.AspNetCore`).
-The CLI injects `BELLA_BAXTER_API_KEY`, `BELLA_BAXTER_URL`, and (if configured) `BELLA_BAXTER_PRIVATE_KEY`
-for [Zero-Knowledge Encryption](/features/e2ee-zke). The SDK handles the actual secret fetching at runtime.
+Instead of fetching secrets itself, `bella sdk run` resolves the right credentials and injects them into
+the child process environment. The SDK inside your app then fetches secrets at runtime — enabling
+lazy loading, caching, and [Zero-Knowledge Encryption](/features/e2ee-zke).
 
 ```sh
 bella sdk run -- node server.js
 bella sdk run -- dotnet run
 bella sdk run -p myapp -e production -- ./start.sh
 ```
+
+**What `bella sdk run` does under the hood:**
+
+1. **Resolves credentials** — picks the best available auth method in priority order:
+   - Stored API key (`bella login --api-key`)
+   - Workload identity (auto-detected in CI/CD environments — GitHub Actions, Google Cloud, Azure, etc.) — exchanges the platform token for a short-lived Bella token
+   - Stored OAuth JWT (`bella login`) — refreshes if expired; resolves project + environment from flags, env vars, or the `.bella` file
+
+2. **Scrubs stale Bella variables** — removes any `BELLA_BAXTER_*` / `BELLA_API_*` vars already present in the environment before injecting fresh ones, preventing credential leakage or conflicts from outer shells.
+
+3. **Injects clean credentials** — sets only what the SDK needs:
+   - API key path → `BELLA_BAXTER_API_KEY` + `BELLA_API_KEY` + `BELLA_BAXTER_URL`
+   - OAuth path → `BELLA_BAXTER_ACCESS_TOKEN` + `BELLA_BAXTER_PROJECT` + `BELLA_BAXTER_ENV` + `BELLA_BAXTER_URL`
+
+4. **Injects the ZKE device key** — if a device private key is configured (and no service-account key is used), `BELLA_BAXTER_PRIVATE_KEY` is set so the SDK can decrypt secrets end-to-end without the server ever seeing plaintext values.
+
+5. **Spawns the subprocess** and returns its exit code — the child process has everything it needs; `bella sdk run` itself makes no secret API calls.
 
 ::: tip Why not `bella exec`?
 `bella exec` still works as an alias. `bella sdk run` is the recommended name — it makes clear that
@@ -193,8 +211,10 @@ the child process must have a Bella SDK installed.
 | | `bella run` | `bella sdk run` |
 |---|---|---|
 | SDK required in child | No | Yes |
-| What's injected | All secrets as env vars | `BELLA_BAXTER_API_KEY` + `BELLA_BAXTER_URL` (+ ZKE key) |
+| What's injected | All secrets as env vars | Credentials + URL (+ ZKE key) |
 | ZKE support | ❌ | ✅ |
+| Workload identity (CI/CD) | ✅ | ✅ |
+| Credential scrubbing | ✅ | ✅ |
 | Watch / auto-reload | ✅ `--watch` | ❌ |
 | Best for | Scripts, legacy apps | SDK-powered apps, ZKE workloads |
 

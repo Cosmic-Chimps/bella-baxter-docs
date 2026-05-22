@@ -1,36 +1,105 @@
-# API Key Rotation
+# Secret Rotation
 
-Bella Baxter can automatically rotate third-party API keys (Stripe, Anthropic, OpenAI, Google Maps, etc.) on a schedule, push the new value into your secret provider, and revoke the old key after a configurable grace period — with zero downtime.
+Bella Baxter can automatically rotate secrets on a schedule, store the new value in your provider, and optionally revoke the old credential after a configurable grace period — with zero downtime.
 
 ## How It Works
 
 ```
 Scheduler (every 15 min)
   → finds secrets due for rotation
-  → publishes TriggerSecretRotationCommand via RabbitMQ
+  → dispatches TriggerSecretRotationCommand
 
-RotatorService (worker)
-  → calls the 3rd-party API to create a new key
-  → returns the new key value
-
-Baxter API
+Rotation handler
+  → executes the chosen strategy (GenerateRandom or HttpWebhook)
   → stores new value in your provider (Vault, AWS, Azure, GCP)
-  → updates the secret's NextRotationAt
-  → schedules old key revocation after grace period
+  → updates NextRotationAt
+  → schedules old-value revocation after grace period (HttpWebhook only)
 ```
 
-The old API key stays valid until the revocation delay elapses — giving your running services time to pick up the new value before the old one stops working.
+The old secret value stays valid until the revocation delay elapses — giving your running services time to pick up the new value.
 
-## Supported Rotators
+## Rotation Strategies
 
-| Rotator | Service | How It Rotates |
-|---------|---------|----------------|
-| `stripe-api-key` | Stripe | Creates a new restricted/secret key via Stripe API, revokes old |
-| `anthropic-api-key` | Anthropic | Generates new API key via Anthropic API, revokes old |
-| `openai-api-key` | OpenAI | Creates new project key via OpenAI API, revokes old |
-| `google-maps-api-key` | Google Maps Platform | Calls GCP Cloud Function (service account impersonation) |
+### GenerateRandom
 
-Custom rotators can be registered by your operator via the Backoffice.
+Bella generates a new random value in-process. No external call is made.
+
+| Format | Example output |
+|--------|---------------|
+| `uuid` | `550e8400-e29b-41d4-a716-446655440000` |
+| `hex32` | `3d8e9f1a0b2c4d5e6f7a8b9c0d1e2f3a` |
+| `base64-32` | `PY6fGgssTVhmz4x6iJ3yKQ==` |
+| `alphanumeric-32` | `K7mXqR2wZ9cLpN0sT4vH8jYb1fDe5uAi` |
+
+Use this strategy for internal API keys, session signing secrets, and any credential where you control both ends.
+
+### HttpWebhook
+
+Bella POSTs a signed request to **your function**. Your function provisions a new key at the external service and returns the new value.
+
+Use this strategy to rotate third-party API keys (Stripe, OpenAI, Google Maps, etc.) or any credential managed by an external API.
+
+#### Wire Contract
+
+All requests are signed using HMAC-SHA256:
+
+```
+X-Bella-Signature: t={unix-epoch-seconds},v1={hmac-sha256-hex}
+```
+
+This is the same signing format used for Bella webhooks and Custom HTTP Providers.
+
+**Rotate request:**
+
+```json
+POST https://your-function.example.com/rotate
+X-Bella-Signature: t=1720000000,v1=abc123...
+{ApiKeyHeader}: {ApiKey}   // optional
+
+{
+  "action": "rotate",
+  "secretKey": "STRIPE_API_KEY",
+  "projectSlug": "my-app",
+  "environmentSlug": "production",
+  "requestId": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+**Rotate response:**
+
+```json
+{
+  "newValue": "sk_live_new_key_value",
+  "newHandle": "stripe-key-id-abc123"
+}
+```
+
+`newHandle` is optional. If returned, Bella stores it and passes it as `oldHandle` in the revoke call.
+
+**Revoke request** (after sunset period, only if `newHandle` was returned):
+
+```json
+{
+  "action": "revoke",
+  "secretKey": "STRIPE_API_KEY",
+  "projectSlug": "my-app",
+  "environmentSlug": "production",
+  "oldHandle": "stripe-key-id-abc123",
+  "requestId": "7e98d73e-..."
+}
+```
+
+**Revoke response:**
+
+```json
+{ "success": true }
+```
+
+**Error response** (return any non-2xx status):
+
+```json
+{ "error": "Rate limit exceeded — try again later" }
+```
 
 ## Configuring Rotation
 
@@ -39,14 +108,13 @@ Custom rotators can be registered by your operator via the Backoffice.
 1. Open **Environment → Secrets**
 2. Find the secret you want to auto-rotate
 3. Click the rotation badge (or the **Set Rotation Policy** button)
-4. Fill in the **Rotation Policy** dialog:
-   - **Rotator** — pick the service (e.g. "Stripe API Key")
-   - **Credentials** — provide the admin key or service account needed to perform rotation
-   - **Rotation interval** — e.g. every 90 days
-   - **Revoke previous key after** — e.g. 7 days (grace period for running services)
+4. Fill in the dialog:
+   - **Interval** — how often to rotate (e.g. every 30 days)
+   - **Revoke previous after** — grace period before revoking the old value (HttpWebhook only)
+   - **Strategy** — `Generate Random` or `HTTP Webhook`
+   - For **HTTP Webhook**: endpoint URL, signing secret, optional API key
+   - For **Generate Random**: value format
 5. Save. Bella schedules the first rotation.
-
-Credentials are encrypted with your tenant's Data Protection key — Bella never logs or exposes them in API responses.
 
 ### Via API
 
@@ -57,15 +125,52 @@ Content-Type: application/json
 
 {
   "enabled": true,
-  "intervalDays": 90,
-  "rotatorDefinitionId": "stripe-api-key",
-  "credentials": {
-    "adminApiKey": "sk_live_..."
-  },
-  "params": {},
+  "intervalDays": 30,
+  "strategy": "HttpWebhook",
+  "endpoint": "https://your-function.example.com/rotate",
+  "signingSecret": "your-hmac-secret",
   "revokePreviousAfterDays": 7
 }
 ```
+
+For `GenerateRandom`:
+
+```json
+{
+  "enabled": true,
+  "intervalDays": 90,
+  "strategy": "GenerateRandom",
+  "randomFormat": "hex32"
+}
+```
+
+## Building a Rotation Function
+
+Use the [rotation function templates](https://github.com/Cosmic-Chimps/bella-baxter/tree/main/apps/templates/rotator) as a starting point. Templates are available for:
+
+- **AWS Lambda** — Node.js/TypeScript
+- **GCP Cloud Run** — Node.js/TypeScript
+- **Azure Functions** — Node.js/TypeScript
+
+All templates use `@bella-baxter/sdk` for signature verification. You only need to implement `rotateSecret()` (and optionally `revokeSecret()`).
+
+### Signature verification
+
+```typescript
+import { verifyWebhookSignature, type BellaRotationRequest } from '@bella-baxter/sdk';
+
+const rawBody = await req.text();
+const valid = await verifyWebhookSignature(
+  process.env.BELLA_SIGNING_SECRET!,
+  req.headers.get('x-bella-signature') ?? '',
+  rawBody,
+);
+if (!valid) return { status: 401, body: '{"error":"Invalid signature"}' };
+
+const bellaReq = JSON.parse(rawBody) as BellaRotationRequest;
+```
+
+The WebApp shows a ready-to-run template snippet when you select **Strategy: HTTP Webhook** in the rotation policy dialog.
 
 ## Manual Rotation
 
@@ -73,13 +178,13 @@ Trigger an immediate rotation from the WebApp by clicking **Rotate Now** on a se
 
 ```sh
 bella secrets rotate \
-  --project my-api \
+  --project my-app \
   --env production \
   --provider my-vault \
   --key STRIPE_API_KEY
 ```
 
-The rotation runs asynchronously. The secret's rotation badge updates to **Rotating…** until the new value is stored.
+The rotation runs asynchronously. The status badge updates to **Rotating…** until the new value is stored.
 
 ## Rotation Status
 
@@ -91,45 +196,38 @@ Each secret with rotation configured shows a status badge:
 | ⚠️ Due soon | Rotation due within 7 days |
 | 🔴 Overdue | Rotation is past due (scheduler will pick it up within 15 min) |
 | 🔵 Rotating… | Active rotation in progress |
-| ⏳ Pending revocation | New key stored, waiting for grace period to revoke old key |
+| ⏳ Pending revocation | New value stored, waiting for grace period to revoke old handle |
 | 🔴 Error | Last rotation attempt failed |
 
 ## Zero-Downtime Rotation
 
 Bella uses a two-phase approach to avoid breaking running services:
 
-1. **Phase 1 — Generate new key:** New key is created and stored in your provider (overwriting the current value). Running services that reload secrets (via SDK refresh, `bella run --watch`, or `bella agent`) will automatically pick up the new value.
+1. **Phase 1 — New value:** The new value is generated/retrieved and stored in your provider. Running services that reload secrets (via SDK refresh or `bella run --watch`) pick up the new value automatically.
 
-2. **Phase 2 — Revoke old key:** After the grace period (default: 7 days), Bella revokes the original key at the 3rd-party API. Services that loaded the new key during Phase 1 are unaffected.
-
-Set `revokePreviousAfterDays: 0` if you want immediate revocation (not recommended for production).
+2. **Phase 2 — Revoke old** *(HttpWebhook only)*: After the grace period, Bella calls your function with `action=revoke` and the stored `oldHandle`. Set `revokePreviousAfterDays: 0` for immediate revocation (not recommended for production).
 
 ## Security
 
-- **Credentials are encrypted at rest** using ASP.NET Data Protection (AES-256-CBC + HMAC-SHA256). The encrypted blob is stored in your tenant's event stream — never in plaintext.
-- **Credentials are never returned by the API.** The rotation policy endpoint masks credential fields as `***ENCRYPTED***`.
-- **Rotation runs in an isolated worker** (`BellaBaxter.RotatorService`) — the worker receives only the encrypted credentials and the secret metadata needed to perform a single rotation. It has no access to other tenant data.
-- **All rotations are audit logged** — actor, timestamp, old key handle, new key resource name.
+- **Signing secrets and API keys are encrypted at rest** using ASP.NET Data Protection (AES-256-CBC + HMAC-SHA256) before being written to the event stream.
+- **Sensitive fields are never returned by the API.** Rotation policy responses mask them as `***ENCRYPTED***`.
+- **All rotations are audit logged** — actor, timestamp, strategy, outcome.
 
 ## FAQ
 
-**Are my rotation credentials (admin API key etc.) stored securely?**
-Yes. They are encrypted with your tenant's Data Protection key before being written to the database. The key never appears in API responses, logs, or error messages.
+**Does rotation work with the Bella CLI?**
+Yes. When `bella run` or `bella agent` is active, secrets are refreshed according to their poll interval. New rotated values are picked up automatically.
 
 **What happens if a rotation fails?**
-Bella marks the secret as `Error` and schedules a retry with exponential backoff (via Wolverine/RabbitMQ). Your existing key continues to work. After 3 failed attempts, the status stays `Error` and an alert is raised. You can trigger a manual rotation once the underlying issue is resolved.
+Bella marks the secret as `Error` and retries with exponential backoff. Your existing value continues to work.
 
-**Can I use rotation without a supported rotator?**
-Yes — your operator can register a custom `HttpWebhook` rotator. Bella will POST a JSON payload to your endpoint with the credential context; your endpoint creates the new key and returns the value. See your operator docs for the webhook schema.
-
-**What if my service doesn't support key reload?**
-Set `revokePreviousAfterDays` to a value longer than your deployment cycle (e.g. 30 days). This gives you a full cycle to deploy a new version that reads the new key before the old one is revoked.
-
-**Does rotation work with the Bella CLI?**
-Yes. When `bella run` or `bella agent` is active, secrets are refreshed according to their `--poll-interval`. New rotated values are picked up automatically without redeployment.
+**What if I don't want to revoke the old key?**
+Don't return `newHandle` from your rotate function. Bella will never call revoke.
 
 ## Related
 
-- [Secrets](./environments.md) — managing secrets in environments
-- [Providers](./providers.md) — connecting Vault, AWS Secrets Manager, etc.
+- [Secrets](./secrets.md) — managing secrets in environments
+- [Providers](./providers.md) — connecting Vault, AWS, Azure, GCP, or a custom HTTP backend
+- [Custom HTTP Provider](./providers.md#httprest-custom-http-provider) — build your own secret backend
 - [Notifications](./notifications.md) — get alerted when rotation fails
+

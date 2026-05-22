@@ -70,6 +70,10 @@ The same event types as [Webhooks](/features/webhooks#event-types) are supported
 | `SecurityScanFailed` | A security scan detected weak or exposed secrets |
 | `LeaseExpiringSoon` | A lease is expiring within the configured warn-before window |
 | `ProviderConnectionFailed` | Bella cannot reach a provider (connectivity issue) |
+| `secret.rotation.succeeded` | A rotation policy successfully rotated a secret |
+| `secret.rotation.failed` | A rotation attempt failed |
+| `secret.expiry.warning` | A secret is approaching its expiry date (N days remaining) |
+| `secret.expired` | A secret has passed its expiry date and should be rotated or updated |
 
 ## Test a Channel
 
