@@ -10,7 +10,7 @@ TLS protects secrets in transit against external eavesdroppers. E2EE adds a seco
 
 - **TLS termination proxies** (load balancers, API gateways, service meshes) see plaintext after decrypting TLS. E2EE ensures secrets remain opaque even at those points.
 - **SDK transport encryption** is independent of your infrastructure — it works the same whether you self-host on a bare VM or run behind a CDN.
-- **Audit confidence** — each fetch is tied to a specific cryptographic key, not just a bearer token.
+- **Audit confidence** — a fetch made with a registered device key is tied to that device on the audit trail, not just to a bearer token. See [Registered devices](#registered-devices).
 
 Bella's E2EE uses **ECDH key agreement (P-256) + AES-256-GCM** — the same primitives used by Signal and TLS 1.3.
 
@@ -54,27 +54,50 @@ App                        Bella API
 
 | Benefit | Details |
 |---------|---------|
-| **Device audit trail** | Every fetch is attributed to a specific key — visible in your audit log |
+| **Device audit trail** | A fetch made with a **registered** device key carries that device's fingerprint on the audit row, so "which machine read this?" is answerable |
 | **DEK lease caching** | The wrapped DEK has a TTL; subsequent fetches reuse it without round-trips |
-| **Key identity** | Rotate or revoke a device key without rotating API credentials |
+| **Revocation** | Withdraw one machine without rotating API credentials — effective on that machine's next request |
+
+> The wrapped DEK is released **only to a registered device** (or to the public key recorded against an
+> API key at creation). An unregistered key still receives the secret values; it just does not receive
+> the environment key. Treat `X-Bella-Wrapped-Dek` as optional — every SDK already does.
 
 ---
 
 ## Getting Started with ZKE
 
-### 1. Generate your device key
+### 1. Register this machine
 
 ```sh
 bella auth setup
 ```
 
-This generates a P-256 PKCS#8 private key, stores it in your OS keychain, and prints the PEM. Keep it secret — treat it like a private SSH key.
+This generates a P-256 keypair, stores the private half in an encrypted file at
+`~/.config/bella-cli/zke-private-key.dat` with owner-only permissions, and **registers the public half
+with Bella**. It prints the device's fingerprint:
 
-### 2. Set the environment variable
+```
+✅ Device registered.
+   Fingerprint: SHA256:mF2v7Q9x0Zk1a2B3c4D5e6F7g8H9i0J1k2L3m4N5o6P
+   Label:       MacBook Pro
+   Tenant:      acme
+```
+
+That fingerprint is what the console's **Devices** page and the audit trail show, so you can match a row
+to a machine by eye. The private key never leaves the machine — keep it as you would a private SSH key.
+
+Registration is **per tenant**: the same laptop registers separately in each tenant it works in. The
+command is safe to re-run (it updates the label and nothing else), and `--force` generates a *new*
+device, leaving the previous one registered until you revoke it.
+
+### 2. Set the environment variable (for SDKs)
 
 ```sh
-export BELLA_BAXTER_PRIVATE_KEY="$(cat ~/.bella/device-key.pem)"
+export BELLA_BAXTER_PRIVATE_KEY="$(bella auth setup --print-key 2>/dev/null || cat ~/.config/bella-cli/zke-private-key.dat)"
 ```
+
+The CLI reads the stored key itself — this variable is for SDK processes that are not launched through
+`bella run` / `bella sdk run` (both inject it for you).
 
 **All SDK framework integrations read this variable automatically.** No code changes required for Django, FastAPI, Flask, Rails, Laravel, Spring Boot, ASP.NET Core, etc.
 
@@ -95,6 +118,45 @@ const client = await createBaxterClient({
 
 ---
 
+## Registered devices
+
+A **device** is one machine's public key, registered by a person. Registration is what makes the
+setting below mean something: before it existed, "ZKE enforcement" accepted any key a client happened
+to send, including one generated seconds earlier by a machine nobody had ever set up.
+
+```sh
+bella auth devices list           # your devices in this tenant
+bella auth devices list --all     # every device in the tenant (Owner/Admin)
+bella auth devices revoke <id|fingerprint>
+```
+
+The console shows the same list under **Settings → Devices**.
+
+**Revocation is effective on that machine's next request** — there is no cache to wait out. What it does
+*not* do is un-share knowledge: an environment key already cached on that machine still decrypts the
+values it decrypted before. Rotate the environment key if that matters.
+
+A machine credential is a device too: an API key registers its public key when the key is *created*
+(`publicKey` on `createApiKey`). A key created without one is refused where enforcement is on, and the
+console marks it "no registered key".
+
+---
+
+## ZKE enforcement
+
+A tenant Owner can require a registered device for every secret read (**Settings → Encryption → ZKE
+enforcement**). With it on:
+
+- a CLI or SDK presenting a **registered** device key reads normally;
+- anything else — no key, a malformed key, an unregistered key, a revoked device, or a device whose
+  owner has left the tenant — is refused with `403` and told to run `bella auth setup`;
+- the console is exempt (a browser session holds no device key);
+- an assistant connected over MCP reads only through an API key with a registered public key.
+
+Before enabling it, the console shows how many members and API keys would be locked out.
+
+---
+
 ## Backward Compatibility
 
 ZKE is **fully opt-in**. If `BELLA_BAXTER_PRIVATE_KEY` is not set:
@@ -106,9 +168,15 @@ ZKE is **fully opt-in**. If `BELLA_BAXTER_PRIVATE_KEY` is not set:
 
 ## What ZKE Does NOT Change
 
-- **The server still authorizes every request** via your API key — ZKE is a transport enhancement, not an auth bypass.
-- **Secret values are decrypted by the SDK** before being returned to your app code in both modes — your application always receives plaintext strings.
+- **The server still authorizes every request** via your API key — ZKE is a transport and device-identity
+  layer, not an auth bypass, and enforcement narrows who may read rather than widening it.
+- **Secret values are decrypted by the SDK** before being returned to your app code in both modes — your
+  application always receives plaintext strings.
 - **TLS is still required** — E2EE and ZKE complement TLS, they don't replace it.
+- **The platform can still read your secrets.** Bella decrypts values server-side to serve them, and the
+  environment key is wrapped *by* the server. ZKE gives you device identity, an attributable audit trail
+  and revocation; it is not a claim that Bella cannot see your secrets. Anything that says otherwise is
+  wrong.
 
 ---
 

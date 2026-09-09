@@ -48,7 +48,7 @@ By default the SDK generates a fresh P-256 keypair per request (ephemeral E2EE).
 **Generate your device key once:**
 
 ```sh
-bella auth setup   # stores in OS keychain; copy the printed PEM
+bella auth setup   # stores it owner-only under ~/.config/bella-cli; copy the printed PEM
 ```
 
 **Use it in your app:**

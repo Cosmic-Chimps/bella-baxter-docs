@@ -1,126 +1,86 @@
 # Self-Hosting
 
-Run your own Bella Baxter instance on your infrastructure.
+Run your own Bella Baxter instance on your infrastructure. Address it however
+your network works — a DNS name with your own certificate, or (fully
+supported, no prerequisites) a raw IP / `/etc/hosts` name with no public DNS
+and no outbound internet after the initial image pull.
 
-## Option 1: Docker Compose (Simplest)
+## The self-hosted bundle (recommended)
 
-The fastest way to run Bella Baxter locally or on a VPS.
+Each release ships a `bella-selfhosted-<version>.tar.gz` bundle containing a
+generated `docker-compose.yaml`, an `.env.template`, and a single `bella.sh`
+script. The bundle is produced directly from the platform's Aspire application
+model, so it can never drift from the real topology.
 
-```yaml
-# docker-compose.yml
-version: '3.8'
-services:
-  postgres:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: bella_baxter
-      POSTGRES_USER: bella
-      POSTGRES_PASSWORD: changeme
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+### Requirements
 
-  keycloak:
-    image: quay.io/keycloak/keycloak:24
-    command: start-dev --import-realm
-    environment:
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres/keycloak
-      KC_DB_USERNAME: bella
-      KC_DB_PASSWORD: changeme
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: changeme
-    depends_on: [postgres]
-    ports:
-      - "8080:8080"
+- A Linux host with Docker Engine + the `docker compose` plugin
+- Credentials for the Bella Baxter container registry (provided with your license)
+- Three host ports: `443` (application), `8444` (admin plane), `9443` (setup)
 
-  openbao:
-    image: openbao/openbao:latest
-    command: server -dev -dev-root-token-id=root
-    ports:
-      - "8200:8200"
-
-  bella-api:
-    image: ghcr.io/cosmic-chimps/bella-baxter-api:latest
-    environment:
-      ConnectionStrings__marten: "Host=postgres;Database=bella_baxter;Username=bella;Password=changeme"
-      Keycloak__Realm: bella-baxter
-      Keycloak__AuthServerUrl: http://keycloak:8080
-      OpenBao__Url: http://openbao:8200
-      OpenBao__RootToken: root
-    depends_on: [postgres, keycloak, openbao]
-    ports:
-      - "5522:5522"
-
-volumes:
-  postgres_data:
-```
+### Install
 
 ```sh
-docker compose up -d
-bella config set-server http://localhost:5522
-bella login
+tar -xzf bella-selfhosted-<version>.tar.gz
+cd bella-selfhosted-<version>
+./bella.sh up
 ```
 
-## Option 2: .NET Aspire (Recommended for .NET Teams)
+`up` starts the infrastructure plane (PostgreSQL, Redis, two OpenBao vaults,
+Keycloak) and the **setup wizard**, then prints the wizard URL and a one-time
+setup token:
 
-If your team uses .NET Aspire, add Bella Baxter as a self-hosted stack to your AppHost:
-
-```csharp
-// AppHost/Program.cs
-var builder = DistributedApplication.CreateBuilder(args);
-
-// Option A: Bella owns all infrastructure
-var bella = builder.AddBellaBaxter("bella");
-
-// Option B: Bring your own Postgres and Redis
-var postgres = builder.AddPostgres("pg");
-var redis = builder.AddRedis("redis");
-var bella = builder.AddBellaBaxter("bella", postgres: postgres, redis: redis);
-
-builder.Build().Run();
+```
+Setup wizard:  https://<your-ip>:9443
+Setup token:   ****************
 ```
 
-See the [05-aspire-selfhosted sample](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dotnet/samples/05-aspire-selfhosted) for the full setup.
+The wizard walks you through everything that used to be a manual runbook:
+
+1. **TLS** — bring your own certificate (drop `server.crt`/`server.key` into
+   `bella-config/pki/`; the wizard verifies and uses it as-is), or let the
+   wizard mint an internal CA and a server certificate with your IP/hostname
+   in the SAN — you then install `ca.crt` on client machines once.
+2. **Vault initialization** — initializes the seal vault (Shamir 3-of-2) and
+   the main vault (transit auto-unseal), showing each recovery kit **exactly
+   once** behind a forced download.
+3. **Provisioning** — policies, AppRoles, and service credentials, verified by
+   live login before the wizard proceeds.
+4. **Identity** — the Keycloak realm, clients, roles, TOTP enforcement, and
+   your initial operator account.
+
+When the wizard finishes:
+
+```sh
+./bella.sh apply     # starts the application plane
+```
+
+and open `https://<your-ip>`.
+
+### After a reboot
+
+The seal vault re-seals on every host reboot by design. Open the wizard URL,
+log in with the ops token, and paste 2 of your 3 unseal keys — the main vault
+auto-unseals via transit and the platform recovers on its own.
+
+```sh
+./bella.sh unseal    # prints the URL + token if you've lost track
+```
+
+### Topology
+
+One HTTPS origin fronts everything: the web app, the API family (including
+certificate management and discovery), and Keycloak (under `/auth`). The
+admin/back-office plane runs on its own port with the same certificate. All
+service-to-service traffic stays on the private compose network; secret
+material lives only in OpenBao — never in Bella's own database.
+
+## Option 2: .NET Aspire (for development/integration)
+
+Consume the published `AddBellaBaxter` Aspire resource to embed a Bella
+Baxter stack in your own AppHost. See the SDK samples
+(`apps/sdk/dotnet/samples/05-aspire-selfhosted`).
 
 ## Option 3: Kubernetes
 
-Helm chart coming soon. In the meantime, adapt the Docker Compose services into your cluster.
-
----
-
-## Configuration Reference
-
-Key environment variables for the Bella Baxter API:
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `ConnectionStrings__marten` | PostgreSQL connection string | required |
-| `Keycloak__Realm` | Keycloak realm name | `bella-baxter` |
-| `Keycloak__AuthServerUrl` | Keycloak base URL | required |
-| `OpenBao__Url` | OpenBao/Vault URL | `http://localhost:8200` |
-| `OpenBao__RootToken` | Root token (dev mode only) | — |
-| `OpenBao__AppRoleRoleId` | AppRole role ID (production) | — |
-| `OpenBao__AppRoleSecretId` | AppRole secret ID (production) | — |
-| `DataProtection__KeyPath` | ASP.NET Data Protection key path | `/keys` |
-
-## Production Checklist
-
-- [ ] Use AppRole auth (not root token) for OpenBao/Vault
-- [ ] Configure TLS on all services
-- [ ] Set `DataProtection__KeyPath` to a persistent volume
-- [ ] Enable external backups for PostgreSQL
-- [ ] Configure Keycloak with your organisation's IdP (LDAP, SAML, etc.)
-- [ ] Set `ASPNETCORE_ENVIRONMENT=Production`
-
----
-
-## Updating
-
-```sh
-# Docker Compose
-docker compose pull && docker compose up -d
-
-# Aspire: update the NuGet package version in your AppHost .csproj
-```
-
-Database schema migrations run automatically on startup.
+A Helm chart is planned. Talk to us if Kubernetes is a hard requirement.

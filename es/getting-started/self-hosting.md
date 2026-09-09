@@ -1,75 +1,73 @@
-# Auto-alojamiento
+# Auto-alojamiento (Self-Hosting)
 
-> 🌐 **English version**: [Self-Hosting](/getting-started/self-hosting)
+Ejecuta tu propia instancia de Bella Baxter en tu infraestructura. Direcciónala
+como funcione tu red — un nombre DNS con tu propio certificado, o (totalmente
+soportado, sin prerequisitos) una IP o un nombre de `/etc/hosts`, sin DNS
+público y sin salida a internet tras la descarga inicial de imágenes.
 
-Ejecuta tu propia instancia de Bella Baxter.
+## El bundle self-hosted (recomendado)
 
-## Opción A: Docker Compose (Recomendado)
+Cada release publica un `bella-selfhosted-<version>.tar.gz` con un
+`docker-compose.yaml` generado, una plantilla `.env.template` y un único script
+`bella.sh`. El bundle se genera directamente del modelo Aspire de la
+plataforma, así que nunca puede divergir de la topología real.
 
-La forma más rápida de levantar Bella Baxter con todas sus dependencias:
+### Requisitos
+
+- Un host Linux con Docker Engine + el plugin `docker compose`
+- Credenciales del registro de contenedores de Bella Baxter (incluidas con tu licencia)
+- Tres puertos: `443` (aplicación), `8444` (plano de administración), `9443` (setup)
+
+### Instalación
 
 ```sh
-curl -sSfL https://raw.githubusercontent.com/cosmic-chimps/bella-baxter/main/infra/docker/docker-compose.yml -o docker-compose.yml
-docker compose up -d
+tar -xzf bella-selfhosted-<version>.tar.gz
+cd bella-selfhosted-<version>
+./bella.sh up
 ```
 
-Esto levanta:
-- **Baxter API** — la API REST en el puerto 5522
-- **PostgreSQL** — almacenamiento de estado del evento
-- **Redis** — caché / publicación/suscripción
-- **Keycloak** — proveedor de identidad
-- **OpenBao** — proveedor de secretos del sistema
+`up` arranca el plano de infraestructura (PostgreSQL, Redis, dos vaults
+OpenBao, Keycloak) y el **asistente de configuración**, e imprime la URL del
+asistente y un token de un solo uso.
 
-Después de unos segundos, accede a `http://localhost:5522/scalar/v1` para ver la documentación de la API.
+El asistente automatiza todo lo que antes era un runbook manual:
 
-### Variables de Entorno
+1. **TLS** — trae tu propio certificado (coloca `server.crt`/`server.key` en
+   `bella-config/pki/`; el asistente lo verifica y lo usa tal cual), o deja
+   que el asistente emita una CA interna y un certificado con tu IP/hostname
+   en el SAN — instalas `ca.crt` una vez en cada máquina cliente.
+2. **Inicialización de vaults** — inicializa el vault de sellado (Shamir) y el
+   principal (auto-unseal por transit), mostrando cada kit de recuperación
+   **exactamente una vez**.
+3. **Aprovisionamiento** — políticas, AppRoles y credenciales de servicio,
+   verificadas con login real antes de continuar.
+4. **Identidad** — el realm de Keycloak, clientes, roles, TOTP y tu cuenta de
+   operador inicial.
 
-| Variable | Por Defecto | Descripción |
-|----------|-------------|-------------|
-| `POSTGRES_PASSWORD` | `bella` | Contraseña de la base de datos |
-| `KEYCLOAK_ADMIN_PASSWORD` | `admin` | Contraseña del admin de Keycloak |
-| `BELLA_ADMIN_EMAIL` | `admin@example.com` | Correo del admin inicial |
-| `BELLA_ADMIN_PASSWORD` | `changeme` | Contraseña del admin inicial |
-| `OPENBAO_ROOT_TOKEN` | auto | Token raíz de OpenBao (generado en el primer inicio) |
+Al terminar el asistente:
 
-Cambia siempre los valores de contraseña por defecto en producción.
-
----
-
-## Opción B: .NET Aspire
-
-Si ya usas .NET Aspire, agrega Bella Baxter a tu AppHost:
-
-```csharp
-// AppHost/Program.cs
-var builder = DistributedApplication.CreateBuilder(args);
-
-// Opción 1: Bella Baxter gestionado por Aspire (Bella gestiona sus propias dependencias)
-builder.AddBellaBaxter("secrets");
-
-// Opción 2: Pasa tus propios recursos Postgres + Redis
-var postgres = builder.AddPostgres("postgres");
-var redis = builder.AddRedis("redis");
-
-builder.AddBellaBaxter("secrets")
-    .WithExternalPostgres(postgres)
-    .WithExternalRedis(redis);
-
-builder.Build().Run();
+```sh
+./bella.sh apply     # arranca el plano de aplicación
 ```
 
-Consulta el [ejemplo completo de Aspire](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dotnet/samples/05-aspire-self-hosted) para ver el ejemplo completo.
+y abre `https://<tu-ip>`.
 
----
+### Tras un reinicio del host
 
-## Configuración de Producción
+El vault de sellado se vuelve a sellar en cada reinicio, por diseño. Abre la
+URL del asistente, entra con el token de operaciones y pega 2 de tus 3 claves
+de unseal — el vault principal se abre solo vía transit y la plataforma se
+recupera automáticamente.
 
-Para despliegues de producción, asegúrate de:
+```sh
+./bella.sh unseal    # imprime la URL + token si los perdiste de vista
+```
 
-1. **Configurar un proveedor de identidad externo** (Keycloak, Okta, Auth0) — el Keycloak incluido es solo para desarrollo
-2. **Usar una base de datos PostgreSQL gestionada** — no el contenedor incluido
-3. **Configurar Redis con AOF habilitado** — para durabilidad
-4. **Configurar HTTPS** — usa un reverse proxy (Caddy, nginx, Traefik)
-5. **Cambiar todas las contraseñas por defecto**
+## Opción 2: .NET Aspire (desarrollo/integración)
 
-Para guías de despliegue en Kubernetes y otras plataformas, consulta el [repositorio de infraestructura](https://github.com/cosmic-chimps/bella-baxter/tree/main/infra).
+Consume el recurso Aspire `AddBellaBaxter` publicado para incrustar un stack
+de Bella Baxter en tu propio AppHost (ver `apps/sdk/dotnet/samples/05-aspire-selfhosted`).
+
+## Opción 3: Kubernetes
+
+Hay un chart de Helm planificado. Háblanos si Kubernetes es un requisito duro.

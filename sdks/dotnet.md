@@ -103,7 +103,7 @@ By default each poll generates a fresh P-256 keypair (ephemeral E2EE). With ZKE 
 **Generate your device key once:**
 
 ```sh
-bella auth setup   # stores in OS keychain; copy the printed PEM
+bella auth setup   # stores it owner-only under ~/.config/bella-cli; copy the printed PEM
 ```
 
 **ASP.NET Core (via env var — recommended):**

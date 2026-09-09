@@ -379,7 +379,8 @@ To manage your subscription or view invoices, visit the **Billing** page in the 
 ```
 bella login                   Log in (OAuth browser or API key)
 bella logout                  Log out
-bella whoami                  Show logged-in user
+bella whoami                  Show logged-in user (verified against the server)
+bella whoami --offline        Same, from the local credential cache only
 bella auth status / refresh
 
 bella org current             Show active org
@@ -392,7 +393,7 @@ bella providers list/get/create/delete
 
 bella secrets list            List secret keys (values masked)
 bella secrets get             Download all secrets as .env / JSON
-bella secrets set <key>       Create or update a secret
+bella secrets set <key>       Create or update a secret (--scope, --tag, --type, --ignore-in-scan)
 bella secrets delete <key>    Delete a secret
 bella secrets push            Push from a .env file
 bella secrets drift           Cross-environment key presence matrix (CI gate)
@@ -463,6 +464,24 @@ bella issue --scope stripe,payment          # 15-min token (default)
 bella issue --scope stripe --ttl 30         # 30-minute token
 TOKEN=$(bella issue --scope stripe)         # capture token
 ```
+
+A scoped token only reads secrets **tagged with one of its scopes**, so the tags have to exist first.
+Tag them as you write them:
+
+```sh
+bella secrets set STRIPE_KEY sk_live_… --scope stripe            # new secret: tagged as it is created
+bella secrets set STRIPE_KEY sk_live_… --scope stripe --scope payment   # two scopes
+bella secrets set NOTE "…" --tag owner=platform                  # any other tag: KEY=VALUE
+bella secrets set BLOB "…" --type Json --ignore-in-scan true     # declared type / scanner opt-out
+```
+
+Repeat `--scope` per scope; a scope may not contain whitespace, because scopes are stored
+space-separated in a single tag and a space would silently split one scope into two.
+
+Re-tagging a secret that already exists is safe: the CLI reads its current tags, merges yours over
+them and writes the result, so tags you did not mention — `bella:env-specific`, anything another
+client set — are carried through. If the current tags cannot be read, the write is refused rather
+than guessed.
 
 ---
 

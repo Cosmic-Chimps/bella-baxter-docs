@@ -25,18 +25,47 @@ Scans run automatically on:
 - Scheduled scan (configurable, default: daily)
 - Manual trigger via CLI or WebApp
 
+## How it works
+
+Values are analysed **server-side**. The only thing that ever leaves your deployment is a
+5-character SHA-1 prefix sent to [Have I Been Pwned](https://haveibeenpwned.com/API/v3#PwnedPasswords)
+(k-anonymity — the same technique 1Password, Firefox and Chrome use); the value itself never does,
+and HIBP cannot tell which of the ~800 hashes under that prefix you asked about.
+
+## What is scanned, and what is not
+
+The scanner separates configuration from credentials before it judges anything, so a port, a feature
+flag or a UUID is not reported as a weak secret. It decides from the secret's declared **type** and,
+when that is the default `String`, from the **shape** of the value:
+
+| Value is | Entropy | Placeholder list | Key-format patterns | HIBP |
+|---|:--:|:--:|:--:|:--:|
+| Text (a plain string) | ✓ | ✓ | ✓ | ✓ |
+| Base64 | ✓ | — | ✓ | — |
+| JSON or a URL | — | — | ✓ | — |
+| Boolean, number, UUID | — | — | — | — |
+| Certificate bundle | — | — | — | — |
+
+A URL containing `user:password@` is treated as text, so the credential is still found.
+
+Mark anything the scanner still misjudges as **ignore in scan** on the secret itself.
+
 ## Scan Rules
 
 | Rule | Description | Severity |
 |------|-------------|----------|
-| Weak password | Entropy analysis — detects passwords like `password123` | High |
-| Common password | Checks against HIBP top 10k passwords | High |
-| Low entropy | Random-looking but short values | Medium |
-| Default credential | Known default credentials (`admin/admin`, etc.) | Critical |
-| Test/dummy value | Detects placeholder values in production (`changeme`, `todo`) | High |
-| Secret in key name | Key name contains the value (e.g. `DATABASE_URL=DATABASE_URL`) | Critical |
-| Unused secret | Secret not accessed in 90+ days (drift risk) | Low |
-| No expiry policy | Environment has no lease policy | Medium |
+| Weak entropy | Total entropy below 28 / 40 / 60 bits, measured over the whole value | Critical / High / Medium |
+| Too short | Fewer than 8 characters in a credential-named key (`*_PASSWORD`, `*_SECRET`, `*_KEY`, …) | High |
+| Known bad value | A dictionary credential or placeholder (`changeme`, `password123`, `letmein`) | Critical in a credential-named key, else Medium |
+| Known breached | The value appears in the HIBP breached-password corpus | Critical |
+| Known key format | Matches a published credential format — AWS, GitHub, Stripe, Slack, a PEM private key, a credential embedded in a connection string, and ~20 more | As published for that format |
+| Stale secret | Not updated in over 365 days | Medium |
+
+Severity for the value-based rules depends on the **key name** as well as the value: `changeme` in
+`JWT_SECRET` is a credential you must rotate; the same word in a display label is not.
+
+The Critical / High / Medium / Low tiles count **secrets**, not findings — one secret breaking three
+rules is one Critical, and the four tiles plus "passed" always add up to the number scanned.
 
 ## View Findings
 
