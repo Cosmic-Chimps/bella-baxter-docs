@@ -144,14 +144,34 @@ console marks it "no registered key".
 
 ## ZKE enforcement
 
-A tenant Owner can require a registered device for every secret read (**Settings → Encryption → ZKE
-enforcement**). With it on:
+A tenant Owner can require a registered device for every secret read **and for every credential the
+platform issues** (**Settings → Encryption → ZKE enforcement**). With it on:
 
-- a CLI or SDK presenting a **registered** device key reads normally;
+- a CLI or SDK presenting a **registered** device key reads and obtains credentials normally;
 - anything else — no key, a malformed key, an unregistered key, a revoked device, or a device whose
   owner has left the tenant — is refused with `403` and told to run `bella auth setup`;
 - the console is exempt (a browser session holds no device key);
 - an assistant connected over MCP reads only through an API key with a registered public key.
+
+### What "credential" covers
+
+Three classes, governed identically on every surface — the console, the CLI, the SDKs and the
+assistant:
+
+| Credential | Obtained by |
+|---|---|
+| **second-factor code** | `getTotpCode`, `get_totp_code` |
+| **SSH certificate** | `signSshKey`, `sign_ssh_key`, `bella ssh sign` |
+| **access token** | `issueEnvironmentToken`, `bella_issue_token` |
+
+**Creating** an access key is not in this set. It is an administrative act gated by its own
+permissions, and it is the act through which a machine's device key is first recorded — requiring a
+device to register a device would lock every new machine out permanently.
+
+> **Migration note.** With enforcement on, `bella ssh sign` and `bella ssh connect` stop working from a
+> machine that has no registered device. Run `bella auth setup` on the machines that need them. An
+> access key created without a recorded public key is likewise refused for credentials — as it already
+> was for secret reads.
 
 Before enabling it, the console shows how many members and API keys would be locked out.
 
