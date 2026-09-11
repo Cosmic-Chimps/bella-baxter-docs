@@ -465,6 +465,39 @@ bella issue --scope stripe --ttl 30         # 30-minute token
 TOKEN=$(bella issue --scope stripe)         # capture token
 ```
 
+### When your tenant requires registered devices
+
+If ZKE enforcement is on, a token has to say **which machine** will use it, or the reads it was issued
+for are refused. Give the machine a keypair and hand `bella issue` the **public** half:
+
+```sh
+# on the runner, or anywhere — generate a pair and issue in one step
+bella issue --scope stripe --generate-device-key --output json
+
+# or supply a key the machine already has
+bella issue --scope stripe --public-key "$RUNNER_PUBLIC_KEY"
+bella issue --scope stripe --device-key-file ./runner.pub
+```
+
+`--generate-device-key` prints the **private** half once. Put it in your CI secret store and give it to
+the job as an environment variable or a mounted file.
+
+::: warning Do not save the private key beside the CLI's own credentials
+`~/.config/bella-cli` is protected by owner-only file permissions on the assumption it sits on a
+personal, disk-encrypted machine. A CI runner is usually neither: its filesystem often outlives the
+job and is shared between jobs. The private half belongs in your pipeline's secret storage.
+:::
+
+Two things that surprise people, both intentional:
+
+- **You must issue from a machine that is itself registered.** Asking for a token is handing out a
+  credential, so it is governed by the same rule. Run `bella auth setup` on your own machine first.
+- **A pipeline cannot issue its own first token.** Someone with a registered device issues it. There is
+  deliberately no way to bootstrap from an unregistered machine — that exemption would be a hole in the
+  control this feature exists to satisfy.
+
+Without enforcement, none of the above applies and `bella issue --scope …` behaves exactly as before.
+
 A scoped token only reads secrets **tagged with one of its scopes**, so the tags have to exist first.
 Tag them as you write them:
 
