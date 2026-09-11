@@ -2,6 +2,19 @@
 
 Every secret fetched through a Bella Baxter SDK is **encrypted end-to-end** between the server and your application — not just protected by TLS. Zero-Knowledge Encryption (ZKE) extends this with a persistent device key for stronger audit trails and DEK lease caching.
 
+::: warning What "zero-knowledge" does and does not mean here
+**Bella can read your secret values.** The server decrypts them to serve a request, and it is the
+server that wraps the environment key.
+
+What ZKE gives you is **device identity**: which machine read which secret, an audit trail that names
+it, and the ability to withdraw one machine without rotating anything else. It is *not* a claim that
+the platform is unable to read your secrets.
+
+If you need that stronger property — encryption the server genuinely cannot reverse — it is separate
+work and not what this page describes. This also appears at the end of the page; it is repeated here
+because it belongs *before* you decide, not after.
+:::
+
 ---
 
 ## Why E2EE on Top of TLS?
