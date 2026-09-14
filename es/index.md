@@ -56,7 +56,7 @@ Las herramientas existentes de gestión de secretos bloquean las funciones que r
 
 Bella Baxter fue construida diferente:
 
-- **Proyectos y entornos ilimitados** — sin límites artificiales
+- **Proyectos y ambientes ilimitados** — sin límites artificiales
 - **Tu propia infraestructura** — conecta Vault, AWS, Azure o GCP. Tú eres dueño de tus datos.
 - **Gratis para comenzar** — 2,000 peticiones API por mes incluidas, sin tarjeta de crédito
 - **Auto-alojable** — ejecútalo tú mismo con Docker o .NET Aspire, siempre gratis bajo ELv2

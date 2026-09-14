@@ -45,10 +45,10 @@ Un **Proyecto** es una agrupación lógica de secretos, generalmente correspondi
 
 Los proyectos se asignan a uno o más Proveedores. Los secretos de un proyecto se almacenan en esos proveedores.
 
-### Entorno
+### Ambiente
 
-Un **Entorno** es una parte de un proyecto para una etapa de despliegue: `dev`, `staging`, `production`, etc. Cada entorno:
-- Tiene su propio conjunto de secretos (aislado de otros entornos)
+Un **Ambiente** es una parte de un proyecto para una etapa de despliegue: `dev`, `staging`, `production`, etc. Cada ambiente:
+- Tiene su propio conjunto de secretos (aislado de otros ambientes)
 - Puede ser asignado a un subconjunto de los proveedores del proyecto
 - Puede tener su propia lista de acceso de miembros
 
@@ -60,7 +60,7 @@ Un **Secreto** es un par clave-valor almacenado en un proveedor. Bella Baxter nu
 
 ### Clave API
 
-Una **Clave API** (`bax-...`) es una credencial de máquina de larga duración, con ámbito limitado a un proyecto+entorno. Úsala en pipelines de CI/CD, servidores y clientes SDK.
+Una **Clave API** (`bax-...`) es una credencial de máquina de larga duración, con ámbito limitado a un proyecto+ambiente. Úsala en pipelines de CI/CD, servidores y clientes SDK.
 
 ### Trust Domain (Dominio de Confianza)
 
@@ -76,19 +76,19 @@ Tenant
  └── Proyectos
       └── Proveedores (asignados a este proyecto)
       └── Miembros (con roles)
-      └── Entornos (dev, staging, production…)
+      └── Ambientes (dev, staging, production…)
            └── Proveedores (subconjunto de proveedores del proyecto)
-           └── Miembros (acceso opcional por entorno)
-           └── Secretos (almacenados en el proveedor del entorno)
+           └── Miembros (acceso opcional por ambiente)
+           └── Secretos (almacenados en el proveedor del ambiente)
 ```
 
 ---
 
 ## Cómo Funciona `bella pull`
 
-1. La CLI lee tu contexto (proyecto + entorno desde el archivo `.bella` o `BELLA_BAXTER_API_KEY`)
+1. La CLI lee tu contexto (proyecto + ambiente desde el archivo `.bella` o `BELLA_BAXTER_API_KEY`)
 2. Envía una solicitud a la API de Bella Baxter
-3. La API resuelve el proveedor para tu entorno
+3. La API resuelve el proveedor para tu ambiente
 4. La API obtiene secretos del proveedor externo (Vault, AWS…)
 5. Los secretos son devueltos a la CLI
 6. La CLI los escribe en `.env` o los inyecta en un proceso hijo
