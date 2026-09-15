@@ -7,9 +7,16 @@ Bella Baxter manages secrets as key-value pairs stored in your external provider
 ::: code-group
 
 ```sh [CLI]
-bella secrets set DATABASE_URL "postgres://user:pass@host/db"
-bella secrets set DATABASE_URL  # prompts for value (keeps it off shell history)
+bella secrets set DATABASE_URL                      # prompts; keeps the value off your shell history
+printf %s "$DATABASE_URL" | bella secrets set DATABASE_URL --stdin   # scripts and CI
+bella secrets set GCP_SA_KEY --from-file sa.json    # a file, bytes as-is
+bella secrets set DATABASE_URL "postgres://user:pass@host/db"        # convenient, but see the warning
 ```
+
+> **Do not pass a value as an argument in automation.** It is visible in `ps` while the command runs,
+> it lands in shell history, and any CI runner that echoes the command it ran will log it. Use
+> `--stdin` or `--from-file`. Use `printf %s` rather than `echo`, which appends a newline that
+> becomes part of the value.
 
 ```http [API]
 POST /api/v1/environments/{envId}/providers/{providerId}/secrets

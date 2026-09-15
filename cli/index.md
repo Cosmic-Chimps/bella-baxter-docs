@@ -393,7 +393,7 @@ bella providers list/get/create/delete
 
 bella secrets list            List secret keys (values masked)
 bella secrets get             Download all secrets as .env / JSON
-bella secrets set <key>       Create or update a secret (--scope, --tag, --type, --ignore-in-scan)
+bella secrets set <key>       Create or update a secret (--stdin, --from-file, --scope, --tag, --type)
 bella secrets delete <key>    Delete a secret
 bella secrets push            Push from a .env file
 bella secrets drift           Cross-environment key presence matrix (CI gate)
@@ -507,6 +507,21 @@ bella secrets set STRIPE_KEY sk_live_… --scope stripe --scope payment   # two 
 bella secrets set NOTE "…" --tag owner=platform                  # any other tag: KEY=VALUE
 bella secrets set BLOB "…" --type Json --ignore-in-scan true     # declared type / scanner opt-out
 ```
+
+### Setting a value without leaking it
+
+A value passed as an argument is visible in `ps` and lands in shell history, so automation should
+pipe it instead:
+
+```sh
+printf %s "$STRIPE_KEY" | bella secrets set STRIPE_KEY --stdin   # the CI pattern
+bella secrets set GCP_SA_KEY --from-file sa.json                 # multi-line values
+bella secrets set STRIPE_KEY                                     # interactive: prompts, no echo
+```
+
+`--from-file` stores the file's bytes as they are, **including a trailing newline** — which is what
+a PEM needs. Prefer `printf %s` over `echo` when piping, since `echo` appends a newline that would
+become part of the value. Supplying more than one of these at once is refused rather than ranked.
 
 Repeat `--scope` per scope; a scope may not contain whitespace, because scopes are stored
 space-separated in a single tag and a space would silently split one scope into two.
