@@ -40,6 +40,37 @@ Or from the WebApp: **Project → Settings → Webhooks → Add Webhook**
 | `secret.rotation.failed` | A rotation attempt failed (error details in `metadata.errorMessage`) |
 | `secret.expiry.warning` | A secret is expiring within the configured warning window (days in `metadata.daysUntilExpiry`) |
 | `secret.expired` | A secret has passed its expiry date |
+| `certificate.rotation.succeeded` | A certificate rotation completed — every eligible host is serving the new certificate |
+| `certificate.rotation.partial` | Some hosts are serving the new certificate and some are not; the target needs attention |
+| `certificate.rotation.failed` | A rotation failed. The previous certificate is untouched and still being served |
+| `certificate.rotation.missed` | A scheduled rotation came due but could not start (reason in `metadata.missedReason`) |
+
+### Certificate rotation payloads
+
+One event per **rotation**, never per host or per certificate — a bulk appliance run over fifty
+certificates is a single event carrying counts. Per-certificate detail stays in the rotation history
+and the rotation report.
+
+`metadata` carries: `outcome`, `targetId`, `rotationId` (absent for `.missed`), `primaryDomain`,
+`sanList`, `trigger`, `occurredAt`; `hostsSucceeded`/`hostsFailed` for multi-host targets;
+`certificatesEvaluated`/`certificatesDeployed`/`certificatesUnchanged`/`certificatesFailed` for bulk
+appliance runs; `failureCategory` and `failureDetail` on failure; `missedReason` and
+`occurrenceDueAt` for a missed occurrence; `notAfter` (the new expiry) on success.
+
+Payloads are metadata only. They never contain certificate material, private keys, passphrases,
+secret values or vault paths.
+
+> **Retired in 2026-09.** `cert_rotation.completed` and `cert_rotation.failed` appeared in the
+> subscription picker between 2026-05-03 and 2026-09-15 but were never emitted by any part of the
+> product — a subscription naming either has always received nothing. They have been removed from the
+> picker. Existing subscriptions that name them remain valid and continue to receive nothing;
+> subscribe to the `certificate.rotation.*` types above instead.
+
+> **If you stream business events to a SIEM.** An audit-stream destination with the business-event
+> mirror enabled will now receive these four types **in addition to** the certificate rotation audit
+> rows it already receives. The two describe the same rotation from different angles: an audit row is
+> per host / per certificate, a business event is per rotation. No existing envelope changes; this is
+> new volume on an existing feed, so rules that count events may need adjusting.
 
 ---
 

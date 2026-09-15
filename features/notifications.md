@@ -74,6 +74,28 @@ The same event types as [Webhooks](/features/webhooks#event-types) are supported
 | `secret.rotation.failed` | A rotation attempt failed |
 | `secret.expiry.warning` | A secret is approaching its expiry date (N days remaining) |
 | `secret.expired` | A secret has passed its expiry date and should be rotated or updated |
+| `certificate.rotation.succeeded` | A certificate rotation completed — every eligible host is serving the new certificate |
+| `certificate.rotation.partial` | Some hosts are serving the new certificate and some are not |
+| `certificate.rotation.failed` | A rotation failed. The previous certificate is untouched and still being served |
+| `certificate.rotation.missed` | A scheduled rotation came due but could not start |
+
+### Certificate rotation messages
+
+A channel subscribed to these receives one message per **rotation** naming the domain, the
+project/environment, the outcome and the host or certificate counts — not one message per host, and
+not one per certificate in a bulk appliance run. Failure messages name the failure category; a missed
+occurrence says why the rotation could not start.
+
+Messages are metadata only: no certificate material, private keys, passphrases or secret values.
+
+> **Retired in 2026-09.** `cert_rotation.completed` and `cert_rotation.failed` were offered by the
+> channel picker between 2026-05-03 and 2026-09-15 but were never emitted — a channel subscribed to
+> either has always received nothing. Subscribe to the `certificate.rotation.*` types above instead.
+
+> **If you stream business events to a SIEM.** An audit-stream destination with the business-event
+> mirror enabled will now also receive these four types alongside the certificate rotation audit rows
+> it already receives — the same rotation seen per-rotation rather than per-host. New volume on an
+> existing feed; no existing envelope changes.
 
 ## Test a Channel
 
