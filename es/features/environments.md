@@ -1,4 +1,4 @@
-# Ambientes
+# Entornos
 
 > 🌐 **English version**: [Environments](/features/environments)
 

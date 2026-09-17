@@ -32,7 +32,7 @@ features:
     details: SDKs oficiales para JavaScript/TypeScript, .NET, Python, Go, Ruby, PHP, Swift, Java, Dart y Ansible. Todos con generación de código de secretos tipados.
   - icon: 🔑
     title: Autenticación Sin Credenciales
-    details: GitHub Actions, Kubernetes y cualquier carga de trabajo compatible con OIDC pueden autenticarse sin claves API estáticas. Los trust domains verifican la identidad automáticamente.
+    details: GitHub Actions, Kubernetes y cualquier carga de trabajo compatible con OIDC pueden autenticarse sin API keys estáticas. Los trust domains verifican la identidad automáticamente.
   - icon: 🛡️
     title: Autoridad de Certificados SSH
     details: Emite certificados SSH de corta duración en lugar de distribuir claves estáticas. Se integra con tu instancia de Vault. Los desarrolladores firman con bella ssh sign.
@@ -56,7 +56,7 @@ Las herramientas existentes de gestión de secretos bloquean las funciones que r
 
 Bella Baxter fue construida diferente:
 
-- **Proyectos y ambientes ilimitados** — sin límites artificiales
+- **Proyectos y entornos ilimitados** — sin límites artificiales
 - **Tu propia infraestructura** — conecta Vault, AWS, Azure o GCP. Tú eres dueño de tus datos.
 - **Gratis para comenzar** — 2,000 peticiones API por mes incluidas, sin tarjeta de crédito
 - **Auto-alojable** — ejecútalo tú mismo con Docker o .NET Aspire, siempre gratis bajo ELv2

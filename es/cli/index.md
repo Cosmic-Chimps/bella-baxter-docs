@@ -4,7 +4,7 @@
 
 La traducción completa de la referencia CLI está en progreso. Mientras tanto, consulta la versión en inglés.
 
-La CLI de Bella Baxter proporciona todos los comandos necesarios para gestionar secretos, proyectos, ambientes y más desde tu terminal.
+La CLI de Bella Baxter proporciona todos los comandos necesarios para gestionar secretos, proyectos, entornos y más desde tu terminal.
 
 ## Instalación
 
@@ -24,7 +24,7 @@ curl -sSfL https://raw.githubusercontent.com/cosmic-chimps/bella-baxter-cli/main
 | `bella pull` | Escribir secretos en `.env` |
 | `bella run -- <cmd>` | Ejecutar proceso con secretos inyectados |
 | `bella exec -- <cmd>` | Similar a run (sin gestión de ciclo de vida) |
-| `bella secrets drift` | Matriz de presencia de claves entre ambientes (CI gate) |
+| `bella secrets drift` | Matriz de presencia de claves entre entornos (CI gate) |
 | `bella secrets scan` | Escanear código fuente en busca de referencias a claves de secretos (CI gate) |
 | `bella usage` | Ver uso de API y estado de facturación del mes actual |
 | `bella context use <project/env>` | Cambiar contexto activo |

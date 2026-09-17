@@ -10,7 +10,7 @@ Bella Baxter expone un servidor [MCP (Model Context Protocol)](https://modelcont
 
 | Método | Cómo | Ideal para |
 |--------|------|-----------|
-| **API key en la config** (recomendado) | Variable de ambiente `BELLA_BAXTER_API_KEY` | Claude Desktop, VS Code, Cursor — sin `bella login` previo |
+| **API key en la config** (recomendado) | Variable de entorno `BELLA_BAXTER_API_KEY` | Claude Desktop, VS Code, Cursor — sin `bella login` previo |
 | **API key guardada** | `bella login --api-key bax-...` una vez | Máquinas de desarrollo compartidas |
 | **Sesión OAuth** | `bella login` (navegador) | Cuentas personales interactivas |
 
@@ -26,7 +26,7 @@ Obtén una API key desde **WebApp → Proyecto → Ajustes → API Keys → Crea
 bella mcp --print-config
 ```
 
-Muestra la configuración lista para pegar en Claude Desktop, VS Code o cualquier host compatible con MCP, con la variable de ambiente de API key ya incluida.
+Muestra la configuración lista para pegar en Claude Desktop, VS Code o cualquier host compatible con MCP, con la variable de entorno de API key ya incluida.
 
 ### 2. Configurar tu host de IA
 
@@ -105,8 +105,8 @@ Cuando `BELLA_BAXTER_API_KEY` está configurada, `bella mcp` arranca directament
 | Herramienta | Descripción |
 |-------------|-------------|
 | `list_projects` | Lista los proyectos a los que tienes acceso |
-| `list_environments` | Lista los ambientes de un proyecto |
-| `list_providers` | Lista los proveedores de secretos de un ambiente |
+| `list_environments` | Lista los entornos de un proyecto |
+| `list_providers` | Lista los proveedores de secretos de un entorno |
 | `list_secret_keys` | Lista los nombres de las claves (valores nunca expuestos) |
 | `get_secret` | Obtiene el valor de un secreto específico |
 | `set_secret` | Crea o actualiza un secreto |
@@ -121,9 +121,9 @@ Cuando `BELLA_BAXTER_API_KEY` está configurada, `bella mcp` arranca directament
 
 Una vez configurada Bella como servidor MCP, puedes pedirle a tu IA:
 
-> "Rota la API key de Stripe en el ambiente de producción y actualiza el webhook signing secret."
+> "Rota la API key de Stripe en el entorno de producción y actualiza el webhook signing secret."
 
-> "Comprueba qué secretos hay en el ambiente staging de my-api y compáralos con producción."
+> "Comprueba qué secretos hay en el entorno staging de my-api y compáralos con producción."
 
 > "Firma mi clave SSH con el rol `ops` para que pueda acceder al servidor de despliegue."
 
@@ -135,7 +135,7 @@ Una vez configurada Bella como servidor MCP, puedes pedirle a tu IA:
 - **RBAC aplicado** — si no puedes acceder a un secreto desde la CLI, la IA tampoco puede
 - **Valores nunca en el contexto del prompt** — `list_secret_keys` lista solo los nombres, sin valores. `get_secret` obtiene un único valor cuando se solicita explícitamente
 - **Tokens con alcance para agentes** — `bella_issue_token` permite al agente emitir una credencial efímera para una subtarea, sin necesidad de tu API key completa
-- **Scope de la API key** — crea una API key dedicada para cada host de IA, con acceso solo a los ambientes necesarios
+- **Scope de la API key** — crea una API key dedicada para cada host de IA, con acceso solo a los entornos necesarios
 
 ## Agentes de IA en CI/CD (sin credenciales)
 

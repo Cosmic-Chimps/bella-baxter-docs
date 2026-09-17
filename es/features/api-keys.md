@@ -1,4 +1,4 @@
-# Claves API
+# API keys
 
 > 🌐 **English version**: [API Keys](/features/api-keys)
 

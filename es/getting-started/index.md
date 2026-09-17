@@ -32,15 +32,15 @@ Esto abre tu navegador para la autenticación segura a través del proveedor de 
 
 ## 3. Seleccionar tu Contexto
 
-Ejecuta la configuración interactiva en el directorio de tu proyecto para elegir un proyecto y ambiente:
+Ejecuta la configuración interactiva en el directorio de tu proyecto para elegir un proyecto y entorno:
 
 ```sh
 bella context init
 ```
 
-Esto crea un archivo `.bella` que fija el proyecto/ambiente para ese directorio. También puedes usar el atajo `bella init`.
+Esto crea un archivo `.bella` que fija el proyecto/entorno para ese directorio. También puedes usar el atajo `bella init`.
 
-O establece el contexto de forma no interactiva usando una clave API:
+O establece el contexto de forma no interactiva usando una API key:
 
 ```sh
 export BELLA_BAXTER_URL=https://tu-instancia.bella-baxter.io
@@ -62,7 +62,7 @@ bella exec -- python manage.py runserver
 
 ## ¿Qué sigue?
 
-- [Conceptos Clave](/es/getting-started/concepts) — entiende proyectos, ambientes, proveedores y secretos
+- [Conceptos Clave](/es/getting-started/concepts) — entiende proyectos, entornos, proveedores y secretos
 - [Referencia CLI](/es/cli/) — todos los comandos con ejemplos
 - [Documentación de SDKs](/es/sdks/) — usa secretos directamente en el código de tu aplicación
-- [Autenticación sin credenciales](/features/keyless) — sin claves API para CI/CD
+- [Autenticación sin credenciales](/features/keyless) — sin API keys para CI/CD
