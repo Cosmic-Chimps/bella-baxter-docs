@@ -26,17 +26,29 @@ GitHub Actions job starts
 
 ### 1. Create a Trust Domain (admin, once)
 
-From WebApp: **Settings → Trust Domains → New Trust Domain**
+From the console: **Environment → Trust Domains → New Trust Domain**.
+
+Or over the API — this is the only scripted route; there is no `bella` command for it:
 
 ```sh
-bella trust-domains create \
-  --name "GitHub Actions CI" \
-  --provider GitHub \
-  --repository "myorg/my-repo" \
-  --branch "main" \
-  --project my-api \
-  --environment production
+curl -X POST "$BELLA_URL/api/v1/environments/$ENVIRONMENT_ID/trust-domains" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "GitHub Actions CI",
+    "oidcIssuerUrl": "https://token.actions.githubusercontent.com",
+    "claimRules": [
+      { "claim": "repository", "operator": "Equals", "value": "myorg/my-repo" },
+      { "claim": "ref", "operator": "Equals", "value": "refs/heads/main" }
+    ],
+    "issuedTokenTtlMinutes": 15,
+    "grantedRole": "Consumer"
+  }'
 ```
+
+The trust domain belongs to the environment in the URL, so the project and environment the issued key
+is scoped to come from `$ENVIRONMENT_ID` rather than from flags. `operator` is one of `Equals`,
+`StartsWith` or `Contains`.
 
 ### 2. Use in a Workflow (no credentials needed)
 
@@ -60,14 +72,20 @@ Or use the [GitHub Actions integration](/integrations/github-actions) directly.
 
 ### 1. Create a Trust Domain
 
+Console, or the same endpoint with your cluster's issuer:
+
 ```sh
-bella trust-domains create \
-  --name "K8s Production" \
-  --provider Kubernetes \
-  --cluster-url https://k8s.example.com \
-  --service-account my-namespace/my-app \
-  --project my-api \
-  --environment production
+curl -X POST "$BELLA_URL/api/v1/environments/$ENVIRONMENT_ID/trust-domains" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "K8s Production",
+    "oidcIssuerUrl": "https://k8s.example.com",
+    "claimRules": [
+      { "claim": "sub", "operator": "Equals",
+        "value": "system:serviceaccount:my-namespace:my-app" }
+    ]
+  }'
 ```
 
 ### 2. Use in a Pod
@@ -86,14 +104,16 @@ spec:
 For any OIDC-capable platform (GitLab CI, CircleCI, etc.):
 
 ```sh
-bella trust-domains create \
-  --name "GitLab CI" \
-  --provider OIDC \
-  --issuer https://gitlab.com \
-  --audience https://your-bella.example.com \
-  --claim-rules '{"project_path": "mygroup/myrepo"}' \
-  --project my-api \
-  --environment production
+curl -X POST "$BELLA_URL/api/v1/environments/$ENVIRONMENT_ID/trust-domains" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "GitLab CI",
+    "oidcIssuerUrl": "https://gitlab.com",
+    "claimRules": [
+      { "claim": "project_path", "operator": "Equals", "value": "mygroup/myrepo" }
+    ]
+  }'
 ```
 
 ## Token Exchange API
