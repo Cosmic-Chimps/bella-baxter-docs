@@ -5,9 +5,15 @@ The `jjchiw.bella_baxter` Ansible collection provides lookup plugins and modules
 ## Installation
 
 ```sh
-pip install bella-baxter
+pip install --pre bella-baxter
 ansible-galaxy collection install jjchiw.bella_baxter
 ```
+
+> **Why `--pre`.** The SDK ships as `0.1.1-preview.N`, which PEP 440 normalises to `0.1.1rcN` — a
+> pre-release. `pip` skips pre-releases unless asked, so omitting `--pre` resolves *no version at
+> all* rather than installing an older one. Every release on PyPI is
+> currently a pre-release, so `--pre` is the contract until a stable `0.1.x` ships. (npm is
+> unaffected: its `latest` dist-tag points at the preview and `npm install` honours it regardless.)
 
 **Requirements:** Ansible 2.14+, Python 3.9+.
 
