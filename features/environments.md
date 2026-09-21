@@ -100,7 +100,7 @@ The `.bella` file is directory-scoped (like `.git`). The CLI walks up the direct
 # With a .bella file present — no flags needed
 bella secrets list
 bella run -- npm start
-bella exec -- ./deploy.sh
+bella sdk run -- ./deploy.sh
 ```
 
 To switch environments temporarily without editing the file, use a session context:

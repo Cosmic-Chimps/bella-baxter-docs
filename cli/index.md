@@ -40,7 +40,7 @@ The token encodes no project/environment — you need a `.bella` file or `-p`/`-
 
 ```sh
 # Store locally
-bella login --api-key bax-...
+bella login
 
 # Or set as environment variable (recommended for AI host configs)
 export BELLA_BAXTER_API_KEY=bax-...
@@ -104,8 +104,8 @@ When connecting to the API, the CLI selects credentials in this order (first mat
 
 1. `BELLA_BAXTER_API_KEY` env var
 2. `BELLA_BAXTER_ACCESS_TOKEN` env var (injected into subprocesses by `bella sdk run`)
-3. Stored API key (saved with `bella login --api-key`)
-4. Stored OAuth token (saved with `bella login`)
+3. Stored API key (saved by `bella login` when you choose the API-key option)
+4. Stored OAuth token (saved by `bella login` when you sign in through the browser)
 
 ### Context Resolution Order
 
@@ -189,7 +189,7 @@ bella sdk run -p myapp -e production -- ./start.sh
 **What `bella sdk run` does under the hood:**
 
 1. **Resolves credentials** — picks the best available auth method in priority order:
-   - Stored API key (`bella login --api-key`)
+   - Stored API key (`bella login`)
    - Workload identity (auto-detected in CI/CD environments — GitHub Actions, Google Cloud, Azure, etc.) — exchanges the platform token for a short-lived Bella token
    - Stored OAuth JWT (`bella login`) — refreshes if expired; resolves project + environment from flags, env vars, or the `.bella` file
 
@@ -204,8 +204,8 @@ bella sdk run -p myapp -e production -- ./start.sh
 5. **Spawns the subprocess** and returns its exit code — the child process has everything it needs; `bella sdk run` itself makes no secret API calls.
 
 ::: tip Why not `bella exec`?
-`bella exec` still works as an alias. `bella sdk run` is the recommended name — it makes clear that
-the child process must have a Bella SDK installed.
+`bella exec` still works as a deprecated alias and prints a notice. `bella sdk run` is the
+recommended name — it makes clear that the child process must have a Bella SDK installed.
 :::
 
 | | `bella run` | `bella sdk run` |
@@ -410,7 +410,7 @@ bella issue --scope <names>   Issue short-lived scoped token
 bella run -- <cmd>            Inject secrets, run command
 bella run --watch -- <cmd>    Auto-restart on secret changes
 bella sdk run -- <cmd>        Inject credentials only (SDK fetches inside app, enables ZKE)
-bella exec -- <cmd>           Alias for bella sdk run
+bella exec -- <cmd>           Deprecated alias for bella sdk run
 
 bella usage                   Show API usage and billing status
 bella usage --json            Machine-readable JSON output

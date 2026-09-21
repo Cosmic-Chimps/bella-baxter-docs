@@ -55,7 +55,7 @@ bella pull
 
 # Or inject into a running process — no file written
 bella run -- npm start
-bella exec -- python manage.py runserver
+bella sdk run -- python manage.py runserver
 ```
 
 That's it. Your application receives the secrets as environment variables.

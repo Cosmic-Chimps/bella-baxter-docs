@@ -23,7 +23,7 @@ curl -sSfL https://raw.githubusercontent.com/cosmic-chimps/bella-baxter-cli/main
 | `bella org switch <slug>` | Cambiar de organización |
 | `bella pull` | Escribir secretos en `.env` |
 | `bella run -- <cmd>` | Ejecutar proceso con secretos inyectados |
-| `bella exec -- <cmd>` | Similar a run (sin gestión de ciclo de vida) |
+| `bella sdk run -- <cmd>` | Similar a run (sin gestión de ciclo de vida) |
 | `bella secrets drift` | Matriz de presencia de claves entre entornos (CI gate) |
 | `bella secrets scan` | Escanear código fuente en busca de referencias a claves de secretos (CI gate) |
 | `bella usage` | Ver uso de API y estado de facturación del mes actual |

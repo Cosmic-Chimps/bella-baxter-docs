@@ -58,15 +58,15 @@ builder.Configuration.AddBellaSecrets();
 
 → [Full ASP.NET Core sample](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dotnet/samples/03-aspnet)
 
-## `bella exec` (Zero-Config)
+## `bella sdk run` (Zero-Config)
 
 The simplest approach — no code changes at all:
 
 ```sh
-bella exec -- dotnet run
+bella sdk run -- dotnet run
 ```
 
-`bella exec` injects `BELLA_BAXTER_URL`, `BELLA_BAXTER_API_KEY`, and all your secrets directly into the process environment. `AddBellaSecrets()` auto-reads the injected env vars.
+`bella sdk run` injects `BELLA_BAXTER_URL`, `BELLA_BAXTER_API_KEY`, and all your secrets directly into the process environment. `AddBellaSecrets()` auto-reads the injected env vars.
 
 ## .NET Aspire Integration
 
@@ -157,7 +157,7 @@ Generates a strongly-typed `AppSecrets` record. Full IDE autocomplete, no magic 
 | Sample | Pattern | Link |
 |--------|---------|------|
 | `01-dotenv-file` | `bella pull` → read `.env` | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dotnet/samples/01-dotenv-file) |
-| `02-process-inject` | `bella exec -- dotnet run` | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dotnet/samples/02-process-inject) |
+| `02-process-inject` | `bella sdk run -- dotnet run` | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dotnet/samples/02-process-inject) |
 | `03-aspnet` | `AddBellaSecrets()` in ASP.NET Core | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dotnet/samples/03-aspnet) |
 | `04-aspire` | Aspire + external Bella instance | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dotnet/samples/04-aspire) |
 | `05-aspire-selfhosted` | Aspire + self-hosted Bella stack | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dotnet/samples/05-aspire-selfhosted) |

@@ -36,7 +36,7 @@ Append `?url=https://your-instance.bella-baxter.io/openapi.json` to this page UR
 ::: info Authentication
 All API endpoints require either:
 - **Bearer token** — `Authorization: Bearer <jwt>` (from `bella login`)
-- **HMAC API Key** — `Authorization: BaxterHmac ...` (from `bella login --api-key`)
+- **HMAC API Key** — `Authorization: BaxterHmac ...` (from `bella login`)
 
 Use the **Authorize** button in the Scalar UI to set your credentials.
 :::

@@ -5,7 +5,7 @@ Official Bella Baxter SDKs for every major platform. Each SDK provides:
 - HMAC-signed requests with automatic retry
 - **End-to-end encrypted transport** (E2EE) — secrets are encrypted between server and SDK before TLS
 - **Zero-Knowledge Encryption (ZKE)** — optional persistent device key for audit trails and DEK caching
-- `bella exec` / `bella run` compatibility (no SDK required for basic use)
+- `bella sdk run` / `bella run` compatibility (no SDK required for basic use)
 - Typed secret code generation via `bella secrets generate <lang>`
 - `User-Agent: bella-{lang}-sdk/1.0` on every request (visible in your audit log)
 
@@ -59,8 +59,8 @@ bella pull
 
 # Inject into any process
 bella run -- npm start
-bella exec -- python manage.py runserver
-bella exec -- java -jar app.jar
+bella sdk run -- python manage.py runserver
+bella sdk run -- java -jar app.jar
 ```
 
 Use an SDK when you want **programmatic access** to secrets inside your application code (e.g., custom loading logic, typed access, framework startup hooks).

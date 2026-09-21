@@ -152,16 +152,16 @@ GET /api/v1/projects/{projectRef}/environments/{envSlug}/providers/{providerSlug
 
 Returns the list of role names configured in OpenBao's database engine mount.
 
-### `bella exec` — inject ephemeral credentials into a subprocess
+### `bella sdk run` — inject ephemeral credentials into a subprocess
 
 The primary CLI integration for ephemeral database credentials:
 
 ```sh
 # Run database migrations with short-lived credentials
-bella exec --provider pg-prod -- npx prisma migrate deploy
+bella sdk run --provider pg-prod -- npx prisma migrate deploy
 
 # Run tests with their own ephemeral credentials (no shared test DB user)
-bella exec --provider pg-dev -- pytest tests/
+bella sdk run --provider pg-dev -- pytest tests/
 
 # The subprocess environment receives:
 # DB_USERNAME=v-approle-...
@@ -169,7 +169,7 @@ bella exec --provider pg-dev -- pytest tests/
 # DATABASE_URL=postgres://v-approle-...:A1B2-...@db:5432/myapp
 ```
 
-Credentials are generated just-in-time when `bella exec` starts and expire after the TTL.
+Credentials are generated just-in-time when `bella sdk run` starts and expire after the TTL.
 They are never written to disk.
 
 ### Security characteristics

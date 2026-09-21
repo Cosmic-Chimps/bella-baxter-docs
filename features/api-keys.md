@@ -28,7 +28,7 @@ export BELLA_BAXTER_URL=https://your-instance.bella-baxter.io
 export BELLA_BAXTER_API_KEY=bax-...
 
 # Or use with bella CLI
-bella login --api-key bax-...
+bella login
 bella run -- ./deploy.sh
 ```
 

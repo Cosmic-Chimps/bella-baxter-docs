@@ -16,9 +16,11 @@ jobs:
         with:
           bella-url: ${{ vars.BELLA_BAXTER_URL }}
 
-      - run: bella login --api-key ${{ secrets.BELLA_BAXTER_API_KEY }}
-
-      - run: bella exec -p my-api -e production -- ./deploy.sh
+      # The CLI reads BELLA_BAXTER_API_KEY from the environment. A key passed as a command
+      # argument is visible in the runner's process list and in its command log (#833).
+      - run: bella sdk run -p my-api -e production -- ./deploy.sh
+        env:
+          BELLA_BAXTER_API_KEY: ${{ secrets.BELLA_BAXTER_API_KEY }}
         # DATABASE_URL, STRIPE_KEY, etc. are injected as env vars
 ```
 
@@ -39,7 +41,7 @@ Bella runs at all. Check
 
 ### Keyless instead of a stored key
 
-Every example below authenticates with `bella login --api-key`, which means a long-lived credential in
+Every example below authenticates with `bella login`, which means a long-lived credential in
 your repository secrets. If you would rather not have one, `oidc: 'true'` replaces both the secret and
 the login step:
 
@@ -78,7 +80,11 @@ Store your API key as a GitHub Actions secret, then pass it to `bella login`:
   with:
     bella-url: ${{ vars.BELLA_BAXTER_URL }}
 
-- run: bella login --api-key ${{ secrets.BELLA_BAXTER_API_KEY }}
+# The CLI reads BELLA_BAXTER_API_KEY from the environment. A key passed as a command
+# argument is visible in the runner's process list and in its command log (#833).
+# Declare it as job or step env:
+#   env:
+#     BELLA_BAXTER_API_KEY: ${{ secrets.BELLA_BAXTER_API_KEY }}
 ```
 
 ### Option B: Keyless — Trust Domain (Recommended for CI/CD)
@@ -102,16 +108,18 @@ steps:
 
 ### Pattern 1 — Inject secrets as environment variables
 
-`bella exec` wraps your command and injects all secrets as environment variables. Nothing is written to disk.
+`bella sdk run` wraps your command and injects all secrets as environment variables. Nothing is written to disk.
 
 ```yaml
 - uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.109
   with:
     bella-url: ${{ vars.BELLA_BAXTER_URL }}
 
-- run: bella login --api-key ${{ secrets.BELLA_BAXTER_API_KEY }}
-
-- run: bella exec -p my-api -e production -- ./deploy.sh
+# The CLI reads BELLA_BAXTER_API_KEY from the environment. A key passed as a command
+# argument is visible in the runner's process list and in its command log (#833).
+- run: bella sdk run -p my-api -e production -- ./deploy.sh
+  env:
+    BELLA_BAXTER_API_KEY: ${{ secrets.BELLA_BAXTER_API_KEY }}
 ```
 
 ### Pattern 2 — Keyless (zero stored credentials)
@@ -143,9 +151,11 @@ Issue a short-lived SSH certificate via Bella's SSH CA for passwordless access t
   with:
     bella-url: ${{ vars.BELLA_BAXTER_URL }}
 
-- run: bella login --api-key ${{ secrets.BELLA_BAXTER_API_KEY }}
-
+# The CLI reads BELLA_BAXTER_API_KEY from the environment. A key passed as a command
+# argument is visible in the runner's process list and in its command log (#833).
 - run: bella ssh sign ~/.ssh/id_ed25519.pub --role deployer
+  env:
+    BELLA_BAXTER_API_KEY: ${{ secrets.BELLA_BAXTER_API_KEY }}
 
 - run: ssh -i ~/.ssh/id_ed25519-cert.pub deploy@prod ./deploy.sh
 ```
@@ -159,11 +169,13 @@ Issue a short-lived SSH certificate via Bella's SSH CA for passwordless access t
   with:
     bella-url: ${{ vars.BELLA_BAXTER_URL }}
 
-- run: bella login --api-key ${{ secrets.BELLA_BAXTER_API_KEY }}
-
-- run: |
+# The CLI reads BELLA_BAXTER_API_KEY from the environment. A key passed as a command
+# argument is visible in the runner's process list and in its command log (#833).
+- env:
+    BELLA_BAXTER_API_KEY: ${{ secrets.BELLA_BAXTER_API_KEY }}
+  run: |
     NEW_PASS=$(bella generate --length 32 --quiet)
-    bella secrets set DB_PASSWORD "$NEW_PASS" -p my-api -e production
+    printf %s "$NEW_PASS" | bella secrets set DB_PASSWORD --stdin -p my-api -e production
     # Then rotate the actual DB credential with the same value
 ```
 
@@ -180,9 +192,11 @@ steps:
     with:
       bella-url: ${{ vars.BELLA_BAXTER_URL }}
 
-  - run: bella login --api-key ${{ secrets.BELLA_BAXTER_API_KEY }}
-
-  - run: bella exec -p my-api -e ${{ matrix.environment }} -- ./deploy.sh
+  # The CLI reads BELLA_BAXTER_API_KEY from the environment. A key passed as a command
+  # argument is visible in the runner's process list and in its command log (#833).
+  - run: bella sdk run -p my-api -e ${{ matrix.environment }} -- ./deploy.sh
+    env:
+      BELLA_BAXTER_API_KEY: ${{ secrets.BELLA_BAXTER_API_KEY }}
 ```
 
 ## Pin a specific CLI version
@@ -214,4 +228,4 @@ Configure your MCP host to launch `bella mcp` — print the exact config snippet
 bella mcp --print-config
 ```
 
-For regular CI/CD pipelines, use `bella exec` or `bella run` directly — `bella mcp` is only needed for AI agent workflows.
+For regular CI/CD pipelines, use `bella sdk run` or `bella run` directly — `bella mcp` is only needed for AI agent workflows.

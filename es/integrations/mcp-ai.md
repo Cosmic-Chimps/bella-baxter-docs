@@ -11,7 +11,7 @@ Bella Baxter expone un servidor [MCP (Model Context Protocol)](https://modelcont
 | Método | Cómo | Ideal para |
 |--------|------|-----------|
 | **API key en la config** (recomendado) | Variable de entorno `BELLA_BAXTER_API_KEY` | Claude Desktop, VS Code, Cursor — sin `bella login` previo |
-| **API key guardada** | `bella login --api-key bax-...` una vez | Máquinas de desarrollo compartidas |
+| **API key guardada** | `bella login` una vez | Máquinas de desarrollo compartidas |
 | **Sesión OAuth** | `bella login` (navegador) | Cuentas personales interactivas |
 
 La opción de API key es la recomendada para configuraciones de hosts de IA: se configura una vez en el archivo y no es necesario ejecutar `bella login` de nuevo.

@@ -55,7 +55,7 @@ bella pull
 
 # O inyectar en un proceso en ejecución — sin archivo escrito
 bella run -- npm start
-bella exec -- python manage.py runserver
+bella sdk run -- python manage.py runserver
 ```
 
 ---

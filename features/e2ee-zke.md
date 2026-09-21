@@ -168,7 +168,7 @@ platform issues** (**Settings → Encryption → ZKE enforcement**). With it on:
 
 ### What "credential" covers
 
-Three classes, governed identically on every surface — the console, the CLI, the SDKs and the
+Five classes, governed identically on every surface — the console, the CLI, the SDKs and the
 assistant:
 
 | Credential | Obtained by |
@@ -176,6 +176,13 @@ assistant:
 | **second-factor code** | `getTotpCode`, `get_totp_code` |
 | **SSH certificate** | `signSshKey`, `sign_ssh_key`, `bella ssh sign` |
 | **access token** | `issueEnvironmentToken`, `bella_issue_token` |
+| **TLS certificate** | `issuePkiCertificate` |
+| **database credential** | `generateDynamicCredentials` |
+
+The last two joined the set after spec 039 shipped: both hand back live secret material — a private
+key, and a database password — and both were reachable from a machine that had never registered
+anything. Nothing about them was ever meant to be outside enforcement; they were missing from the
+declared inventory, which is why the guard tests passed over them.
 
 **Creating** an access key is not in this set. It is an administrative act gated by its own
 permissions, and it is the act through which a machine's device key is first recorded — requiring a

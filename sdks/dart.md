@@ -19,7 +19,7 @@ dart pub get
 ```dart
 import 'package:bella_baxter/bella_baxter.dart';
 
-// Recommended: read config from environment (injected by `bella exec`)
+// Recommended: read config from environment (injected by `bella sdk run`)
 final client = BellaClient.fromEnv();
 
 final secrets = await client.pullSecrets(
@@ -131,7 +131,7 @@ If `privateKey` is null the SDK falls back to ephemeral E2EE — fully backward-
 |--------|---------|-------------|
 | `baseUrl` | `https://api.bella-baxter.io` | Bella API base URL |
 | `apiKey` | — | `bax-...` consumer key (mutually exclusive with `accessToken`) |
-| `accessToken` | — | Short-lived JWT (injected by `bella exec` in SSO mode) |
+| `accessToken` | — | Short-lived JWT (injected by `bella sdk run` in SSO mode) |
 | `appClient` | `null` | Sent as `X-App-Client` header; falls back to `BELLA_BAXTER_APP_CLIENT` env var |
 | `connectTimeout` | `10s` | HTTP connection timeout |
 | `receiveTimeout` | `30s` | HTTP receive timeout |
@@ -151,7 +151,7 @@ Generates a typed `AppSecrets` class with final fields.
 | Sample | Pattern | Link |
 |--------|---------|------|
 | `01-dart-dotenv` | `bella pull` → dotenv Dart | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/samples/01-dart-dotenv) |
-| `02-process-inject` | `bella exec -- dart run main.dart` | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/samples/02-process-inject) |
+| `02-process-inject` | `bella sdk run -- dart run main.dart` | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/samples/02-process-inject) |
 | `03-dart-cli` | SDK in Dart CLI tool | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/samples/03-dart-cli) |
 | `04-dart-shelf` | SDK in Shelf server | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/samples/04-dart-shelf) |
 | `05-flutter-app` | SDK in Flutter app | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/samples/05-flutter-app) |
