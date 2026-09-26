@@ -7,11 +7,11 @@ Get your first secret in under 5 minutes.
 ::: code-group
 
 ```sh [Linux / macOS]
-curl -sSfL https://raw.githubusercontent.com/cosmic-chimps/bella-baxter-cli/main/scripts/install-bella.sh | bash
+curl -sSfL https://github.com/Cosmic-Chimps/bella-baxter-cli/releases/latest/download/install-bella.sh | bash
 ```
 
 ```powershell [Windows (PowerShell)]
-irm https://raw.githubusercontent.com/cosmic-chimps/bella-baxter-cli/main/scripts/install-bella.ps1 | iex
+irm https://github.com/Cosmic-Chimps/bella-baxter-cli/releases/latest/download/install-bella.ps1 | iex
 ```
 
 :::

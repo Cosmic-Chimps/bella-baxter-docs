@@ -9,8 +9,17 @@ La CLI de Bella Baxter proporciona todos los comandos necesarios para gestionar 
 ## Instalación
 
 ```sh
-curl -sSfL https://raw.githubusercontent.com/cosmic-chimps/bella-baxter-cli/main/scripts/install-bella.sh | bash
+curl -sSfL https://github.com/Cosmic-Chimps/bella-baxter-cli/releases/latest/download/install-bella.sh | bash
 ```
+
+El instalador se publica con cada release. Verifica la firma GPG del `checksums.txt` de la release con
+la clave de firma de Cosmic Chimps que lleva incorporada (huella
+`65BB 8D3C EEE3 DD9E 4FFD  22B4 119F 114C A309 C2FA`) y después el SHA-256 del binario, y **aborta** si
+no puede completar cualquiera de las dos comprobaciones, así que necesitas `gpg` instalado. Para fijar
+una versión, descarga el instalador de esa release:
+`https://github.com/Cosmic-Chimps/bella-baxter-cli/releases/download/v1.2.3/install-bella.sh`.
+Solo para un espejo sin conexión que no pueda llevar la firma, `BELLA_INSECURE_SKIP_SIGNATURE=1` instala
+comprobando únicamente el checksum.
 
 ## Comandos Principales
 

@@ -7,14 +7,22 @@ The `bella` CLI is a self-contained binary with zero runtime dependencies. No No
 ::: code-group
 
 ```sh [Linux / macOS]
-curl -sSfL https://raw.githubusercontent.com/cosmic-chimps/bella-baxter-cli/main/scripts/install-bella.sh | bash
+curl -sSfL https://github.com/Cosmic-Chimps/bella-baxter-cli/releases/latest/download/install-bella.sh | bash
 ```
 
 ```powershell [Windows (PowerShell)]
-irm https://raw.githubusercontent.com/cosmic-chimps/bella-baxter-cli/main/scripts/install-bella.ps1 | iex
+irm https://github.com/Cosmic-Chimps/bella-baxter-cli/releases/latest/download/install-bella.ps1 | iex
 ```
 
 :::
+
+The installer is published with each release. It verifies the GPG signature on the release's
+`checksums.txt` against the Cosmic Chimps release key it embeds (fingerprint
+`65BB 8D3C EEE3 DD9E 4FFD  22B4 119F 114C A309 C2FA`), then the binary's SHA-256, and **aborts** if
+either check cannot be completed — so `gpg` must be installed. To pin a version, fetch the installer
+from that release: `https://github.com/Cosmic-Chimps/bella-baxter-cli/releases/download/v1.2.3/install-bella.sh`.
+Only for an air-gapped mirror without the signature, `BELLA_INSECURE_SKIP_SIGNATURE=1` installs on the
+checksum alone.
 
 Self-update after install:
 
