@@ -62,7 +62,9 @@ r.GET("/health", func(c *gin.Context) {
 
 ## Zero-Knowledge Encryption (ZKE)
 
-By default the SDK generates a fresh P-256 keypair per request (ephemeral E2EE). With ZKE you supply a **persistent device key** — the server audits which host fetched each secret and the SDK can cache the wrapped DEK.
+With ZKE you supply a **persistent device key**. The server audits which host fetched each secret, the SDK can cache the wrapped DEK, and under ZKE enforcement it is what lets the app read at all: a secrets request that presents no registered key is refused with a 403.
+
+Supplying the key is all it takes. The client then presents it as `X-E2E-Public-Key` on every secrets request and decrypts the response with it. You do **not** need `EnableE2EE`; that option is only for end-to-end encryption *without* a device key, using an ephemeral key per client.
 
 **Generate your device key once:**
 
@@ -73,10 +75,11 @@ bella auth setup   # stores it owner-only under ~/.config/bella-cli; copy the pr
 **Use it in your app:**
 
 ```go
-client := bellabaxter.New(bellabaxter.Options{
+client, err := bellabaxter.New(bellabaxter.Options{
     BaxterURL: os.Getenv("BELLA_BAXTER_URL"),
-    APIKey:    os.Getenv("BELLA_BAXTER_API_KEY"),
-    // Optional — reads BELLA_BAXTER_PRIVATE_KEY env var automatically
+    ApiKey:    os.Getenv("BELLA_BAXTER_API_KEY"),
+    // Optional — New reads BELLA_BAXTER_PRIVATE_KEY itself when this is empty.
+    // PEM or bare base64 PKCS#8 DER.
     PrivateKeyPEM: os.Getenv("BELLA_BAXTER_PRIVATE_KEY"),
     OnWrappedDEK: func(project, env, wrappedDEK string, leaseExpires *time.Time) {
         log.Printf("DEK for %s/%s expires %v", project, env, leaseExpires)
@@ -90,7 +93,11 @@ Or just set the environment variable — `New()` reads `BELLA_BAXTER_PRIVATE_KEY
 export BELLA_BAXTER_PRIVATE_KEY="$(cat ~/.bella/device-key.pem)"
 ```
 
-If the variable is not set the SDK falls back to ephemeral E2EE — fully backward-compatible.
+`bella sdk run` injects that variable for you once the device is set up.
+
+- **A key that is set but unreadable is an error.** `New` returns one naming `BELLA_BAXTER_PRIVATE_KEY` (or `Options.PrivateKeyPEM`) and never continues with a throwaway key in its place.
+- **Opting out:** `DisableE2EE: true` keeps the key off the wire. `New` logs one warning through the standard `log` package when a key is supplied anyway, because under enforcement every read will then be refused. Setting both `EnableE2EE` and `DisableE2EE` is an error.
+- **No key:** the SDK behaves as before. Secrets responses are plaintext over TLS unless you set `EnableE2EE: true`, which uses an ephemeral key per client.
 
 ## Typed Secrets
 

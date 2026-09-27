@@ -1,6 +1,6 @@
 # End-to-End Encryption & Zero-Knowledge Encryption
 
-Every secret fetched through a Bella Baxter SDK is **encrypted end-to-end** between the server and your application — not just protected by TLS. Zero-Knowledge Encryption (ZKE) extends this with a persistent device key for stronger audit trails and DEK lease caching.
+Secrets fetched through a Bella Baxter SDK are **encrypted end-to-end** between the server and your application — not just protected by TLS. Every SDK does this out of the box except Go, which needs a device key or `EnableE2EE: true` (see [Per-SDK Reference](#per-sdk-reference)). Zero-Knowledge Encryption (ZKE) extends this with a persistent device key for stronger audit trails and DEK lease caching.
 
 ::: warning What "zero-knowledge" does and does not mean here
 **Bella can read your secret values.** The server decrypts them to serve a request, and it is the
@@ -33,19 +33,26 @@ Bella's E2EE uses **ECDH key agreement (P-256) + AES-256-GCM** — the same prim
 
 ### Default: Ephemeral E2EE
 
-Out of the box, every SDK generates a **fresh P-256 keypair** for each secrets request:
+With no device key configured, the SDK generates a **P-256 keypair of its own** when the client is
+created, and presents its public half on every secrets request:
 
 ```
 App                        Bella API
  │                              │
  │── X-E2E-Public-Key: <pub> ──▶│  Server generates shared secret via ECDH
- │                              │  Encrypts each secret value with AES-GCM
+ │                              │  Encrypts the response body with AES-GCM
  │◀─── encrypted body ─────────│
  │                              │
  │  SDK decrypts locally        │
 ```
 
-The ephemeral key is discarded after each request. No configuration needed — this is the default.
+The key lives as long as the client instance and is never stored or registered. The server's side of
+the exchange is fresh for every response. No configuration is needed; this is the default in every SDK
+**except Go**, which sends no key and receives plaintext over TLS unless you set `EnableE2EE: true` or
+supply a device key.
+
+An ephemeral key is not a registered device, so under [ZKE enforcement](#zke-enforcement) these reads
+are refused.
 
 ### Optional: ZKE with Persistent Device Key
 
@@ -103,14 +110,22 @@ Registration is **per tenant**: the same laptop registers separately in each ten
 command is safe to re-run (it updates the label and nothing else), and `--force` generates a *new*
 device, leaving the previous one registered until you revoke it.
 
-### 2. Set the environment variable (for SDKs)
+### 2. Hand the key to your SDK process
+
+Launch the app through the CLI:
 
 ```sh
-export BELLA_BAXTER_PRIVATE_KEY="$(bella auth setup --print-key 2>/dev/null || cat ~/.config/bella-cli/zke-private-key.dat)"
+bella sdk run -- <your app command>
 ```
 
-The CLI reads the stored key itself — this variable is for SDK processes that are not launched through
-`bella run` / `bella sdk run` (both inject it for you).
+`bella sdk run` sets `BELLA_BAXTER_PRIVATE_KEY` in the child process to this machine's device key, as
+PKCS#8 PEM. The file under `~/.config/bella-cli/` is encrypted, so do not `cat` it into the variable:
+the SDK would refuse the result. `bella run` does not inject the key and does not need to, because it
+hands the app the secret values themselves.
+
+Anywhere else (CI, a container), set `BELLA_BAXTER_PRIVATE_KEY` to a PKCS#8 P-256 private key in PEM,
+or pass it through the SDK's option (see the [Per-SDK Reference](#per-sdk-reference)). Its public half
+must be registered: as a device, or as the `publicKey` recorded on the API key the process uses.
 
 **All SDK framework integrations read this variable automatically.** No code changes required for Django, FastAPI, Flask, Rails, Laravel, Spring Boot, ASP.NET Core, etc.
 
@@ -199,10 +214,17 @@ Before enabling it, the console shows how many members and API keys would be loc
 
 ## Backward Compatibility
 
-ZKE is **fully opt-in**. If `BELLA_BAXTER_PRIVATE_KEY` is not set:
-- The SDK uses ephemeral E2EE (existing behavior, unchanged)
-- No code changes or configuration needed
-- Existing applications continue to work without modification
+ZKE is **opt-in** unless the tenant turns on [enforcement](#zke-enforcement). If no device key is
+supplied (no `BELLA_BAXTER_PRIVATE_KEY` and no key option):
+- every SDK except Go uses ephemeral E2EE, as it always has;
+- Go reads over plain TLS, as it always has, unless `EnableE2EE: true` is set;
+- no code changes or configuration are needed, and existing applications keep working, **unless the
+  tenant enforces ZKE**: then every secrets read without a registered key is refused with `403`.
+
+If a device key **is** supplied, every SDK presents it and decrypts with it. A key that is set but
+cannot be read is an error (see the [Per-SDK Reference](#per-sdk-reference) for when it is raised). No
+SDK silently replaces it with an ephemeral key, because that key would not be registered and every read
+would then fail with a `403` whose cause is invisible from inside the application.
 
 ---
 
@@ -222,16 +244,20 @@ ZKE is **fully opt-in**. If `BELLA_BAXTER_PRIVATE_KEY` is not set:
 
 ## Per-SDK Reference
 
-| SDK | Env var | Options field | Callback parameter |
-|-----|---------|---------------|--------------------|
-| JavaScript / TypeScript | `BELLA_BAXTER_PRIVATE_KEY` | `privateKey` | `onWrappedDekReceived(project, env, wrappedDek, leaseExpires)` |
-| .NET | `BELLA_BAXTER_PRIVATE_KEY` | `options.PrivateKey` | — (logged internally) |
-| Python | `BELLA_BAXTER_PRIVATE_KEY` | `private_key=` | `on_wrapped_dek_received(project, env, wrapped_dek, lease_expires)` |
-| Go | `BELLA_BAXTER_PRIVATE_KEY` | `Options.PrivateKeyPEM` | `Options.OnWrappedDEK(project, env, wrappedDEK, leaseExpires)` |
-| Ruby | `BELLA_BAXTER_PRIVATE_KEY` | `private_key:` | `on_wrapped_dek_received:` |
-| PHP | `BELLA_BAXTER_PRIVATE_KEY` | `$options->privateKey` | `$options->onWrappedDekReceived` |
-| Swift | set manually | `BellaClientOptions(privateKey:)` | `onWrappedDekReceived:` |
-| Java | `BELLA_BAXTER_PRIVATE_KEY` | `.privateKeyPem()` | `.onWrappedDekReceived()` |
-| Dart | set manually | `BellaClientOptions(privateKey:)` | `onWrappedDekReceived:` |
+| SDK | E2EE with no key configured | Reads `BELLA_BAXTER_PRIVATE_KEY` | Key formats accepted | Options field | Callback parameter |
+|-----|-----------------------------|----------------------------------|----------------------|---------------|--------------------|
+| JavaScript / TypeScript | Yes, ephemeral key per client (`init()`) | Yes, in Node (`process.env`) | PKCS#8 PEM or base64 DER | `privateKey` | `onWrappedDekReceived(project, env, wrappedDek, leaseExpires)` |
+| .NET (`AddBellaSecrets`) | Yes, ephemeral key per client | Yes | PKCS#8 PEM or base64 DER | `options.PrivateKey` | — (logged internally) |
+| Python | Yes, ephemeral key per client | Yes | EC PEM (PKCS#8 or SEC1) | `private_key=` | `on_wrapped_dek_received(project, env, wrapped_dek, lease_expires)` |
+| Go | **No**, plaintext over TLS unless `EnableE2EE: true` (then an ephemeral key per client) | Yes | PKCS#8 PEM or base64 DER | `Options.PrivateKeyPEM` (opt out: `DisableE2EE`) | `Options.OnWrappedDEK(project, env, wrappedDEK, leaseExpires)` |
+| Ruby | Yes, ephemeral key per client | Yes | EC PEM (PKCS#8 or SEC1) | `private_key:` | `on_wrapped_dek_received:` |
+| PHP | Yes, ephemeral key per client | Yes | EC PEM (PKCS#8 or SEC1) | `$options->privateKey` | `$options->onWrappedDekReceived` |
+| Swift | Yes, ephemeral key per client | Yes, on macOS and Linux (iOS/tvOS have no process environment) | PKCS#8 PEM or base64 DER | `BellaClientOptions(privateKey:)`, from `BellaClient.loadPrivateKey(pkcs8Pem:)` | `onWrappedDekReceived:` |
+| Java | Yes, ephemeral key per client | Yes | PKCS#8 PEM or base64 DER | `.privateKeyPem()` | `.onWrappedDekReceived()` |
+| Dart | Yes, ephemeral key per client | Only through `BellaClient.fromEnv()` | PKCS#8 PEM or base64 DER (`bellaPrivateKeyFromEnvValue`) | `BellaClientOptions(privateKey:)` (DER bytes) | `onWrappedDekReceived:` |
+
+In every SDK a key that is set but unreadable is an error, raised when the client is created. The one
+exception is a Dart key passed as bytes in `BellaClientOptions`, which is parsed on the first request.
+No SDK falls back to an ephemeral key. The key must be a P-256 EC key.
 
 → See each SDK's page for a full code example.
