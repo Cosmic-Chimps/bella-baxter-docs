@@ -95,13 +95,21 @@ bella security policy set \
 
 ## Notifications on Findings
 
-Subscribe your Slack or Teams channel to receive alerts on new critical findings:
+Subscribe a Slack or Teams channel to `security.scan.risk_detected` to be alerted when a scan finds
+new risk. It fires when a scan's verdict changes, not on every scan, so an unchanged finding is not
+repeated:
 
 ```sh
-bella notifications subscribe \
-  --channel "Security Teams" \
-  --events SecurityScanFailed \
-  --project my-api
+curl -X POST "$BELLA_URL/api/v1/notifications" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Security Teams",
+    "channelType": "MicrosoftTeams",
+    "configuration": { "webhook_url": "https://outlook.office.com/webhook/..." },
+    "eventTypes": ["security.scan.risk_detected"],
+    "projectId": "<project id>"
+  }'
 ```
 
 See [Notifications](/features/notifications) for setup.

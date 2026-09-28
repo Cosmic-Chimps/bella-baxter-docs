@@ -1,49 +1,92 @@
 # Webhooks
 
-Webhooks let you receive HTTP POST notifications when events happen in Bella Baxter — secret changes, lease expirations, API key rotation, and more.
+Webhooks let you receive an HTTP POST when something happens in Bella Baxter — a secret is written,
+rotated or about to expire, an environment is created, a lease is granted, a security scan finds a new
+risk, a certificate rotation finishes. Every delivery is signed so you can verify it came from Bella.
 
 ---
 
 ## Create a Webhook
 
+From the console: the **Webhooks** tab of a project or an environment, or **Settings** for a
+tenant-wide webhook.
+
+Or through the API:
+
 ```sh
-bella webhooks create \
-  --url https://your-service.example.com/webhooks/bella \
-  --events SecretCreated,SecretUpdated,SecretDeleted \
-  --project my-api \
-  --environment production \
-  --name "Secret change notifications"
+curl -X POST "$BELLA_URL/api/v1/webhooks" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Secret change notifications",
+    "targetUrl": "https://your-service.example.com/webhooks/bella",
+    "eventTypes": ["secret.created", "secret.updated", "secret.deleted"],
+    "projectId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "environmentId": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+  }'
 ```
 
-Or from the WebApp: **Project → Settings → Webhooks → Add Webhook**
+The response carries the **signing secret** (`whsec-…`). It is shown once and cannot be retrieved
+again — store it where your receiver can read it.
+
+`projectId` and `environmentId` are IDs, not slugs, and together they set the webhook's **scope**:
+
+| Scope | Request body | Receives |
+|-------|--------------|----------|
+| Tenant-wide (tenant `ADMIN` only) | neither | subscribed events from the whole tenant |
+| Project | `projectId` | subscribed events for that project |
+| Environment | `projectId` + `environmentId` | subscribed events for that environment only |
+
+::: tip Some events carry no project, or no environment
+`lease.expired` and `api_key.expired` carry no project, so only a **tenant-wide** webhook receives
+them. The `global_secret.*` events, and `security.scan.risk_detected` for a project's global secrets,
+carry no environment, so a tenant-wide or **project** webhook receives them and an environment webhook
+does not.
+:::
 
 ---
 
 ## Event Types
 
-| Event | Description |
-|-------|-------------|
-| `SecretCreated` | A secret was created |
-| `SecretUpdated` | A secret value was changed |
-| `SecretDeleted` | A secret was deleted |
-| `EnvironmentCreated` | A new environment was created |
-| `EnvironmentDeleted` | An environment was deleted |
-| `LeaseIssued` | A new lease was issued |
-| `LeaseExpired` | A lease expired |
-| `LeaseRevoked` | A lease was manually revoked |
-| `ApiKeyCreated` | A new API key was created |
-| `ApiKeyRevoked` | An API key was revoked |
-| `MemberAdded` | A user was added to a project or environment |
-| `MemberRemoved` | A user was removed |
-| `SecurityScanFailed` | A security intelligence scan detected an issue |
-| `secret.rotation.succeeded` | A secret was rotated successfully by a rotation policy |
-| `secret.rotation.failed` | A rotation attempt failed (error details in `metadata.errorMessage`) |
-| `secret.expiry.warning` | A secret is expiring within the configured warning window (days in `metadata.daysUntilExpiry`) |
-| `secret.expired` | A secret has passed its expiry date |
-| `certificate.rotation.succeeded` | A certificate rotation completed — every eligible host is serving the new certificate |
-| `certificate.rotation.partial` | Some hosts are serving the new certificate and some are not; the target needs attention |
-| `certificate.rotation.failed` | A rotation failed. The previous certificate is untouched and still being served |
-| `certificate.rotation.missed` | A scheduled rotation came due but could not start (reason in `metadata.missedReason`) |
+Subscribe with the exact names below. Names are case-sensitive and matched exactly at delivery.
+
+| Event | Fires when | What `data` carries |
+|-------|------------|---------------------|
+| `secret.created` | A secret is created in an environment | `key`; `resourceId` = the key |
+| `secret.updated` | A secret in an environment is updated | `key`; `resourceId` = the key |
+| `secret.deleted` | A secret is deleted from an environment | `key`; `resourceId` = the key |
+| `global_secret.created` | A project-level (global) secret is created | `key`; `resourceId` = the key; no environment |
+| `global_secret.updated` | A global secret is updated | `key`; `resourceId` = the key; no environment |
+| `global_secret.deleted` | A global secret is deleted | `key`; `resourceId` = the key; no environment |
+| `secret.rotation.succeeded` | A rotation policy rotated a secret and the new value reached the provider | `key`; `metadata.newKeyHandle` |
+| `secret.rotation.failed` | A rotation attempt failed | `key`; `metadata.errorMessage`, `metadata.retryCount` |
+| `secret.rotation.revoked` | A rotated secret's previous value was revoked at the end of its grace period | `key`; `metadata.revokedKeyHandle` |
+| `secret.expiry.warning` | A secret's expiry date falls inside its warning window | `key`; `resourceId` = the secret id; `metadata.expiresAt`, `metadata.daysUntilExpiry` |
+| `secret.expired` | A secret's expiry date has passed | `key`; `resourceId` = the secret id; `metadata.expiresAt`, `metadata.daysUntilExpiry` |
+| `environment.created` | An environment is created | `resourceId` = the environment id |
+| `environment.deleted` | An environment is deleted | `resourceId` = the environment id |
+| `environment.restored` | A deleted environment is restored | `resourceId` = the environment id |
+| `lease.granted` | A secret lease is granted | `resourceId` = the lease id; `metadata.holderName`; no slugs |
+| `lease.expired` | A lease passes its expiry (checked every 15 minutes) | `resourceId` = the lease id; no project or environment |
+| `api_key.expired` | An API key passes its expiry date (checked hourly) | `resourceId` = the API key id; no project or environment |
+| `ssh_role.created` | An SSH signing role is created in an environment | `resourceId` = the role name |
+| `ssh_key.signed` | An SSH public key is signed | `resourceId` = the role name used |
+| `security.scan.risk_detected` | A security scan finds risk **and its verdict changed** since the previous scan | `metadata.overallRisk`, `critical`, `high`, `medium`, `low`, `totalScanned` |
+| `certificate.rotation.succeeded` | A certificate rotation completed — every eligible host is serving the new certificate | `key` = the primary domain; see below |
+| `certificate.rotation.partial` | Some hosts are serving the new certificate and some are not; the target needs attention | `key` = the primary domain; see below |
+| `certificate.rotation.failed` | A rotation failed. The previous certificate is untouched and still being served | `key` = the primary domain; see below |
+| `certificate.rotation.missed` | A scheduled rotation came due but could not start | `key` = the primary domain; see below |
+
+Notes on individual events:
+
+- **Expiry alerts** are checked hourly and sent once per expiry date. They are not sent for secrets
+  with rotation enabled — the rotation policy owns their lifecycle. Changing a secret's expiry date
+  re-arms both alerts.
+- **`security.scan.risk_detected`** fires on a change of verdict, not on every scan. Scans re-run after
+  every secret write and periodically, and repeating an unchanged finding would bury the new ones. A
+  scan of a project's global secrets reports `environmentSlug` `_global` and `metadata.scope` `global`.
+- **Secret values are never in a payload.** A secret event tells you *that* something changed, never
+  what it changed to.
 
 ### Certificate rotation payloads
 
@@ -55,16 +98,11 @@ and the rotation report.
 `sanList`, `trigger`, `occurredAt`; `hostsSucceeded`/`hostsFailed` for multi-host targets;
 `certificatesEvaluated`/`certificatesDeployed`/`certificatesUnchanged`/`certificatesFailed` for bulk
 appliance runs; `failureCategory` and `failureDetail` on failure; `missedReason` and
-`occurrenceDueAt` for a missed occurrence; `notAfter` (the new expiry) on success.
+`occurrenceDueAt` for a missed occurrence; `notAfter` (the new expiry) on success. `resourceId` is the
+certificate target's id.
 
 Payloads are metadata only. They never contain certificate material, private keys, passphrases,
 secret values or vault paths.
-
-> **Retired in 2026-09.** `cert_rotation.completed` and `cert_rotation.failed` appeared in the
-> subscription picker between 2026-05-03 and 2026-09-15 but were never emitted by any part of the
-> product — a subscription naming either has always received nothing. They have been removed from the
-> picker. Existing subscriptions that name them remain valid and continue to receive nothing;
-> subscribe to the `certificate.rotation.*` types above instead.
 
 > **If you stream business events to a SIEM.** An audit-stream destination with the business-event
 > mirror enabled will now receive these four types **in addition to** the certificate rotation audit
@@ -72,27 +110,59 @@ secret values or vault paths.
 > per host / per certificate, a business event is per rotation. No existing envelope changes; this is
 > new volume on an existing feed, so rules that count events may need adjusting.
 
+### Names that are refused, and names that deliver nothing
+
+A name the platform does not recognise is **refused** with `400 Bad Request`, and the error lists the
+valid names. Editing an existing webhook re-checks only the names you are adding, so a webhook created
+before names were validated can still be edited, or have a dead name removed.
+
+A few names are **accepted but never delivered** to a webhook. Do not subscribe to them:
+
+- `secret.rotated`, `provider.created`, `provider.deleted` — nothing in the product sends them. For
+  rotations use `secret.rotation.succeeded`.
+- `secret.changed`, `scan.environment.complete`, `scan.project.complete` — these are live-update
+  messages for the console, not webhook events, although the validator currently accepts them.
+
+> **Retired in 2026-09.** `cert_rotation.completed` and `cert_rotation.failed` appeared in the
+> subscription picker between 2026-05-03 and 2026-09-15 but were never emitted by any part of the
+> product — a subscription naming either has always received nothing. A new subscription naming them
+> is refused; existing ones keep them and keep receiving nothing. Subscribe to the
+> `certificate.rotation.*` types above instead.
+
 ---
 
 ## Webhook Payload
 
+Every delivery is a `POST` with `Content-Type: application/json`, the `X-Bella-Signature` header (see
+below) and an `X-Bella-Event` header that repeats the event name.
+
 ```json
 {
-  "id": "evt-7e98d73e...",
-  "type": "SecretUpdated",
+  "id": "whevt_7e98d73e4f0a4b1c9d2e3f4a5b6c7d8e",
+  "type": "secret.updated",
+  "tenantId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "timestamp": "2026-03-18T10:30:00Z",
-  "tenantId": "...",
   "data": {
-    "resourceId": "...",
-    "projectId": "...",
+    "resourceId": "DATABASE_URL",
+    "projectId": "…",
+    "environmentId": "…",
     "projectSlug": "my-api",
-    "environmentId": "...",
     "environmentSlug": "production",
     "key": "DATABASE_URL",
-    "metadata": {}
+    "metadata": null
   }
 }
 ```
+
+| Field | Meaning |
+|-------|---------|
+| `id` | Unique per event (`whevt_` prefix). Use it to de-duplicate. |
+| `type` | The event name from the table above. |
+| `data.resourceId` | What the event is about — see the table for each event. |
+| `data.projectId` / `data.environmentId` | Set when the event belongs to a project / an environment; `null` otherwise. |
+| `data.projectSlug` / `data.environmentSlug` | Slugs, when the event carries them. |
+| `data.key` | The secret key for secret events, the primary domain for certificate events; `null` otherwise. |
+| `data.metadata` | The event-specific fields listed in the table, or `null`. |
 
 ::: warning Secret values are never included
 Webhook payloads contain metadata only — never secret values.
@@ -406,14 +476,18 @@ ngrok http 3000      # replace 3000 with your server port
 #   Forwarding  https://a1b2c3d4.ngrok-free.app → http://localhost:3000
 
 # 3. Register the ngrok URL as your webhook endpoint in Bella Baxter:
-bella webhooks create \
-  --url https://a1b2c3d4.ngrok-free.app/webhooks \
-  --events SecretCreated,SecretUpdated \
-  --project my-api \
-  --environment dev
+curl -X POST "$BELLA_URL/api/v1/webhooks" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Local dev",
+    "targetUrl": "https://a1b2c3d4.ngrok-free.app/webhooks",
+    "eventTypes": ["secret.created", "secret.updated"],
+    "projectId": "<project id>",
+    "environmentId": "<dev environment id>"
+  }'
 
-# 4. Copy your webhook secret from the CLI output:
-#   Signing secret: whsec-...
+# 4. Copy the signing secret from the response ("signingSecret": "whsec-...")
 export BELLA_WEBHOOK_SECRET="whsec-..."
 ```
 
@@ -439,25 +513,28 @@ All samples read `BELLA_WEBHOOK_SECRET` from the environment. If the variable is
 
 ## Delivery & Retries
 
-Failed deliveries are retried automatically up to **5 times** with exponential backoff.
+A delivery that fails with a `5xx` response or a network error is retried three times — after 30
+seconds, 5 minutes and 30 minutes. A `4xx` response is treated as permanent and is not retried, so
+answer `2xx` as soon as you have accepted the event and process it afterwards.
 
-View recent delivery attempts in the WebApp: **Project → Settings → Webhooks → View Log**
-
-Or via CLI:
+Every attempt is recorded. View them in the console's webhook list, or through the API:
 
 ```sh
-bella webhooks deliveries list <webhook-id>
-bella webhooks deliveries retry <delivery-id>   # manually retry a failed delivery
+curl "$BELLA_URL/api/v1/webhooks/<webhook-id>/deliveries" -H "Authorization: Bearer $TOKEN"
 ```
 
 ---
 
 ## Manage Webhooks
 
-```sh
-bella webhooks list
-bella webhooks get <webhook-id>
-bella webhooks update <webhook-id> --active false   # pause
-bella webhooks delete <webhook-id>
-```
+| Action | Request |
+|--------|---------|
+| List a project's / an environment's webhooks | `GET /api/v1/projects/{projectId}/webhooks`, `GET /api/v1/environments/{environmentId}/webhooks` |
+| Get one | `GET /api/v1/webhooks/{id}` |
+| Change name, URL or event types | `PUT /api/v1/webhooks/{id}` with any of `name`, `targetUrl`, `eventTypes` |
+| Pause / resume | `POST /api/v1/webhooks/{id}/deactivate`, `POST /api/v1/webhooks/{id}/reactivate` |
+| Rotate the signing secret | `POST /api/v1/webhooks/{id}/rotate-secret` |
+| Delete | `DELETE /api/v1/webhooks/{id}` |
+
+A `PUT` that changes `eventTypes` replaces the whole list — send every name you want to keep.
 
