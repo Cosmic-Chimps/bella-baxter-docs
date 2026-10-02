@@ -63,6 +63,15 @@ jobs:
 
 See [Keyless / Workload Identity](/features/keyless) for the Trust Domain this needs.
 
+**Token audience.** The action asks GitHub for a token minted for Bella, with audience `bella-baxter`, so
+it works against a trust domain that accepts the default with nothing to configure. If your trust domain
+accepts a different audience, for example its recommended per-environment value, set `BELLA_OIDC_AUDIENCE`
+for the job. If you call Bella without the CLI, request the audience yourself:
+`core.getIDToken('bella-baxter')`.
+
+GitHub's default audience (`https://github.com/<owner>`) is shared with every other service that accepts
+it, so a trust domain enforcing its audience refuses it.
+
 ## Action Outputs
 
 | Output | Description |
