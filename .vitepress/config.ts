@@ -35,6 +35,7 @@ const enNav = [
     items: [
       { text: 'GitHub Actions', link: '/integrations/github-actions' },
       { text: 'MCP / AI', link: '/integrations/mcp-ai' },
+      { text: 'AI Coding Agents', link: '/integrations/ai-coding-agents' },
     ],
   },
   { text: 'API Reference', link: '/api-reference/' },
@@ -96,6 +97,7 @@ const enSidebar = {
         { text: 'PKI Certificates', link: '/features/pki-certificates' },
         { text: 'TOTP / 2FA Keys', link: '/features/totp' },
         { text: 'Keyless / Workload Identity', link: '/features/keyless' },
+        { text: 'Workload Identity on EC2', link: '/features/spiffe-ec2' },
         { text: 'Secret Leases', link: '/features/secret-leases' },
         { text: 'Dynamic Secrets', link: '/features/dynamic-secrets' },
         { text: 'Secure Shares', link: '/features/secure-shares' },
@@ -116,6 +118,7 @@ const enSidebar = {
       items: [
         { text: 'GitHub Actions', link: '/integrations/github-actions' },
         { text: 'MCP / AI Integration', link: '/integrations/mcp-ai' },
+        { text: 'AI Coding Agents', link: '/integrations/ai-coding-agents' },
       ],
     },
   ],
@@ -152,6 +155,7 @@ const esNav = [
     items: [
       { text: 'GitHub Actions', link: '/es/integrations/github-actions' },
       { text: 'MCP / IA', link: '/es/integrations/mcp-ai' },
+      { text: 'Agentes de programación', link: '/es/integrations/ai-coding-agents' },
     ],
   },
   { text: 'Referencia API', link: '/api-reference/' },
@@ -200,6 +204,7 @@ const esSidebar = {
       items: [
         { text: 'GitHub Actions', link: '/es/integrations/github-actions' },
         { text: 'MCP / IA', link: '/es/integrations/mcp-ai' },
+        { text: 'Agentes de programación', link: '/es/integrations/ai-coding-agents' },
       ],
     },
   ],
