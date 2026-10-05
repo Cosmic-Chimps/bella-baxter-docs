@@ -134,7 +134,9 @@ A few names are **accepted but never delivered** to a webhook. Do not subscribe 
 ## Webhook Payload
 
 Every delivery is a `POST` with `Content-Type: application/json`, the `X-Bella-Signature` header (see
-below) and an `X-Bella-Event` header that repeats the event name.
+below), an `X-Bella-Event` header that repeats the event name, and an `X-Bella-Delivery` header that
+repeats the payload `id`. That `id` is the same on every retry of an event, so you can drop a repeat
+before reading the body.
 
 ```json
 {
@@ -516,6 +518,15 @@ All samples read `BELLA_WEBHOOK_SECRET` from the environment. If the variable is
 A delivery that fails with a `5xx` response or a network error is retried three times — after 30
 seconds, 5 minutes and 30 minutes. A `4xx` response is treated as permanent and is not retried, so
 answer `2xx` as soon as you have accepted the event and process it afterwards.
+
+Each of those attempts sends the request once. A request is sent again within an attempt only when the
+connection to your endpoint could not be opened at all, so nothing reached you.
+
+Delivery is still **at least once**: if your endpoint processed an event but the response never
+reached Bella (a timeout, a dropped connection, a `5xx` after the work was done), the retry schedule
+above sends the same event again. Every retry of an event carries the **same payload `id`**
+(`whevt_…`) and the same `X-Bella-Signature`, so record the `id`s you have processed and ignore a
+repeat.
 
 Every attempt is recorded. View them in the console's webhook list, or through the API:
 
