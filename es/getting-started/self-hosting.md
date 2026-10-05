@@ -16,7 +16,36 @@ plataforma, así que nunca puede divergir de la topología real.
 
 - Un host Linux con Docker Engine + el plugin `docker compose`
 - Credenciales del registro de contenedores de Bella Baxter (incluidas con tu licencia)
+- [cosign](https://docs.sigstore.dev) v3, para verificar las firmas del release
 - Tres puertos: `443` (aplicación), `8444` (plano de administración), `9443` (setup)
+
+### Verifica la descarga
+
+Cada release va firmado. Cada imagen se referencia por digest y se firma por
+digest, y el tarball lleva una firma al lado (`bella-selfhosted-<version>.tar.gz.sigstore.json`).
+Verifícalo con la clave pública de Bella **antes** de descomprimirlo:
+
+```sh
+curl -fsSLO https://docs.bella-baxter.io/selfhosted/cosign.pub
+cosign verify-blob --key cosign.pub --insecure-ignore-tlog=true \
+  --bundle bella-selfhosted-<version>.tar.gz.sigstore.json \
+  bella-selfhosted-<version>.tar.gz
+```
+
+`Verified OK` significa que el archivo está íntegro **y** que lo publicó Bella.
+Cualquier otra cosa: detente, no lo descomprimas y contáctanos.
+
+- La clave pública está en este sitio, en `https://docs.bella-baxter.io/selfhosted/cosign.pub`.
+  El bundle incluye una copia, pero una copia dentro del archivo que estás
+  comprobando no prueba nada hasta que el propio archivo esté comprobado.
+- `--insecure-ignore-tlog=true` es lo esperado: Bella firma con una clave y sin
+  registro de transparencia público, así que la verificación funciona en un host
+  aislado (air-gapped). Omite la consulta al registro, no la comprobación de la firma.
+
+No tienes que verificar las imágenes a mano: `bella.sh` ejecuta `verify-bundle.sh`
+antes de arrancar nada y **se niega a arrancar** una imagen que no esté fijada por
+digest o cuya firma no verifique (`./bella.sh verify` hace la misma comprobación
+cuando quieras).
 
 ### Instalación
 
