@@ -223,6 +223,7 @@ Response:
 |--------|---------|
 | 401 `token_audience_mismatch` | a trust domain would have admitted the token, but it was minted for another audience — request an accepted one |
 | 401 `no_matching_trust_domain` | no trust domain admitted the token (issuer, signature, lifetime or a claim rule) |
+| 403 `trust_domain_role_not_grantable` | the trust domain admitted the token but grants a role other than `Consumer` or `Manager` — an administrator must change its role |
 | 422 | the token is not a JWT, or has no issuer |
 | 429 | too many attempts for this issuer and subject — 10 per minute |
 
