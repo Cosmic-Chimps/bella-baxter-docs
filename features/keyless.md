@@ -33,7 +33,7 @@ A trust domain admits a token only if **all** of these hold:
 The two checks answer different questions, and you need both.
 
 - **The audience.** A token's `aud` names the service it was requested for. Without an audience check, a token your workflow requested for AWS STS, or for any other service, would be just as good at Bella. Each trust domain records the audiences it accepts.
-- **Claim rules.** The audience alone does **not** limit *who* can get a token: on GitHub's issuer, **any repository on GitHub** can request `aud=bella-baxter`. Only claim rules narrow that down. This is why a trust domain must have at least one claim rule, and why a domain without one is flagged **critical** and cannot enforce its audience.
+- **Claim rules.** The audience alone does **not** limit *who* can get a token: on GitHub's issuer, **any repository on GitHub** can request `aud=bella-baxter`. Only claim rules narrow that down. This is why a trust domain must have at least one claim rule. A domain saved earlier without one is flagged **critical**, cannot enforce its audience, and **its exchanges are refused** until you add a rule.
 
 ### Accepted audiences
 
@@ -86,7 +86,10 @@ curl -X POST "$BELLA_URL/api/v1/environments/$ENVIRONMENT_ID/trust-domains" \
 ```
 
 - **Scope.** The trust domain belongs to the environment in the URL, so the project and environment the issued key is scoped to come from `$ENVIRONMENT_ID`, not from flags.
-- **Operators.** `operator` is one of `Equals`, `StartsWith` or `Contains`.
+- **Operators.** `operator` is `Equals` or `StartsWith`. Matching ignores case.
+  - A `StartsWith` value must end in `/`, `:` or `@`, so the prefix stops at a boundary: `repo:myorg/my-repo:` (any branch of one repository), `repo:myorg/` (every repository in the organization) or `myorg/my-repo/.github/workflows/deploy.yml@` (one workflow file, as `job_workflow_ref`). `repo:myorg/my-repo` without the `:` would also match `repo:myorg/my-repo-fork`, so it is refused.
+  - `Contains` is no longer accepted. It cannot be anchored, so it matches any value that merely includes the text.
+  - A trust domain saved earlier with `Contains`, or with a `StartsWith` value not ending in one of those characters, is flagged in the console and its exchanges are refused until the rule is fixed.
 - **Required.** `claimRules` needs at least one rule.
 - **Optional.** `acceptedAudiences` may be omitted, which means `bella-baxter`.
 
@@ -224,13 +227,15 @@ Response:
 | 401 `token_audience_mismatch` | a trust domain would have admitted the token, but it was minted for another audience — request an accepted one |
 | 401 `no_matching_trust_domain` | no trust domain admitted the token (issuer, signature, lifetime or a claim rule) |
 | 403 `trust_domain_role_not_grantable` | the trust domain admitted the token but grants a role other than `Consumer` or `Manager` — an administrator must change its role |
+| 403 `trust_domain_has_no_claim_rules` | the only trust domain that matched has no claim rule, so it bounds no one — an administrator must add a rule |
+| 403 `trust_domain_claim_rule_not_accepted` | the only trust domain that matched holds a `Contains` rule or a `StartsWith` value not ending in `/`, `:` or `@` — an administrator must fix the rule |
 | 422 | the token is not a JWT, or has no issuer |
 | 429 | too many attempts for this issuer and subject — 10 per minute |
 
 ## Security Notes
 
 - **Lifetime.** Exchanged keys are short-lived (default: **15 minutes**, set per trust domain) and are not stored.
-- **Claim rules decide who.** They can restrict by repository, branch, service account and custom claims, and at least one is required.
+- **Claim rules decide who.** They can restrict by repository, branch, service account and custom claims. At least one is required, and a prefix must end on a boundary (`/`, `:` or `@`).
 - **Audience decides for whom.** The audience check means a token minted for another service is refused once the trust domain enforces.
 - **Every exchange is recorded.** Each exchange that reaches a trust domain is recorded in the audit trail as `oidc_token_exchanged` or `oidc_exchange_refused`, with the trust domain, the reason, and the audience the token carried. The token itself is never stored.
 - **Credential-less.** No long-lived secret ever touches your CI/CD config.
