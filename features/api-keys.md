@@ -48,7 +48,7 @@ For zero-trust patterns — issue a token that expires automatically:
 bella issue --scope stripe,payment --ttl 15
 ```
 
-The scoped token (`bax-...`) can only access the named secret scopes and expires after the TTL.
+The scoped token (`bax-...`) can only access the named secret scopes and expires after the TTL. It reads secrets and never issues credentials: TLS and SSH certificates, TOTP codes, database credentials and further tokens are refused to it (`403 scope-limited-token`). Use an unscoped key for automation that issues them.
 
 | Flag | Default | Description |
 |------|---------|-------------|
