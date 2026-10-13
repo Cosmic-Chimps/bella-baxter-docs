@@ -88,7 +88,7 @@ The CLI reads the following environment variables. They take precedence over sto
 
 | Variable | Purpose | Notes |
 |----------|---------|-------|
-| `BELLA_BAXTER_URL` | API server URL | Overrides `bella config set-server` and stored config |
+| `BELLA_BAXTER_URL` | API server URL | Overrides `bella config set-server`, stored config and a `.bella` `url`; needs no confirmation (a server named only by a `.bella` must be trusted once: `bella config trust <url>`) |
 | `BELLA_BAXTER_API_KEY` | API key for authentication | `bax-...` format; takes priority over stored credentials |
 | `BELLA_BAXTER_ACCESS_TOKEN` | OAuth JWT bearer token | Injected into child processes by `bella sdk run` |
 | `BELLA_BAXTER_PROJECT` | Project slug (session override) | Set by `bella context use` via shell function |
@@ -441,7 +441,7 @@ bella mcp --print-config      Print Claude/Copilot/Cursor config snippets
 
 bella upgrade / upgrade --check
 bella generate                Generate a secure random password or passphrase
-bella config show/set-server
+bella config show/set-server/trust
 ```
 
 ---
