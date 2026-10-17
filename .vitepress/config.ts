@@ -13,6 +13,7 @@ const enNav = [
       { text: 'Environments', link: '/features/environments' },
       { text: 'API Keys', link: '/features/api-keys' },
       { text: 'Groups', link: '/features/groups' },
+      { text: 'Team Members', link: '/features/team-members' },
       { text: 'SSH Certificate Authority', link: '/features/ssh-ca' },
       { text: 'PKI Certificates', link: '/features/pki-certificates' },
       { text: 'TOTP', link: '/features/totp' },
@@ -88,6 +89,7 @@ const enSidebar = {
         { text: 'Environments', link: '/features/environments' },
         { text: 'API Keys', link: '/features/api-keys' },
         { text: 'Groups', link: '/features/groups' },
+        { text: 'Team Members', link: '/features/team-members' },
       ],
     },
     {
