@@ -104,6 +104,37 @@ admin/back-office plane runs on its own port with the same certificate. All
 service-to-service traffic stays on the private compose network; secret
 material lives only in OpenBao — never in Bella's own database.
 
+### Email verification on an air-gapped install
+
+The bundle sends no email: there is no mail server for Keycloak or Bella to
+use. That matters for one thing. An organisation invitation is accepted only
+by an account whose email address Keycloak holds as **verified** and that
+matches the address invited, so that a leaked invitation link cannot be used by
+someone else. On a hosted plane people verify their address through a link
+Keycloak mails them. Here nobody can, so the console tells an invitee that the
+**platform operator** (you, not the organisation's administrator, who cannot do
+this) has to confirm the address.
+
+You have three ways to do that:
+
+1. **Create the account yourself.** An account created through the operator API
+   (`POST /api/v1/admin/users`) is created with its address already verified.
+2. **Mark an existing account's address as verified.** In the operator console,
+   open **Users**, find the account, and choose **Mark email as verified**. You
+   see the address you are vouching for, give a reason, and confirm. Do this
+   only after confirming outside Bella that the account's owner controls that
+   address: the account can then accept invitations to that address in every
+   organisation. The change is recorded in the audit log with your reason (never
+   the address). If the person changed their address in the meantime, the
+   request is refused and you search again.
+3. **Use an identity provider you operate.** Connect your own directory to the
+   Keycloak realm as the platform operator. Addresses it asserts are trusted.
+   Single sign-on connections that an organisation adds for itself in the
+   console are not: they vouch only inside that organisation.
+
+If someone later changes their address themselves, Keycloak marks it unverified
+again and it has to be confirmed again.
+
 ## Option 2: .NET Aspire (for development/integration)
 
 Consume the published `AddBellaBaxter` Aspire resource to embed a Bella

@@ -92,6 +92,38 @@ recupera automáticamente.
 ./bella.sh unseal    # imprime la URL + token si los perdiste de vista
 ```
 
+### Verificación de email en una instalación aislada (air-gapped)
+
+El bundle no envía correo: no hay servidor de correo que puedan usar Keycloak o
+Bella. Eso afecta a una sola cosa. Una invitación a una organización solo la
+acepta una cuenta cuya dirección Keycloak tiene como **verificada** y que
+coincide con la dirección invitada, para que nadie pueda usar un enlace de
+invitación filtrado. En un plano alojado, la gente verifica su dirección con un
+enlace que Keycloak le envía por correo. Aquí nadie puede, así que la consola le
+dice al invitado que el **operador de la plataforma** (tú, no el administrador
+de la organización, que no puede hacerlo) tiene que confirmar la dirección.
+
+Tienes tres formas de hacerlo:
+
+1. **Crear tú la cuenta.** Una cuenta creada con la API de operador
+   (`POST /api/v1/admin/users`) se crea con la dirección ya verificada.
+2. **Marcar como verificada la dirección de una cuenta existente.** En la consola
+   de operador, abre **Users**, busca la cuenta y elige **Mark email as
+   verified**. Ves la dirección por la que respondes, indicas un motivo y
+   confirmas. Hazlo solo después de comprobar, fuera de Bella, que quien tiene la
+   cuenta controla esa dirección: la cuenta podrá aceptar invitaciones a esa
+   dirección en todas las organizaciones. El cambio queda en el registro de
+   auditoría con tu motivo (nunca la dirección). Si la persona cambió su
+   dirección entretanto, la solicitud se rechaza y vuelves a buscar.
+3. **Usar un proveedor de identidad que operas tú.** Conecta tu propio
+   directorio al realm de Keycloak como operador de la plataforma. Las
+   direcciones que afirma se consideran de confianza. Las conexiones de inicio de
+   sesión único que una organización añade por su cuenta en la consola no lo son:
+   dan fe solo dentro de esa organización.
+
+Si alguien cambia después su dirección por sí mismo, Keycloak la vuelve a marcar
+como no verificada y hay que confirmarla de nuevo.
+
 ## Opción 2: .NET Aspire (desarrollo/integración)
 
 Consume el recurso Aspire `AddBellaBaxter` publicado para incrustar un stack
