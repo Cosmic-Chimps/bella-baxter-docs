@@ -448,7 +448,9 @@ bella config show/set-server/trust
 
 ## Workload Identity (Keyless)
 
-In GitHub Actions (with `id-token: write`) or Kubernetes, `bella run`/`bella sdk run` automatically exchange the platform OIDC token for a short-lived Bella key — no stored credentials needed.
+In GitHub Actions (with `id-token: write`) or Kubernetes, `bella auth oidc` exchanges the platform OIDC token for a short-lived Bella key — no stored credentials needed. It needs the tenant, project and environment slugs (`--tenant`, `--project`, `--env`, or `BELLA_BAXTER_TENANT`, `BELLA_BAXTER_PROJECT`, `BELLA_BAXTER_ENV`) and exports the key as `BELLA_BAXTER_API_KEY` (legacy alias `BELLA_API_KEY`). The key is scoped to that environment, so `bella run -- <cmd>` afterwards needs no `-p` or `-e`.
+
+In GitHub Actions the setup action does this for you:
 
 ```yaml
 # .github/workflows/deploy.yml
@@ -458,7 +460,13 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - run: bella sdk run -p my-project -e production -- ./deploy.sh
+      - uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.109
+        with:
+          oidc: 'true'
+          tenant: my-org
+          project: my-project
+          environment: production
+      - run: bella run -- ./deploy.sh
 ```
 
 See [Keyless / Workload Identity](/features/keyless) for full setup.

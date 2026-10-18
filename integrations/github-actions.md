@@ -29,8 +29,12 @@ jobs:
 | Input | Required | Default | Description |
 |-------|----------|---------|-------------|
 | `version` | No | `latest` | CLI version to install (e.g. `1.2.3`) |
-| `bella-url` | No | — | API base URL — exported as `BELLA_BAXTER_URL` for all subsequent steps |
-| `oidc` | No | `false` | Set to `'true'` to exchange the job's GitHub OIDC token for a short-lived Bella key. Requires `id-token: write`, and a [Trust Domain](/features/keyless) for this repository. Exports `BELLA_API_KEY` for subsequent steps. |
+| `bella-url` | No | — | API base URL, exported as `BELLA_BAXTER_URL` for all subsequent steps. With `oidc: 'true'` and no URL, `https://api.bella-baxter.io` is used. Self-hosted: your API origin, not the console's. |
+| `oidc` | No | `false` | Set to `'true'` to exchange the job's GitHub OIDC token for a short-lived Bella key. Requires `id-token: write`, a [Trust Domain](/features/keyless) for this repository, and `tenant`, `project` and `environment`. Exports `BELLA_BAXTER_API_KEY` (masked; legacy alias `BELLA_API_KEY`) for subsequent steps. |
+| `tenant` | With `oidc` | — | Tenant (organisation) slug. Falls back to `BELLA_BAXTER_TENANT` in the job's `env`. |
+| `project` | With `oidc` | — | Project slug. Falls back to `BELLA_BAXTER_PROJECT`. |
+| `environment` | With `oidc` | — | Environment slug. Falls back to `BELLA_BAXTER_ENV`. |
+| `audience` | No | `bella-baxter` | OIDC audience to request. Must be one the Trust Domain accepts. Falls back to `BELLA_OIDC_AUDIENCE`. |
 
 ### Which version to pin
 
@@ -56,18 +60,31 @@ jobs:
       - uses: actions/checkout@v6
       - uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.109
         with:
-          bella-url: ${{ vars.BELLA_BAXTER_URL }}
+          bella-url: ${{ vars.BELLA_BAXTER_URL }}   # optional; default https://api.bella-baxter.io
           oidc: 'true'
-      - run: bella run -- ./deploy.sh   # project/environment come from the issued key's scope
+          tenant: my-org
+          project: my-api
+          environment: production
+      # The issued key is scoped to that environment, so no -p / -e is needed.
+      - run: bella run -- ./deploy.sh
 ```
 
-See [Keyless / Workload Identity](/features/keyless) for the Trust Domain this needs.
+The action exports the issued key as `BELLA_BAXTER_API_KEY` (and the legacy name `BELLA_API_KEY`), masked in the log.
+`tenant`, `project` and `environment` are required with `oidc`: Bella looks for the trust domain of that
+environment, and the step fails early if one is missing. You can also set `BELLA_BAXTER_TENANT`,
+`BELLA_BAXTER_PROJECT` and `BELLA_BAXTER_ENV` in the job's `env`; an input wins when both are set.
+
+`bella-url` is the **API** address (`https://api.bella-baxter.io` for the hosted service, your API origin when
+self-hosted), not the console's. See [Keyless / Workload Identity](/features/keyless) for the Trust Domain this
+needs, including the claim rules it accepts.
+
+`bella run` does not mask the secret values it injects. Do not echo them in a step.
 
 **Token audience.** The action asks GitHub for a token minted for Bella, with audience `bella-baxter`, so
 it works against a trust domain that accepts the default with nothing to configure. If your trust domain
-accepts a different audience, for example its recommended per-environment value, set `BELLA_OIDC_AUDIENCE`
-for the job. If you call Bella without the CLI, request the audience yourself:
-`core.getIDToken('bella-baxter')`.
+accepts a different audience, for example its recommended per-environment value, pass it as the `audience`
+input (or set `BELLA_OIDC_AUDIENCE` for the job). It must be one the trust domain accepts. If you call Bella
+without the CLI, request the audience yourself: `core.getIDToken('bella-baxter')`.
 
 GitHub's default audience (`https://github.com/<owner>`) is shared with every other service that accepts
 it, so a trust domain enforcing its audience refuses it.
@@ -103,14 +120,19 @@ No stored credentials. The job authenticates using GitHub's OIDC token. Requires
 ```yaml
 permissions:
   id-token: write   # required
+  contents: read
 
 steps:
   - uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.109
     with:
       bella-url: ${{ vars.BELLA_BAXTER_URL }}
+      oidc: 'true'
+      tenant: my-org
+      project: my-api
+      environment: production
 
-  - run: bella run -p my-api -e production -- ./deploy.sh
-    # bella detects the OIDC token automatically — no login step needed
+  # No login step: the action already exported BELLA_BAXTER_API_KEY for this environment.
+  - run: bella run -- ./deploy.sh
 ```
 
 ## Workflow Patterns
@@ -147,8 +169,12 @@ jobs:
       - uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.109
         with:
           bella-url: ${{ vars.BELLA_BAXTER_URL }}
+          oidc: 'true'
+          tenant: my-org
+          project: my-api
+          environment: production
 
-      - run: bella run -p my-api -e production -- ./deploy.sh
+      - run: bella run -- ./deploy.sh
 ```
 
 ### Pattern 3 — SSH certificate signing

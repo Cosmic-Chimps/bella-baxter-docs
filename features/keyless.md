@@ -39,7 +39,7 @@ The two checks answer different questions, and you need both.
 
 | Setting | Meaning |
 |---------|---------|
-| none recorded | the platform default, `bella-baxter`, which is what the `bella` CLI requests |
+| none recorded | the platform default, `bella-baxter`, which is what the `bella` CLI and the action request |
 | a list | any one of them is accepted; use two values while moving from one to another |
 | recommended | `bella-baxter/<environment id>`, unique to the environment and shown in the console |
 
@@ -54,7 +54,7 @@ The two checks answer different questions, and you need both.
 
 To move an existing trust domain to enforcing:
 
-1. Point every CI job at an accepted audience. With the `bella` CLI there is nothing to do, because it already requests `bella-baxter`.
+1. Point every CI job at an accepted audience. With the `bella` CLI or the action there is nothing to do, because they already request `bella-baxter`; if you chose another accepted audience, set it with the `audience` input or `BELLA_OIDC_AUDIENCE`.
 2. Check **readiness**, on the environment's Identity tab or with `bella spiffe audience-readiness`. It shows how many recent exchanges presented an accepted audience, and which callers still don't.
 3. Switch **Refuse other audiences** on. If recent exchanges would be refused, you are asked first.
 
@@ -85,11 +85,14 @@ curl -X POST "$BELLA_URL/api/v1/environments/$ENVIRONMENT_ID/trust-domains" \
   }'
 ```
 
-- **Scope.** The trust domain belongs to the environment in the URL, so the project and environment the issued key is scoped to come from `$ENVIRONMENT_ID`, not from flags.
+- **Scope.** The trust domain belongs to the environment in the URL, so the project and environment the issued key is scoped to come from `$ENVIRONMENT_ID`. The workflow names that environment's slugs (see below) so the exchange finds this trust domain.
+- **API address.** `$BELLA_URL` is the **API** origin: `https://api.bella-baxter.io` for the hosted service, your API origin when self-hosted. It is not the console's address.
 - **Operators.** `operator` is `Equals` or `StartsWith`. Matching ignores case.
   - A `StartsWith` value must end in `/`, `:` or `@`, so the prefix stops at a boundary: `repo:myorg/my-repo:` (any branch of one repository), `repo:myorg/` (every repository in the organization) or `myorg/my-repo/.github/workflows/deploy.yml@` (one workflow file, as `job_workflow_ref`). `repo:myorg/my-repo` without the `:` would also match `repo:myorg/my-repo-fork`, so it is refused.
   - `Contains` is no longer accepted. It cannot be anchored, so it matches any value that merely includes the text.
   - A trust domain saved earlier with `Contains`, or with a `StartsWith` value not ending in one of those characters, is flagged in the console and its exchanges are refused until the rule is fixed.
+- **No globs.** `v*` or `refs/tags/v*` match nothing special; only `Equals` and `StartsWith` exist. `refs/tags/` is a valid prefix (any tag), `refs/tags/v` is refused.
+- **Restricting tags such as `v*`.** Rules cannot express that pattern. Anyone who can push a tag can get a key from a `refs/tags/` rule, so gate the deployment with a GitHub **environment** (with a deployment rule limiting which tags may deploy), have the job use it (`environment: production`), and add an `environment` `Equals` rule for that name next to the repository rule.
 - **Required.** `claimRules` needs at least one rule.
 - **Optional.** `acceptedAudiences` may be omitted, which means `bella-baxter`.
 
@@ -99,19 +102,37 @@ curl -X POST "$BELLA_URL/api/v1/environments/$ENVIRONMENT_ID/trust-domains" \
 # .github/workflows/deploy.yml
 jobs:
   deploy:
+    runs-on: ubuntu-latest
     permissions:
       id-token: write   # required
       contents: read
     steps:
       - uses: actions/checkout@v6
+      - uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.109
+        with:
+          oidc: 'true'
+          tenant: my-org          # slugs of the environment the trust domain belongs to
+          project: my-api
+          environment: production
+          # bella-url: https://api.bella-baxter.io   # the default; self-hosted: your API origin
       - name: Deploy with secrets
-        run: bella run -p my-api -e production -- ./deploy.sh
-        # No BELLA_BAXTER_API_KEY needed. bella requests the token for audience bella-baxter.
+        run: bella run -- ./deploy.sh
+        # No stored key. The issued key is scoped to that environment, so no -p / -e.
 ```
 
-If your trust domain accepts a different audience, tell the CLI which one to request in either of these ways:
+What happens:
+
+- **The exchange needs the environment.** `tenant`, `project` and `environment` are required (the step fails early without them). You can set `BELLA_BAXTER_TENANT`, `BELLA_BAXTER_PROJECT` and `BELLA_BAXTER_ENV` in the job's `env` instead; an input wins when both are set. Without the action, `bella auth oidc --tenant … --project … --env …` takes the same values.
+- **The key.** It is exported as `BELLA_BAXTER_API_KEY` (and the legacy name `BELLA_API_KEY`) for the later steps of the job, masked in the log, and expires with the trust domain's TTL.
+- **The server.** The API base URL is `https://api.bella-baxter.io`, not the console's address (`console.bella-baxter.io` answers with the console's HTML). Self-hosted, use your API origin.
+- **Secret values.** `bella run` does not mask the values it injects. Do not echo them in a step.
+
+If your trust domain accepts a different audience, tell Bella which one to request in any of these ways:
+- the `audience` input of the action
 - `--audience` on `bella auth oidc`
 - `BELLA_OIDC_AUDIENCE=<value>` in the job's environment
+
+The audience must be one of the trust domain's accepted audiences (the **Accepted audiences** field in the console).
 
 `.bella` cannot set the audience. The token is sent to the server `.bella` names, and a `.bella` comes with every repository a job checks out, so the job's own configuration decides which audience to request.
 
