@@ -38,6 +38,16 @@ comprobando únicamente el checksum.
 | `bella usage` | Ver uso de API y estado de facturación del mes actual |
 | `bella context use <project/env>` | Cambiar contexto activo |
 
+## Identidad de carga de trabajo (sin claves)
+
+En GitHub Actions (con `id-token: write`) o Kubernetes, `bella run`, `bella sdk run`, `bella exec` y `bella auth oidc` intercambian el token OIDC de la plataforma por una clave Bella de corta duración. El intercambio necesita el tenant, el proyecto y el entorno: `-t`/`--tenant`, `-p`/`--project` y `-e`/`--env` (o `BELLA_BAXTER_TENANT`, `BELLA_BAXTER_PROJECT` y `BELLA_BAXTER_ENV`, o un archivo `.bella`):
+
+```sh
+bella run -t mi-org -p mi-api -e production -- ./deploy.sh
+```
+
+Cada valor se resuelve por separado: el flag gana a la variable de entorno, y esta al `.bella`, y un flag nunca cambia los otros dos. Si todavía falta alguno, el comando se detiene antes de contactar a Bella y nombra el que falta (por ejemplo "missing: environment", junto con `--env <slug>`, `BELLA_BAXTER_ENV` o la clave `environment` de `.bella` para indicarlo) en lugar de decir "Not logged in". Si el runner tiene además una sesión guardada con `bella login`, sigue usándola.
+
 ## Organizaciones (Multi-Org)
 
 Si perteneces a más de una organización, puedes cambiar entre ellas sin cerrar sesión:

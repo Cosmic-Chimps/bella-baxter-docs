@@ -89,7 +89,7 @@ client := bellabaxter.NewClient(bellabaxter.ClientOptions{
 
 ## Hash-Based Efficient Polling
 
-Bella uses a lightweight `GET /secrets/hash` endpoint that returns only a hash of the current secret set. The full `GET /secrets` is only called when the hash changes — minimising API calls and bandwidth.
+Bella uses a lightweight `GET /secrets/hash` endpoint that returns an opaque change token for the current secret set — not a digest of the values: compare it for equality with the last one you saw, nothing more. The full `GET /secrets` is only called when the token changes — minimising API calls and bandwidth. The token changes once when Bella is upgraded to the keyed form, so every watcher refetches once.
 
 ---
 

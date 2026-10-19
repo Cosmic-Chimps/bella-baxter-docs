@@ -177,6 +177,7 @@ API keys are bound to one org at creation time. `bella org switch` is for OAuth 
 ```sh
 bella run -- node server.js
 bella run -p myapp -e staging -- python manage.py runserver
+bella run -t my-org -p myapp -e staging -- ./deploy.sh   # keyless in CI: tenant, project, environment
 bella run --watch -- node server.js   # auto-restart on secret changes
 bella run --watch --signal sighup -- gunicorn app:app   # reload without restart
 ```
@@ -449,6 +450,8 @@ bella config show/set-server/trust
 ## Workload Identity (Keyless)
 
 In GitHub Actions (with `id-token: write`) or Kubernetes, `bella auth oidc` exchanges the platform OIDC token for a short-lived Bella key — no stored credentials needed. It needs the tenant, project and environment slugs (`--tenant`, `--project`, `--env`, or `BELLA_BAXTER_TENANT`, `BELLA_BAXTER_PROJECT`, `BELLA_BAXTER_ENV`) and exports the key as `BELLA_BAXTER_API_KEY` (legacy alias `BELLA_API_KEY`). The key is scoped to that environment, so `bella run -- <cmd>` afterwards needs no `-p` or `-e`.
+
+`bella run`, `bella sdk run` and `bella exec` can also do the exchange themselves, taking `-t`/`--tenant`, `-p`/`--project` and `-e`/`--env` (or the same variables, or a `.bella`): `bella run -t my-org -p my-project -e production -- ./deploy.sh`. Each value is resolved on its own, and a flag wins over the variable and the `.bella` for its own field. If one is still missing the command stops before contacting Bella and names it (for example "missing: environment", with `--env <slug>`, `BELLA_BAXTER_ENV` or the `environment` key of `.bella` as ways to supply it) rather than saying "Not logged in". A runner that also has a stored `bella login` keeps using it.
 
 In GitHub Actions the setup action does this for you:
 

@@ -95,6 +95,7 @@ curl -X POST "$BELLA_URL/api/v1/environments/$ENVIRONMENT_ID/trust-domains" \
 - **Restricting tags such as `v*`.** Rules cannot express that pattern. Anyone who can push a tag can get a key from a `refs/tags/` rule, so gate the deployment with a GitHub **environment** (with a deployment rule limiting which tags may deploy), have the job use it (`environment: production`), and add an `environment` `Equals` rule for that name next to the repository rule.
 - **Required.** `claimRules` needs at least one rule.
 - **Optional.** `acceptedAudiences` may be omitted, which means `bella-baxter`.
+- The issued key's lifetime (Token TTL) is 1–1440 minutes; the API refuses anything outside that range (#1371).
 
 ### 2. Use in a Workflow (no credentials needed)
 
@@ -117,12 +118,29 @@ jobs:
           # bella-url: https://api.bella-baxter.io   # the default; self-hosted: your API origin
       - name: Deploy with secrets
         run: bella run -- ./deploy.sh
-        # No stored key. The issued key is scoped to that environment, so no -p / -e.
+        # No stored key. The issued key is scoped to that environment, so -p / -e are not needed.
 ```
 
 What happens:
 
 - **The exchange needs the environment.** `tenant`, `project` and `environment` are required (the step fails early without them). You can set `BELLA_BAXTER_TENANT`, `BELLA_BAXTER_PROJECT` and `BELLA_BAXTER_ENV` in the job's `env` instead; an input wins when both are set. Without the action, `bella auth oidc --tenant … --project … --env …` takes the same values.
+- **Flags work too.** `bella run`, `bella exec`, `bella sdk run` and `bella auth oidc` take the same three values as flags: `-t`/`--tenant`, `-p`/`--project` and `-e`/`--env` (`bella auth oidc` has the long forms only). For `bella run` the environment-variable form above stays valid, and so does this:
+
+  ```sh
+  bella run -t my-org -p my-api -e production -- ./deploy.sh
+  ```
+
+  Each value is resolved on its own, in this order: the flag, then `BELLA_BAXTER_TENANT` / `BELLA_BAXTER_PROJECT` / `BELLA_BAXTER_ENV`, then the nearest `.bella` (`org`, `project`, `environment`; the file supplies project and environment together). A flag wins over both for its own field and never changes the other two. So `-e production` with the project taken from the job's `env` targets `production`, even when a checked-in `.bella` names another environment. A `.bella` supplies these three slugs and nothing else: not the token, its location or its audience.
+- **A missing value is named, not guessed.** If a keyless exchange would run but the tenant, project or environment is still empty, the CLI sends nothing and says which are missing and how to supply each. For example, with only the environment missing:
+
+  ```
+  Keyless sign-in on GitHubActions needs a tenant, project and environment to find the trust domain, and is missing: environment.
+    environment: --env <slug>, BELLA_BAXTER_ENV, or `environment` in .bella
+  A .bella file supplies the project and environment together.
+  Or run 'bella login' to use a stored login instead.
+  ```
+
+  A runner that also has a stored `bella login` keeps using that login when the context is incomplete, as before. A `--tenant` that differs from the tenant the stored login is signed in to is refused, with both tenants named, instead of being ignored.
 - **The key.** It is exported as `BELLA_BAXTER_API_KEY` (and the legacy name `BELLA_API_KEY`) for the later steps of the job, masked in the log, and expires with the trust domain's TTL.
 - **The server.** The API base URL is `https://api.bella-baxter.io`, not the console's address (`console.bella-baxter.io` answers with the console's HTML). Self-hosted, use your API origin.
 - **Secret values.** `bella run` does not mask the values it injects. Do not echo them in a step.
@@ -145,6 +163,27 @@ const token = await core.getIDToken("bella-baxter"); // must be an audience the 
 GitHub's *default* audience (`https://github.com/<owner>`) is shared with every other service that accepts the default, so an enforcing trust domain refuses it. Request Bella's audience explicitly.
 
 Or use the [GitHub Actions integration](/integrations/github-actions) directly.
+
+### 3. Tenants that require registered devices
+
+A tenant can require a [registered device](/features/e2ee-zke#registered-devices) for every secret read. A keyless key has no person behind it, so it has no device of its own. The sign-in gives it one.
+
+- **Each sign-in binds a device key.** `bella auth oidc`, and the action that runs it, makes a new P-256 key pair in memory and sends the public half as `publicKey` with the exchange. Bella records it on the issued key, as it does for a key created in the console. The device check admits the key when the request presents that same public half.
+- **On GitHub Actions the private half is exported too.** It goes to later steps as `BELLA_BAXTER_PRIVATE_KEY` (PKCS#8 PEM), next to the API key. The CLI masks the API key and every line of the PEM before it writes either to `$GITHUB_ENV`. `bella run -- ./deploy.sh` needs no key options, and the action needs no new input.
+- **One command.** `bella run`, `bella exec` and `bella sdk run` sign in on their own when they find no key. They keep the device key in memory and write nothing to disk. `bella exec` and `bella sdk run` hand the child process `BELLA_BAXTER_PRIVATE_KEY` as PEM.
+- **GitLab and other platforms.** `bella auth oidc` prints the API key and never the private half, because a pipeline log is not a secret store. It prints a `#` comment pointing at `bella run`, which signs in and reads in one command. `--json` has no private key either.
+- **Which key a command uses.** `bella run`, `bella secrets get`, `bella secrets list`, `bella pull`, `bella sdk run` and `bella issue` take the first of these:
+  1. `--private-key`.
+  2. `BELLA_BAXTER_PRIVATE_KEY`, as PEM or base64 PKCS#8.
+  3. The device file on the machine.
+
+  If the variable is set but cannot be read, the command stops on a tenant that requires devices and names the variable. It does not fall back to the device file.
+
+The private half is bound to one API key. That key expires within the trust domain's token lifetime (1 to 1440 minutes, 15 by default), and the device key is useless after that. Exposing it is no worse than exposing the key.
+
+A refusal names its reason. A current CLI sends a device key every time, so `device_key_required` means a client that sent none, such as an older CLI. Update it.
+
+Without the CLI, send `publicKey` yourself (see [Token Exchange API](#token-exchange-api)) and keep the private half for the requests that read secrets.
 
 ## Kubernetes Setup
 
@@ -228,11 +267,14 @@ Content-Type: application/json
   "oidcToken": "<oidc-jwt requested for an accepted audience>",
   "tenantSlug": "my-org",
   "projectSlug": "my-api",
-  "environmentSlug": "production"
+  "environmentSlug": "production",
+  "publicKey": "<base64 SPKI P-256 public key; optional>"
 }
 ```
 
-Or, by environment id: `POST /api/v1/environments/{environmentId}/token` with `{ "oidcToken": "…" }`.
+Or, by environment id: `POST /api/v1/environments/{environmentId}/token` with `{ "oidcToken": "…", "publicKey": "…" }`.
+
+`publicKey` is optional. When it is sent, the issued key records it, and the device check admits the key when requests present that same public key. A tenant that requires registered devices refuses an exchange without it.
 
 Response:
 
@@ -245,8 +287,10 @@ Response:
 
 | Status | Meaning |
 |--------|---------|
+| 400 `device_key_malformed` | a trust domain admitted the token, but `publicKey` is not a base64 SPKI P-256 public key |
 | 401 `token_audience_mismatch` | a trust domain would have admitted the token, but it was minted for another audience — request an accepted one |
 | 401 `no_matching_trust_domain` | no trust domain admitted the token (issuer, signature, lifetime or a claim rule) |
+| 403 `device_key_required` | a trust domain admitted the token, but the tenant requires registered devices and no `publicKey` was sent: send one with the sign-in |
 | 403 `trust_domain_role_not_grantable` | the trust domain admitted the token but grants a role other than `Consumer` or `Manager` — an administrator must change its role |
 | 403 `trust_domain_has_no_claim_rules` | the only trust domain that matched has no claim rule, so it bounds no one — an administrator must add a rule |
 | 403 `trust_domain_claim_rule_not_accepted` | the only trust domain that matched holds a `Contains` rule or a `StartsWith` value not ending in `/`, `:` or `@` — an administrator must fix the rule |
@@ -258,5 +302,6 @@ Response:
 - **Lifetime.** Exchanged keys are short-lived (default: **15 minutes**, set per trust domain) and are not stored.
 - **Claim rules decide who.** They can restrict by repository, branch, service account and custom claims. At least one is required, and a prefix must end on a boundary (`/`, `:` or `@`).
 - **Audience decides for whom.** The audience check means a token minted for another service is refused once the trust domain enforces.
-- **Every exchange is recorded.** Each exchange that reaches a trust domain is recorded in the audit trail as `oidc_token_exchanged` or `oidc_exchange_refused`, with the trust domain, the reason, and the audience the token carried. The token itself is never stored.
+- **Every exchange is recorded.** Each exchange that reaches a trust domain is recorded in the audit trail as `oidc_token_exchanged` or `oidc_exchange_refused`, with the trust domain, the reason, and the audience the token carried. A grant that bound a device key also carries the device's fingerprint. The token itself is never stored.
+- **A device key reaches no further than its API key.** It is bound to one key that expires with the trust domain's TTL.
 - **Credential-less.** No long-lived secret ever touches your CI/CD config.

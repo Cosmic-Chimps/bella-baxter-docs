@@ -123,8 +123,15 @@ PKCS#8 PEM. The file under `~/.config/bella-cli/` is encrypted, so do not `cat` 
 the SDK would refuse the result. `bella run` does not inject the key and does not need to, because it
 hands the app the secret values themselves.
 
-Anywhere else (CI, a container), set `BELLA_BAXTER_PRIVATE_KEY` to a PKCS#8 P-256 private key in PEM,
-or pass it through the SDK's option (see the [Per-SDK Reference](#per-sdk-reference)). Its public half
+In CI with [keyless sign-in](/features/keyless), you store no key. `bella auth oidc` makes a throwaway
+device key for each sign-in and binds its public half to the API key it issues. On GitHub Actions it also
+exports the private half, masked, as `BELLA_BAXTER_PRIVATE_KEY`, so later steps and SDK processes read it
+with no setup. Where it is not exported (GitLab, other platforms), `bella run` and `bella sdk run` sign in
+and keep the key in memory. The key is useful only with its API key, which expires with the trust domain's
+token lifetime. See [Tenants that require registered devices](/features/keyless#_3-tenants-that-require-registered-devices).
+
+Anywhere else (a container, a long-lived host), set `BELLA_BAXTER_PRIVATE_KEY` to a PKCS#8 P-256 private key
+in PEM, or pass it through the SDK's option (see the [Per-SDK Reference](#per-sdk-reference)). Its public half
 must be registered: as a device, or as the `publicKey` recorded on the API key the process uses.
 
 **All SDK framework integrations read this variable automatically.** No code changes required for Django, FastAPI, Flask, Rails, Laravel, Spring Boot, ASP.NET Core, etc.

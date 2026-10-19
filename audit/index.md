@@ -31,6 +31,12 @@ Each log entry contains:
 | `outcome` | `Success` or `Denied` |
 | `requestId` | Correlation ID for tracing |
 
+### The "App" label is reported by the client, not verified
+
+The console's **App** column, and the `bellaClient` / `appClient` fields of a streamed audit record (`client.bellaClient` and `client.app` in the envelope), are what the caller *said* it was, taken from the `X-Bella-Client` and `X-App-Client` request headers. Bella does not verify them, so do not write a rule that treats either as proof of who called; the actor, API key or user id and the IP address are the fields Bella establishes.
+
+Bella limits what a caller can put there. `bellaClient` is one of Bella's own clients (`bella-cli`, `bella-webapp`, `bella-mcp`, `bella-dotnet-sdk`, `bella-js-sdk`, and the other `bella-*-sdk` names), or the literal `unrecognised` when the caller sent anything else; it is empty only when the caller sent nothing. `appClient` is the name you gave your own application (`bella exec --app`), with control characters removed and cut to 64 characters.
+
 ## Event Types
 
 | Event | Description |

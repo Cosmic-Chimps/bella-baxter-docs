@@ -65,7 +65,7 @@ jobs:
           tenant: my-org
           project: my-api
           environment: production
-      # The issued key is scoped to that environment, so no -p / -e is needed.
+      # The issued key is scoped to that environment, so -p / -e are not needed.
       - run: bella run -- ./deploy.sh
 ```
 
@@ -74,11 +74,22 @@ The action exports the issued key as `BELLA_BAXTER_API_KEY` (and the legacy name
 environment, and the step fails early if one is missing. You can also set `BELLA_BAXTER_TENANT`,
 `BELLA_BAXTER_PROJECT` and `BELLA_BAXTER_ENV` in the job's `env`; an input wins when both are set.
 
+`bella run` also takes the three as flags, `bella run -t my-org -p my-api -e production -- ./deploy.sh`, and the
+environment-variable form above stays valid. Each is resolved on its own: a flag beats the variable, which beats a
+`.bella` in the repository, and a flag never changes the other two values. If a keyless exchange would run but
+one is still empty, `bella run` sends nothing and names the missing ones (for example "missing: environment", with
+`--env <slug>`, `BELLA_BAXTER_ENV` or the `environment` key of `.bella` as ways to supply it), instead of reporting "Not logged in".
+
 `bella-url` is the **API** address (`https://api.bella-baxter.io` for the hosted service, your API origin when
 self-hosted), not the console's. See [Keyless / Workload Identity](/features/keyless) for the Trust Domain this
 needs, including the claim rules it accepts.
 
 `bella run` does not mask the secret values it injects. Do not echo them in a step.
+
+**Tenants that require registered devices.** The sign-in also binds a throwaway device key to the issued key, and
+the action exports its private half, masked, as `BELLA_BAXTER_PRIVATE_KEY`. `bella run -- ./deploy.sh` finds it
+with no key options, and the action needs no new input. The key is useful only with that API key, which expires
+with the trust domain's token lifetime. See [Tenants that require registered devices](/features/keyless#_3-tenants-that-require-registered-devices).
 
 **Token audience.** The action asks GitHub for a token minted for Bella, with audience `bella-baxter`, so
 it works against a trust domain that accepts the default with nothing to configure. If your trust domain

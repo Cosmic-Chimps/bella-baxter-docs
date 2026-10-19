@@ -88,5 +88,5 @@ Shows active shares with their expiry and view count (not the values or decrypti
 - ✅ Zero-knowledge: Bella only stores ciphertext — it cannot decrypt the value
 - ✅ One-time: default `max-views: 1` — opened once, gone forever
 - ✅ Time-limited: shares expire automatically
-- ✅ Audit trail: all view events are logged (IP, timestamp, user agent)
+- ✅ Audit trail: all view events are logged (IP, timestamp, user agent). Reading a password-protected share's label without unlocking it is logged too, once per source per hour, never with the label itself
 - ✅ Revocable: cancel a share before it's opened
