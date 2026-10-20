@@ -208,7 +208,7 @@ bella sdk run -p myapp -e production -- ./start.sh
    - API key path → `BELLA_BAXTER_API_KEY` + `BELLA_API_KEY` + `BELLA_BAXTER_URL`
    - OAuth path → `BELLA_BAXTER_ACCESS_TOKEN` + `BELLA_BAXTER_PROJECT` + `BELLA_BAXTER_ENV` + `BELLA_BAXTER_URL`
 
-4. **Injects the ZKE device key** — if a device private key is configured (and no service-account key is used), `BELLA_BAXTER_PRIVATE_KEY` is set so the SDK can decrypt secrets end-to-end without the server ever seeing plaintext values.
+4. **Injects the ZKE device key** — if a device private key is configured (and no service-account key is used), `BELLA_BAXTER_PRIVATE_KEY` is set so the SDK can decrypt secrets end-to-end without the server ever seeing plaintext values. With a `bax-` API key it is set only when the server confirms this machine's device key is the one recorded against that key; otherwise it is left out (see [ZKE: an SDK that uses an API key](/features/e2ee-zke#_2-hand-the-key-to-your-sdk-process)). The Go, Python, PHP, Ruby and Swift SDKs accept only a `bax-` key (no access-token mode).
 
 5. **Spawns the subprocess** and returns its exit code — the child process has everything it needs; `bella sdk run` itself makes no secret API calls.
 

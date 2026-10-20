@@ -123,6 +123,25 @@ PKCS#8 PEM. The file under `~/.config/bella-cli/` is encrypted, so do not `cat` 
 the SDK would refuse the result. `bella run` does not inject the key and does not need to, because it
 hands the app the secret values themselves.
 
+That is the developer-login path, where the child also gets `BELLA_BAXTER_ACCESS_TOKEN`. The **Go, Python,
+PHP, Ruby and Swift SDKs have no access-token mode**: they accept only a `bax-` API key, so the token never
+reaches them and they read with the key `bella sdk run` finds instead (a stored key from `bella login --api-key`,
+or `BELLA_BAXTER_API_KEY`).
+
+**An SDK that uses an API key needs that key's own registered device.** An API key's only device is the public
+key recorded against it when it was created (or attached later from the console), not the developer's device from
+`bella auth setup`. With a `bax-` key and no `BELLA_BAXTER_PRIVATE_KEY` already exported, `bella sdk run` asks the
+server, signing as that key and presenting this machine's device key, whether the two are the same. Only on a
+confirmed yes does it set `BELLA_BAXTER_PRIVATE_KEY`; the server decides, not the CLI. Otherwise nothing is injected:
+
+- Tenant requires registered devices and this machine's device is not the key's: `sdk run` prints one warning
+  naming this machine's device fingerprint and still starts the child, whose secret reads will be refused. Create
+  the API key with this machine's device public key (or attach it to a key that has none), or export
+  `BELLA_BAXTER_PRIVATE_KEY` as the private key of the key's own device.
+- The server could not be asked (network error, 5xx, 401): `sdk run` prints a dim note that the device key was not
+  injected because the server could not confirm it belongs to this API key, and starts the child.
+- No device key on this machine, or a tenant that does not require registered devices: nothing is asked and nothing is printed.
+
 In CI with [keyless sign-in](/features/keyless), you store no key. `bella auth oidc` makes a throwaway
 device key for each sign-in and binds its public half to the API key it issues. On GitHub Actions it also
 exports the private half, masked, as `BELLA_BAXTER_PRIVATE_KEY`, so later steps and SDK processes read it
