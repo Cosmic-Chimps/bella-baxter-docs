@@ -101,6 +101,12 @@ appliance runs; `failureCategory` and `failureDetail` on failure; `missedReason`
 `occurrenceDueAt` for a missed occurrence; `notAfter` (the new expiry) on success. `resourceId` is the
 certificate target's id.
 
+`failureCategory` is one of `Preflight`, `DnsValidation`, `Issuance`, `NoHostSucceeded`, `Cancelled`,
+`Stalled`, `StoreCredentialUnavailable` or `ApplianceAuthenticationRejected`. The last means the Gigamon
+appliance answered 401/403 to the credentials Bella presented. It says "rejected", not "expired": Gigamon
+FM API tokens expire, while username and password do not, but the FM answers 401 for an expired token and
+for a wrong credential alike.
+
 Payloads are metadata only. They never contain certificate material, private keys, passphrases,
 secret values or vault paths.
 
