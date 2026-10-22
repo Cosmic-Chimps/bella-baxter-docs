@@ -65,9 +65,9 @@ Human workflows (WebApp, project management, user management) are **never metere
 | Solo developer | Active development | ~200 | $0 |
 | 3-person startup | Dev + CI/CD (20 deploys/day) | ~600 | $0 |
 | 3-person startup + AI | CI/CD + daily MCP sessions | ~1,800 | $0 |
-| 10-person team | Heavy CI/CD (100 deploys/day) | ~3,000 | $0.005 |
-| 10-person team | 500 deploys/day | ~15,000 | $0.065 |
-| 50-person company | 2,000 deploys/day | ~60,000 | $0.29 |
+| 10-person team | Heavy CI/CD (100 deploys/day) | ~3,000 | $5 |
+| 10-person team | 500 deploys/day | ~15,000 | $65 |
+| 50-person company | 2,000 deploys/day | ~60,000 | $290 |
 
 You pay more when you ship more (or your AI agents are very busy). The bill growing is a signal that the team is growing.
 
