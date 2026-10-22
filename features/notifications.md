@@ -60,6 +60,41 @@ A `Custom` channel receives this JSON body:
 Use a [webhook](/features/webhooks) instead when you need a signed request or the event's full
 `metadata`.
 
+## Set up a Discord channel
+
+1. In Discord, open the channel's settings → **Integrations** → **Webhooks** → **New webhook**.
+   Name it (the name signs the messages) and copy the URL.
+2. In the console, open the **Notifications** tab of a project or an environment, or **Settings**
+   for a tenant-wide channel. Create a channel of type **Discord**, paste the URL into `webhook_url`
+   and pick the events.
+3. Send the test. A "Bella Baxter Test Notification" message with the channel's name arrives in
+   Discord.
+
+> The webhook URL is a credential: anyone who has it can post to your channel. Don't paste it in
+> chats, issues or tickets. If it leaks, delete the webhook in Discord and create a new one.
+
+## Set up a Telegram channel
+
+1. **Create the bot.** In Telegram, talk to `@BotFather` and send `/newbot`. Choose a name and a
+   username (it must end in `bot`). BotFather returns the bot's **token**, which is a credential.
+2. **Create the channel.** It can be private.
+3. **Add the bot as an administrator with Post Messages.** In the channel's settings, open
+   **Administrators** → **Add Admin** and search for the bot by its username. In the bot's admin
+   card, expand **Manage Messages**, tick **Post Messages** and save.
+   Without Post Messages the bot is in the channel, but Telegram rejects every send with a 400.
+   The **Channel Admin Rights** you set in BotFather only define what the bot *asks for* when it is
+   added. What counts is the administrator card in the channel.
+4. **Get the `chat_id`.** A channel's ID is a negative number that starts with `-100`.
+   1. Post any message in the channel.
+   2. Open `https://api.telegram.org/bot<TOKEN>/getUpdates` in your browser. The ID is in
+      `channel_post.chat.id`. If the bot has a webhook configured, `getUpdates` returns nothing.
+   3. Check it with `https://api.telegram.org/bot<TOKEN>/getChat?chat_id=<ID>`. It must answer
+      `"ok": true` with the channel's title.
+5. **Create the channel in Bella.** Choose type **Telegram**, fill in `bot_token` and `chat_id`, pick
+   the events and send the test.
+
+> These URLs contain the bot token. Open them only in your own browser and don't share them.
+
 ## Event Types
 
 Channels subscribe to the same event types as [webhooks](/features/webhooks#event-types), with the
@@ -125,6 +160,19 @@ subscription.
 
 Channel delivery is best-effort: a message the destination refuses is not retried. Use a
 [webhook](/features/webhooks#delivery-retries) when every event must arrive.
+
+### If the test fails
+
+| What you see | Cause | What to do |
+|--------------|-------|------------|
+| The console shows "Network Error"; the browser console shows a CORS error and a `502` on `POST …/notifications/{id}/test` | The destination refused the message. Bella answers 502, and that response carries no CORS header, so the browser hides the reason | Test the destination directly (see below) |
+| Telegram: 400 on send, but `getChat` answers fine | The bot is not an administrator with **Post Messages** | Step 3 of [Set up a Telegram channel](#set-up-a-telegram-channel) |
+| Telegram: `chat not found` | Wrong `chat_id`, or the bot is not in the channel | Step 4 of [Set up a Telegram channel](#set-up-a-telegram-channel) |
+
+To test Telegram without Bella, open
+`https://api.telegram.org/bot<TOKEN>/sendMessage?chat_id=<ID>&text=test`. If it fails, the
+`description` field says why. For Discord, send a `POST` with a JSON `content` field straight to the
+webhook URL with `curl`.
 
 ## Manage Channels
 
