@@ -30,6 +30,24 @@ print(secrets["DATABASE_URL"])
 
 All methods are **synchronous** by default. Async variants (e.g. `get_all_secrets_async()`) are available for use inside async frameworks.
 
+## Writing and deleting secrets
+
+```python
+# Create or update one secret (an upsert). `provider` is the provider's slug or UUID and is required.
+client.set_secret("RDS_PASSWORD", "s3cr3t", provider="vault-main", description="rotated by CI")
+
+# Delete one. Returns True when it was deleted, False when it was already absent (404).
+client.delete_secret("OLD_KEY", provider="vault-main")
+```
+
+- `project_slug` and `env_slug` are optional keyword arguments; they default to the API key's own project and
+  environment. Environments are addressed by **slug**, never by UUID.
+- Everything after `key`/`value` is keyword-only, so a provider can never be passed where a project was meant.
+- Writing needs a **Manager** API key or higher. A Consumer key is read-only and the API answers 403.
+- A scope-limited key gets 404 from the update when the key does not exist yet; `set_secret` then creates it
+  (which also stamps the key's scopes on it), as `bella secrets set` does. Any other error raises.
+- Async variants: `set_secret_async()` and `delete_secret_async()`.
+
 ## Framework Integrations
 
 ### Flask

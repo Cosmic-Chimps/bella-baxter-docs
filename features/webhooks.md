@@ -59,7 +59,7 @@ Subscribe with the exact names below. Names are case-sensitive and matched exact
 | `global_secret.updated` | A global secret is updated | `key`; `resourceId` = the key; no environment |
 | `global_secret.deleted` | A global secret is deleted | `key`; `resourceId` = the key; no environment |
 | `secret.rotation.succeeded` | A rotation policy rotated a secret and the new value reached the provider | `key`; `metadata.newKeyHandle` |
-| `secret.rotation.failed` | A rotation attempt failed | `key`; `metadata.errorMessage`, `metadata.retryCount` |
+| `secret.rotation.failed` | A rotation attempt failed | `key`; `metadata.errorMessage`; `metadata.retryCount` = consecutive failed attempts, this one included (1 on the first failure; resets to 0 after a success) |
 | `secret.rotation.revoked` | A rotated secret's previous value was revoked at the end of its grace period | `key`; `metadata.revokedKeyHandle` |
 | `secret.expiry.warning` | A secret's expiry date falls inside its warning window | `key`; `resourceId` = the secret id; `metadata.expiresAt`, `metadata.daysUntilExpiry` |
 | `secret.expired` | A secret's expiry date has passed | `key`; `resourceId` = the secret id; `metadata.expiresAt`, `metadata.daysUntilExpiry` |

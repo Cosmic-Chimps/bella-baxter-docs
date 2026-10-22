@@ -81,12 +81,31 @@ Write or delete a secret value from a playbook:
     api_key: "{{ bella_api_key }}"
     project_slug: my-app
     environment_slug: production
+    provider: vault-main
+  no_log: true
 
 - name: Remove a secret
   jjchiw.bella_baxter.secret:
     key: OLD_FEATURE_FLAG
     state: absent
+    baxter_url: "{{ bella_baxter_url }}"
+    api_key: "{{ bella_api_key }}"
+    environment_slug: production
+    provider: vault-main
 ```
+
+Requirements for writing:
+
+- An API key with the **Manager** role or higher. A Consumer key is read-only and the API answers 403.
+- A `bella-baxter` SDK release that provides `set_secret` / `delete_secret` (newer than `0.1.1-preview.139`).
+  The module fails with a message saying so when the installed SDK is older.
+- Environments are addressed by **slug**. `environment_id` is no longer accepted (the API has no route by
+  UUID) and fails with a message that points at `environment_slug`. `provider` is the provider's slug or UUID
+  (`provider_id` still works as an alias). Without `project_slug` / `environment_slug` the module uses the
+  API key's own project and environment.
+- `state: present` always reports `changed: true` (there is no single-secret read to compare against).
+  `state: absent` reports `changed: false` when the key was already gone.
+- A scope-limited key can create keys inside its scope.
 
 ## SSH Certificate Authority
 
