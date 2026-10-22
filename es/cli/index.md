@@ -21,6 +21,21 @@ una versión, descarga el instalador de esa release:
 Solo para un espejo sin conexión que no pueda llevar la firma, `BELLA_INSECURE_SKIP_SIGNATURE=1` instala
 comprobando únicamente el checksum.
 
+## Qué URL de servidor usar
+
+La CLI habla con un solo servidor: el origen de la **API** de Bella Baxter. Fíjalo una vez con
+`bella config set-server <url>` o con `BELLA_BAXTER_URL`:
+
+| Instalación | URL del servidor |
+|-------------|------------------|
+| Servicio alojado | `https://api.bella-baxter.io`, el valor por defecto, así que no hay que fijar nada |
+| Autoalojada con nombres de host separados | el nombre de host de la **API** (`api.<dominio>`), no el de la pasarela de la consola (`gw.<dominio>`) |
+| Paquete autoalojado | `https://<tu-dirección>`, la única dirección que sirve |
+
+En una instalación con nombres de host separados, la consola habla con una pasarela que además da acceso a la
+rotación de certificados y a Scout. Esa pasarela solo reenvía `/api/**`, y `bella mcp` y el conector MCP usan
+`/mcp`, así que deja la CLI en el nombre de host de la API. Todos los comandos actuales de la CLI se sirven ahí.
+
 ## Comandos Principales
 
 | Comando | Descripción |

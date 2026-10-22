@@ -62,6 +62,18 @@ Set `BELLA_BAXTER_API_KEY` in the MCP server `env` block — no `bella login` st
 See [MCP / AI Integration](/integrations/mcp-ai) for config snippets.
 :::
 
+### Which server URL
+
+The CLI talks to one server: your Bella Baxter **API** origin. Set it once with `bella config set-server <url>`, or with `BELLA_BAXTER_URL`:
+
+| Install | Server URL |
+|---------|-----------|
+| Hosted | `https://api.bella-baxter.io`, the default, so nothing to set |
+| Self-hosted with separate hostnames | the **API** hostname (`api.<domain>`), not the console's gateway hostname (`gw.<domain>`) |
+| Self-hosted bundle | `https://<your-address>`, the one address it serves |
+
+On an install with separate hostnames, the console talks to a gateway that also fronts certificate rotation and Scout. That gateway forwards only `/api/**`, while `bella mcp` and the MCP connector use `/mcp`, so keep the CLI on the API hostname. Every CLI command today is served there.
+
 ### The `.bella` file
 
 ```sh
