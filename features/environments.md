@@ -12,18 +12,21 @@ Environments have a slug used in API keys and CLI commands.
 
 ## Assign a Provider
 
-Each environment must have at least one provider assigned before secrets can be stored:
+Each environment must have at least one provider assigned before secrets can be stored. `--provider` takes the provider's slug (see `bella providers list`):
 
 ```sh
-bella environments assign-provider \
+bella environments add-provider production \
   --project my-api \
-  --environment production \
-  --provider "AWS Production"
+  --provider aws-production
 ```
 
 ## Members and Access
 
 By default, project members inherit access to all environments. You can restrict a sensitive environment (e.g., `production`) to a subset of users:
+
+::: warning Planned — not in the CLI yet
+`bella environments add-member` and `remove-member` are on the roadmap and are not in the CLI yet. Until then, manage environment access in the WebApp or with the [REST API](/api-reference/). The examples below show the planned syntax.
+:::
 
 ```sh
 # Grant user access to this specific environment
@@ -50,6 +53,10 @@ bella environments remove-member \
 
 Copy all secrets from one environment to another:
 
+::: warning Planned — not in the CLI yet
+`bella environments copy` is on the roadmap and is not in the CLI yet. Until then, use the WebApp or the [REST API](/api-reference/). The example below shows the planned syntax.
+:::
+
 ```sh
 bella environments copy \
   --from my-api/staging \
@@ -63,6 +70,10 @@ This copies secret values from one provider to another. Ensure both environments
 ## Lease Policy
 
 You can configure an automatic lease policy on an environment — secrets expire after a set duration and must be explicitly re-issued:
+
+::: warning Planned — not in the CLI yet
+`bella environments set-lease-policy` is on the roadmap and is not in the CLI yet. Until then, set the lease policy in the WebApp or with the [REST API](/api-reference/). The example below shows the planned syntax.
+:::
 
 ```sh
 bella environments set-lease-policy \

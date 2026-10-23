@@ -199,7 +199,7 @@ Issue a short-lived SSH certificate via Bella's SSH CA for passwordless access t
 
 # The CLI reads BELLA_BAXTER_API_KEY from the environment. A key passed as a command
 # argument is visible in the runner's process list and in its command log (#833).
-- run: bella ssh sign ~/.ssh/id_ed25519.pub --role deployer
+- run: bella ssh sign --key ~/.ssh/id_ed25519.pub --role deployer
   env:
     BELLA_BAXTER_API_KEY: ${{ secrets.BELLA_BAXTER_API_KEY }}
 

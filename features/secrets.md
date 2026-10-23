@@ -32,18 +32,27 @@ Content-Type: application/json
 
 ## List Secrets
 
-Key names are returned; values are always masked unless you explicitly request them.
+Key names are returned; the CLI always masks the values (`***`). To read values, use `bella secrets get` (see below).
 
 ```sh
 bella secrets list
-bella secrets list --show-values   # requires elevated permissions
 ```
 
 ## Read a Secret
 
+`bella secrets get` downloads all secrets of the environment; it does not take a key. To read one secret, ask for JSON and pick the key:
+
 ```sh
-bella secrets get DATABASE_URL
+bella secrets get --format json | jq -r '.DATABASE_URL'
 ```
+
+Or read it through the process environment of a command Bella starts:
+
+```sh
+bella run -- sh -c 'echo "$DATABASE_URL"'
+```
+
+Pass `-p <project> -e <environment>` to target a specific environment (otherwise the `.bella` file is used).
 
 ## Update a Secret
 
@@ -64,8 +73,8 @@ Deletion is proxied to the provider. Vault soft-deletes (recoverable); AWS hard-
 ## Import from `.env` File
 
 ```sh
-bella secrets push .env            # push all key=value pairs
-bella secrets push .env --dry-run  # preview without writing
+bella secrets push -i .env          # push all key=value pairs
+bella secrets push -i .env -p my-api -e staging   # into a specific environment
 ```
 
 ## Export to `.env` File
@@ -78,10 +87,16 @@ bella pull -o yaml          # write secrets.yaml
 
 ## Secret Versioning
 
-When the underlying provider supports versioning (Vault, AWS), you can access historical values:
+When the underlying provider supports versioning (Vault, AWS), Bella exposes the history: list a secret's versions, read
+an older one, roll back to it, and soft-delete or restore a version. These are in the console and the
+[REST API](/api-reference/) (`listSecretVersions`, `getSecretVersion`, `rollbackSecret`) today.
+
+::: warning Planned — not in the CLI yet
+The version commands, `bella secrets versions` and `bella secrets rollback`, are on the roadmap and are not in the CLI yet.
+Until then, use the console or the REST API above.
+:::
 
 ```sh
-bella secrets get DATABASE_URL --version 3
 bella secrets rollback DATABASE_URL   # revert to previous version
 ```
 

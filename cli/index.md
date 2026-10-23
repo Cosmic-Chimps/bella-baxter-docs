@@ -408,8 +408,8 @@ bella org current             Show active org
 bella org list                List all orgs you belong to
 bella org switch <slug>       Switch to a different org
 
-bella projects list/get/create/update/delete/default
-bella environments list/get/create/update/delete/default
+bella projects list/get/create/update/delete
+bella environments list/get/create/update/delete
 bella providers list/get/create/delete
 
 bella secrets list            List secret keys (values masked)
@@ -444,7 +444,7 @@ bella pki ca                      View CA certificate and ACME directory URL
 bella pki roles create/list/delete
 bella pki issue                   Issue a TLS/X.509 certificate
 bella pki revoke --serial <sn>    Revoke a certificate by serial number
-bella pki tidy                    Remove expired / revoked cert storage
+bella pki tidy (planned)          Remove expired / revoked cert storage (not in the CLI yet)
 
 bella agent                   Sidecar: watch secrets, write files, signal process
 bella agent --init            Scaffold bella-agent.yaml
@@ -633,7 +633,7 @@ bella pki revoke --serial "1a:2b:3c:..."
 # Other
 bella pki roles list
 bella pki roles delete --name web-server
-bella pki tidy       # remove expired / revoked cert storage from OpenBao
+bella pki tidy       # (planned, not in the CLI yet) remove expired / revoked cert storage from OpenBao
 ```
 
 > The CA private key is generated inside OpenBao and **never leaves it**. Bella never stores private keys.

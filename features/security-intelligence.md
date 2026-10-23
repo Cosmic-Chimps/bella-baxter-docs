@@ -16,6 +16,10 @@ Navigate to: **WebApp → Security → Dashboard**
 
 ## Run a Scan
 
+::: warning Planned — not in the CLI yet
+The `bella security` commands (`scan`, `findings list|get|dismiss`, `policy set`) are on the roadmap and are not in the CLI yet. Until then, run scans and manage findings in the WebApp (**Security → Dashboard**) or with the [REST API](/api-reference/). The CLI examples on this page show the planned syntax.
+:::
+
 ```sh
 bella security scan --project my-api --environment production
 ```

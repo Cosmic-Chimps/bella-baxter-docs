@@ -65,6 +65,10 @@ Tenant
 
 ## Assign a Provider to a Project
 
+::: warning Planned — not in the CLI yet
+`bella providers assign` is on the roadmap and is not in the CLI yet. Until then, use the WebApp (**Project → Providers → Assign Provider**) or the [REST API](/api-reference/). The example below shows the planned syntax.
+:::
+
 ```sh
 bella providers assign --project my-project --provider "AWS Production"
 ```
@@ -73,18 +77,21 @@ Or from the WebApp: **Project → Providers → Assign Provider**
 
 ## Assign a Provider to an Environment
 
-Each environment within a project can use a specific provider:
+Each environment within a project can use a specific provider. `--provider` takes the provider's slug (see `bella providers list`):
 
 ```sh
-bella environments assign-provider \
+bella environments add-provider production \
   --project my-project \
-  --environment production \
-  --provider "AWS Production"
+  --provider aws-production
 ```
 
 Multiple providers can be assigned to one environment — Bella reads from the primary provider and optionally syncs to others.
 
 ## Test a Provider Connection
+
+::: warning Planned — not in the CLI yet
+`bella providers test` is on the roadmap and is not in the CLI yet. Until then, test the connection from the WebApp (the provider's page) or with the [REST API](/api-reference/). The example below shows the planned syntax.
+:::
 
 ```sh
 bella providers test my-provider-id

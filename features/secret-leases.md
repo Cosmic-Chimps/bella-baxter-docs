@@ -4,6 +4,10 @@ Secret Leases add **time-limited access** to secrets. When a lease expires, the 
 
 ## Create a Lease
 
+::: warning Planned — not in the CLI yet
+The `bella leases` commands (`issue`, `list`, `revoke`, `expire-all`) and `bella environments set-lease-policy` are on the roadmap and are not in the CLI yet. Until then, use the WebApp or the [REST API](/api-reference/). To issue a short-lived scoped token from the CLI today, use `bella issue` (see [Relationship to `bella issue`](#relationship-to-bella-issue)). The CLI examples on this page show the planned syntax.
+:::
+
 ```sh
 bella leases issue \
   --project my-api \

@@ -8,6 +8,10 @@ From the WebApp: **Project → Settings → API Keys → Create Key**
 
 Or via CLI:
 
+::: warning Planned — not in the CLI yet
+The `bella api-keys` commands (`create`, `list`, `rotate`, `revoke`) are on the roadmap and are not available in the CLI yet. Until then, manage keys from the WebApp (**Project → Settings → API Keys**) or the [REST API](/api-reference/). The examples below show the planned syntax.
+:::
+
 ```sh
 bella api-keys create \
   --project my-api \
@@ -58,6 +62,10 @@ The scoped token (`bax-...`) can only access the named secret scopes and expires
 
 ## Rotate a Key
 
+::: warning Planned — not in the CLI yet
+`bella api-keys rotate` is on the roadmap and is not in the CLI yet. Until then, rotate from the WebApp (**Project → Settings → API Keys**) or the [REST API](/api-reference/).
+:::
+
 ```sh
 bella api-keys rotate my-key-id
 ```
@@ -66,6 +74,10 @@ The old key is invalidated immediately. Issue a new key and update your services
 
 ## Revoke a Key
 
+::: warning Planned — not in the CLI yet
+`bella api-keys revoke` is on the roadmap and is not in the CLI yet. Until then, revoke from the WebApp (**Project → Settings → API Keys**) or the [REST API](/api-reference/).
+:::
+
 ```sh
 bella api-keys revoke my-key-id
 ```
@@ -73,6 +85,10 @@ bella api-keys revoke my-key-id
 Revoked keys are rejected immediately by all API endpoints.
 
 ## List Keys
+
+::: warning Planned — not in the CLI yet
+`bella api-keys list` is on the roadmap and is not in the CLI yet. Until then, list keys in the WebApp (**Project → Settings → API Keys**) or with the [REST API](/api-reference/).
+:::
 
 ```sh
 bella api-keys list --project my-api --environment production

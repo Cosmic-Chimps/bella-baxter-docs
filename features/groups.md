@@ -6,6 +6,10 @@ Groups let you manage access for multiple users at once. Assign a group to a pro
 
 From the WebApp: **Settings → Groups → Create Group**
 
+::: warning Planned — not in the CLI yet
+The `bella groups` commands (`create`, `list`, `members`, `add-member`, `remove-member`, `assign-project`, `assign-environment`, `unassign-project`) are on the roadmap and are not in the CLI yet. Until then, manage groups in the WebApp (**Settings → Groups**) or with the [REST API](/api-reference/). The CLI examples on this page show the planned syntax.
+:::
+
 ```sh
 bella groups create --name "Backend Team"
 bella groups create --name "Ops Team"

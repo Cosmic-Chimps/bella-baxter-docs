@@ -6,6 +6,10 @@ Every operation in Bella Baxter is logged — secret reads, writes, deletes, aut
 
 From the WebApp: **Project → Audit Logs**
 
+::: warning Planned — not in the CLI yet
+`bella audit list` is on the roadmap and is not in the CLI yet. Until then, read the audit log in the WebApp (**Project → Audit Logs**) or through the [REST API](/api-reference/). The CLI examples on this page, including the filtering and export ones, show the planned syntax.
+:::
+
 ```sh
 bella audit list --project my-api
 bella audit list --project my-api --environment production

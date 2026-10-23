@@ -24,6 +24,10 @@ Secure Shares let you share a secret value with someone **without sending it in 
 
 ## Create a Share
 
+::: warning Planned — not in the CLI yet
+The `bella share` commands (`create`, `from-secret`, `list`, `revoke`) are on the roadmap and are not in the CLI yet. Until then, create and manage shares in the WebApp (**Secrets → Share → Create Secure Share**) or with the [REST API](/api-reference/). The CLI examples on this page show the planned syntax.
+:::
+
 ```sh
 bella share create \
   --value "postgres://user:pass@host/db" \

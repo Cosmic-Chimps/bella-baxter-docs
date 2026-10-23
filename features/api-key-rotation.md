@@ -177,11 +177,10 @@ The WebApp shows a ready-to-run template snippet when you select **Strategy: HTT
 Trigger an immediate rotation from the WebApp by clicking **Rotate Now** on a secret, or via CLI:
 
 ```sh
-bella secrets rotate \
+bella secrets rotate STRIPE_API_KEY \
   --project my-app \
   --env production \
-  --provider my-vault \
-  --key STRIPE_API_KEY
+  --provider my-vault
 ```
 
 The rotation runs asynchronously. The status badge updates to **Rotating…** until the new value is stored.
