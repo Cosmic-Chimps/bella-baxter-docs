@@ -408,7 +408,9 @@ bella org current             Show active org
 bella org list                List all orgs you belong to
 bella org switch <slug>       Switch to a different org
 
-bella projects list/get/create/update/delete
+bella projects list/get/create/update
+bella projects delete <slug>  Show what is destroyed, then delete after you type the slug
+                              (--dry-run, --yes --confirm <slug>, --json)
 bella environments list/get/create/update/delete
 bella providers list/get/create/delete
 

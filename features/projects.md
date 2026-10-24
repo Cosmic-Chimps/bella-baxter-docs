@@ -16,7 +16,7 @@ Projects have a slug (used in API calls and `.bella` files) and a human-readable
 
 | Role | Permissions |
 |------|-------------|
-| `OWNER` | Full control — can delete the project, manage all members |
+| `OWNER` | Full control, including deleting the project; manages all members |
 | `PROJECT_MANAGER` | Can manage environments, providers, and members |
 | `MEMBER` | Can read and write secrets in assigned environments |
 | `CONSUMER` | Read-only access to secrets |
@@ -88,8 +88,36 @@ bella projects import my-api.yaml --project my-api-copy
 
 ## Delete a Project
 
+Deleting a project **deletes its secrets in the providers that hold them**, including providers in your own AWS, Azure,
+GCP or Vault account, and the tenant's System Provider. It also deletes the project's data key, revokes its API keys, and
+removes its environments, webhooks, notification channels, leases, trust domains, SSH roles and TOTP keys. None of it can
+be restored from Bella. If a provider keeps deleted values for a while (a KV v2 soft delete, a cloud recovery window),
+recovering them is done in that provider, not in Bella.
+
+**Who may delete:** the project's Owner, or a tenant Owner or Admin. A Project Manager cannot, and no API key can,
+whatever its kind: both get the same "not found" any caller without access gets.
+
+**Before deleting, Bella shows what will be destroyed:** each provider that loses secrets, how many (environment and
+project-wide), whether it is in your own account, the other resources with their counts, and whether a data key is
+deleted. You confirm by typing the project's slug. The console's delete dialog and the CLI both work this way.
+
 ```sh
-bella projects delete my-api
+bella projects delete my-api                              # prints the summary, then asks you to type the slug
+bella projects delete my-api --dry-run                    # prints the summary and stops
+bella projects delete my-api --yes --confirm my-api       # unattended: no prompt, still prints the summary
+bella projects delete my-api --yes --confirm my-api --json  # one JSON document: { "preview": …, "result": … }
 ```
 
-Deleting a project removes it from Bella's database (soft delete). Secret values in the external provider are **not** deleted — they remain in Vault, AWS, etc. until explicitly removed from the provider side.
+`--yes` (or its older name `--force`) skips the prompt, never the summary, and always needs `--confirm <slug>`: the CLI
+never takes the slug from the project argument. Without a terminal and without `--yes`, the command refuses. After a
+delete, the clean-up in the providers runs in the background; its result is in **Audit Logs**, where the deletion itself
+is recorded as `project_deleted` with the totals that were confirmed.
+
+What is counted is what Bella holds for the project. Keys written straight into a store, never through Bella, are not
+counted and not deleted. If a provider cannot be reached, or was already deleted in Bella, its secrets are still removed
+from Bella, but their values stay in the store; the per-environment audit row says how many.
+
+Over the API, preview with `GET /api/v1/projects/{projectRef}/deletion-preview`, then call
+`DELETE /api/v1/projects/{projectRef}?confirmProjectSlug=<slug>&previewDigest=<digest from the preview>`. A missing or
+wrong slug is refused with `422`, a digest from a preview the project has since outgrown with `409` (take a new preview),
+and nothing is deleted in either case.
