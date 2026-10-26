@@ -79,6 +79,37 @@ bella security findings list --severity High,Critical
 bella security findings get <finding-id>
 ```
 
+## Acknowledge a Finding
+
+Some findings are not problems. A value can look like an Azure client secret and be a token for another
+service. When you have read a finding and decided it is fine, acknowledge it from the report in the
+WebApp: use the shield button on its row, and optionally say why (up to 500 characters).
+
+- **What it does.** The finding leaves the severity counts, the risk badge, the project and organisation
+  security summaries, and the scan alerts (`security.scan.risk_detected`). It moves to an
+  **Acknowledged findings** list under the report, which shows its original severity, who acknowledged
+  it, when, and the reason. It covers one finding type on one secret. Other findings on the same secret
+  keep counting, and a rescan does not bring it back.
+- **Who can do it.** On an environment's report, anyone who may manage that environment's secrets. On a
+  project's global secrets, anyone who may manage the project. People who can only read see the
+  Acknowledged list but cannot change it. API keys limited to tagged secrets cannot acknowledge
+  anything.
+- **It lapses when the value changes.** An acknowledgement covers the value you looked at. Once the
+  secret's value changes by any route (an edit, an import, a file upload or a version rollback), the
+  acknowledgement no longer applies. If the new value still triggers the rule, the finding counts again
+  and is marked **Previously acknowledged — value changed**. Changing only the description or tags does
+  not affect it. If the value changed after the last scan, scan again before acknowledging.
+- **Undo.** Use **Undo** in the Acknowledged list. The finding counts again straight away, without a
+  rescan.
+- **Audit.** Each acknowledgement and each undo is written to the [audit log](/audit/) as
+  `security_insight_acknowledged` or `security_insight_acknowledgement_withdrawn`. The entry records
+  the person, the project and environment, the secret key, the finding type, the severity and the
+  reason. It never records the value.
+
+The same actions are available in the [REST API](/api-reference/):
+`POST` and `DELETE /api/v1/projects/{project}/environments/{env}/security/acknowledgements`, and
+`/api/v1/projects/{project}/security/acknowledgements` for global secrets.
+
 ## Dismiss a Finding
 
 ```sh
