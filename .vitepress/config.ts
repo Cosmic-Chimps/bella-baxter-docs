@@ -14,6 +14,7 @@ const enNav = [
       { text: 'API Keys', link: '/features/api-keys' },
       { text: 'Groups', link: '/features/groups' },
       { text: 'Team Members', link: '/features/team-members' },
+      { text: 'Single Sign-On', link: '/features/sso' },
       { text: 'SSH Certificate Authority', link: '/features/ssh-ca' },
       { text: 'PKI Certificates', link: '/features/pki-certificates' },
       { text: 'TOTP', link: '/features/totp' },
@@ -90,6 +91,7 @@ const enSidebar = {
         { text: 'API Keys', link: '/features/api-keys' },
         { text: 'Groups', link: '/features/groups' },
         { text: 'Team Members', link: '/features/team-members' },
+        { text: 'Single Sign-On', link: '/features/sso' },
       ],
     },
     {
@@ -197,6 +199,7 @@ const esSidebar = {
         { text: 'Proyectos', link: '/es/features/projects' },
         { text: 'Entornos', link: '/es/features/environments' },
         { text: 'API keys', link: '/es/features/api-keys' },
+        { text: 'SPIFFE y ZKE', link: '/es/features/spiffe-zke' },
       ],
     },
   ],

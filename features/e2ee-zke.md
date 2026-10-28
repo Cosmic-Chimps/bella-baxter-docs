@@ -205,7 +205,8 @@ platform issues** (**Settings → Encryption → ZKE enforcement**). With it on:
 - anything else — no key, a malformed key, an unregistered key, a revoked device, or a device whose
   owner has left the tenant — is refused with `403` and told to run `bella auth setup`;
 - the console is exempt (a browser session holds no device key);
-- an assistant connected over MCP reads only through an API key with a registered public key.
+- an assistant connected over MCP reads only through an API key with a registered public key;
+- a SPIFFE workload's lease reads metadata and hashes but never values: see [SPIFFE and zero-knowledge encryption](/features/spiffe-ec2#spiffe-and-zero-knowledge-encryption).
 
 ### What "credential" covers
 
