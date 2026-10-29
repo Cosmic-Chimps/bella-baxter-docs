@@ -41,7 +41,7 @@ const enNav = [
     ],
   },
   { text: 'API Reference', link: '/api-reference/' },
-  { text: 'Open Source', link: '/open-source/' },
+  { text: 'Source-available', link: '/open-source/' },
   { text: 'Console →', link: 'https://console.bella-baxter.io' },
 ];
 
@@ -128,7 +128,7 @@ const enSidebar = {
   ],
   '/open-source/': [
     {
-      text: 'Open Source',
+      text: 'Source-available',
       items: [
         { text: 'Community vs Enterprise', link: '/open-source/' },
         {
@@ -163,7 +163,7 @@ const esNav = [
     ],
   },
   { text: 'Referencia API', link: '/api-reference/' },
-  { text: 'Open Source', link: '/es/open-source/' },
+  { text: 'Source-available', link: '/es/open-source/' },
   { text: 'Consola →', link: 'https://console.bella-baxter.io' },
 ];
 
@@ -221,7 +221,7 @@ const esSidebar = {
   ],
   '/es/open-source/': [
     {
-      text: 'Open Source',
+      text: 'Source-available',
       items: [{ text: 'Comunidad vs Enterprise', link: '/es/open-source/' }],
     },
   ],
