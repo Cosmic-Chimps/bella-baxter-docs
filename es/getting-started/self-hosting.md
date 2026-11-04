@@ -99,6 +99,15 @@ Tienes tres formas de hacerlo:
 Si alguien cambia después su dirección por sí mismo, Keycloak la vuelve a marcar
 como no verificada y hay que confirmarla de nuevo.
 
+Como no hay servidor de correo, el bundle **no** exige que las personas
+verifiquen su dirección al registrarse: eso dejaría a todo el mundo fuera, porque
+el correo de verificación nunca podría llegar. Si tu instalación tiene un relay
+de correo funcional para Keycloak, define `KEYCLOAK_VERIFY_EMAIL=true` en el
+`.env` del bundle antes de que el asistente ejecute su paso de Keycloak, y el
+realm de clientes exigirá una dirección verificada al registrarse. Déjalo sin
+definir en caso contrario. El valor por defecto es `false`, y cualquier valor
+distinto de `true` o `false` detiene el asistente al arrancar.
+
 ## Opción 2: .NET Aspire (desarrollo/integración)
 
 Consume el recurso Aspire `AddBellaBaxter` publicado para incrustar un stack

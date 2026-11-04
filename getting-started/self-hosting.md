@@ -110,6 +110,14 @@ You have three ways to do that:
 If someone later changes their address themselves, Keycloak marks it unverified
 again and it has to be confirmed again.
 
+Because there is no mail server, the bundle does **not** require people to verify
+their address at sign-up: that would lock everyone out, since the verification
+mail could never arrive. If your install has a working mail relay for Keycloak,
+set `KEYCLOAK_VERIFY_EMAIL=true` in the bundle's `.env` before the setup wizard
+runs its Keycloak step, and the customer realm will then require a verified
+address at sign-up. Leave it unset otherwise. The default is `false`, and any
+value other than `true` or `false` stops the wizard at start.
+
 ## Option 2: .NET Aspire (for development/integration)
 
 Consume the published `AddBellaBaxter` Aspire resource to embed a Bella
