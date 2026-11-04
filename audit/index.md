@@ -105,6 +105,25 @@ The audit log supports common compliance requirements:
 
 Audit log streaming to SIEM systems (Splunk, Datadog, Azure Monitor) is an Enterprise feature.
 
+### What a SIEM receives, and what CEF cannot carry
+
+The JSON destinations (generic HTTPS, Splunk HEC, Datadog, Azure Monitor) receive every event as one JSON
+envelope whose `raw` member holds the whole stored audit row. A few of its members matter for detection rules:
+
+- `raw.scopeNarrowing` (`{ "providerKeys": n, "globalKeys": n }`) is present on a `secret_scope_denied` event written when a
+  token limited to some scopes listed secrets and some were left out. The counts are how many keys were hidden per layer
+  (`null` where that layer was not queried, never `0` for "not asked"); key names are never included. A `secret_scope_denied`
+  event **without** it is a refused read of one named secret.
+- `raw.trustDomainId`, `raw.presentedAudiences` and `raw.audienceMatched` describe a token exchange or workload
+  attestation: which trust domain was evaluated, which audiences the caller presented, and whether they matched.
+  The presented audiences are values the caller supplied and Bella did not verify: at most 8 values of 256 characters,
+  with control characters replaced. Treat them as untrusted input when you display them (events stored before this
+  protection existed are not rewritten).
+
+**The CEF (syslog over TLS) destination carries only the promoted fields and no `raw`.** It therefore cannot tell a
+narrowed listing from a refused read, and it does not carry the trust domain or the presented audiences. If a rule
+depends on those, use a JSON destination.
+
 ## Retention
 
 Default retention: 365 days. Contact your instance admin to adjust.
