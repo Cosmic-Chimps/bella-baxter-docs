@@ -1,6 +1,6 @@
 # Community vs Enterprise
 
-Bella Baxter is open-core, source-available under the [ELv2 License](https://www.elastic.co/licensing/elastic-license). The self-hosted Community edition is free forever. Enterprise features require a license key.
+Bella Baxter is open-core, source-available under the [ELv2 License](https://www.elastic.co/licensing/elastic-license). The self-hosted Community edition is free forever. Enterprise features are part of the Enterprise plan; contact us to enable them.
 
 ## The Guiding Principle
 
@@ -46,6 +46,7 @@ These are gated because they're only relevant at **organisational scale** — sm
 The Bella Baxter managed cloud runs on a **pay-as-you-go** model:
 
 - **Free**: 2,000 API requests per month, no credit card required
+  When the free allowance is used up and no payment method is on file, API key requests return `429` until you add one. Signing in to the console or the CLI is not metered.
 - **Overage**: $0.005 per request beyond 2,000 (~$5 per 1,000 requests)
 - **Enterprise**: Contact us — flat monthly, custom volume, SLA, dedicated support
 
@@ -78,8 +79,8 @@ You pay more when you ship more (or your AI agents are very busy). The bill grow
 | Cost | Free forever | $0 to start, $0.005/req overage |
 | Infrastructure | You manage (Docker/Aspire/K8s) | Managed by Cosmic Chimps |
 | Data residency | Your infrastructure | Cosmic Chimps (EU / US) |
-| SSO | Enterprise license key | Enterprise plan |
-| Audit streaming | Enterprise license key | Enterprise plan |
+| SSO | Enterprise plan | Enterprise plan |
+| Audit streaming | Enterprise plan | Enterprise plan |
 | Updates | Manual | Automatic |
 
 ## License

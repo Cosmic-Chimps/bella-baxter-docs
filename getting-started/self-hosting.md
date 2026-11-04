@@ -7,47 +7,22 @@ and no outbound internet after the initial image pull.
 
 ## The self-hosted bundle (recommended)
 
-Each release ships a `bella-selfhosted-<version>.tar.gz` bundle containing a
-generated `docker-compose.yaml`, an `.env.template`, and a single `bella.sh`
-script. The bundle is produced directly from the platform's Aspire application
-model, so it can never drift from the real topology.
+Self-hosting is available on request: [contact us](mailto:enterprise@cosmic-chimps.io)
+and we will set it up with you. There is no public download yet.
+
+The bundle contains a generated `docker-compose.yaml`, an `.env.template`, and a
+single `bella.sh` script. It is produced directly from the platform's Aspire
+application model, so it can never drift from the real topology.
 
 ### Requirements
 
 - A Linux host with Docker Engine + the `docker compose` plugin
-- Credentials for the Bella Baxter container registry (provided with your license)
-- [cosign](https://docs.sigstore.dev) v3, to verify the release signatures
+- Credentials for the Bella Baxter container registry (we provide them when we set up your instance)
 - Three host ports: `443` (application), `8444` (admin plane), `9443` (setup)
 
-### Verify the download
-
-Every release is signed. Each image is pinned by digest and signed by digest, and
-the tarball carries a signature beside it (`bella-selfhosted-<version>.tar.gz.sigstore.json`).
-Verify it with Bella's public key **before** unpacking:
-
-```sh
-curl -fsSLO https://docs.bella-baxter.io/selfhosted/cosign.pub
-cosign verify-blob --key cosign.pub --insecure-ignore-tlog=true \
-  --bundle bella-selfhosted-<version>.tar.gz.sigstore.json \
-  bella-selfhosted-<version>.tar.gz
-```
-
-`Verified OK` means the file is intact **and** was published by Bella. Anything
-else: stop, do not unpack it, and contact us.
-
-- The public key lives on this site, at `https://docs.bella-baxter.io/selfhosted/cosign.pub`.
-  The bundle carries a copy, but a copy inside the file you are checking proves
-  nothing until the file itself is checked.
-- `--insecure-ignore-tlog=true` is expected: Bella signs with a key and no public
-  transparency log, so verification works on an air-gapped host. It skips the log
-  lookup, not the signature check.
-
-You never have to verify the images by hand: `bella.sh` runs `verify-bundle.sh`
-before it starts anything and **refuses to start** an image that is not pinned by
-digest or whose signature does not verify (`./bella.sh verify` runs the same check
-on demand).
-
 ### Install
+
+Once you have the bundle:
 
 ```sh
 tar -xzf bella-selfhosted-<version>.tar.gz

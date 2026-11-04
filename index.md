@@ -59,6 +59,7 @@ Bella Baxter was built differently:
 - **Unlimited projects and environments** — no artificial caps
 - **Your own infrastructure** — connect Vault, AWS, Azure, or GCP. You own your data.
 - **Free to start** — 2,000 API requests per month included, no credit card required
+  When the free allowance is used up and no payment method is on file, API key requests return `429` until you add one. Signing in to the console or the CLI is not metered.
 - **Self-hostable** — run it yourself with Docker or .NET Aspire, forever free under ELv2
 
 ---
