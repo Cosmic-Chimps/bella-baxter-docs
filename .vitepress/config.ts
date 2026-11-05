@@ -227,6 +227,97 @@ const esSidebar = {
   ],
 };
 
+// Catalan (#1478). Only the pages that are really translated live under /ca/.
+// The six feature pages, github-actions and open-source are untranslated stubs in
+// `es`; Catalan carries no stubs, so those entries point at the English page.
+const caNav = [
+  { text: 'Primers passos', link: '/ca/getting-started/' },
+  { text: 'CLI', link: '/ca/cli/' },
+  { text: 'SDKs', link: '/ca/sdks/' },
+  {
+    text: 'Funcionalitats',
+    items: [
+      { text: 'Secrets', link: '/features/secrets' },
+      { text: 'Proveïdors', link: '/features/providers' },
+      { text: 'Projectes', link: '/features/projects' },
+      { text: 'Entorns', link: '/features/environments' },
+      { text: 'API keys', link: '/features/api-keys' },
+      { text: 'SPIFFE i ZKE', link: '/ca/features/spiffe-zke' },
+    ],
+  },
+  {
+    text: 'Integracions',
+    items: [
+      { text: 'GitHub Actions', link: '/integrations/github-actions' },
+      { text: 'MCP / IA', link: '/ca/integrations/mcp-ai' },
+      { text: 'Agents de programació', link: '/ca/integrations/ai-coding-agents' },
+    ],
+  },
+  { text: "Referència de l'API", link: '/ca/api-reference/' },
+  { text: 'Source-available', link: '/open-source/' },
+  { text: 'Consola →', link: 'https://console.bella-baxter.io' },
+];
+
+const caSidebar = {
+  '/ca/getting-started/': [
+    {
+      text: 'Primers passos',
+      items: [
+        { text: 'Inici ràpid', link: '/ca/getting-started/' },
+        { text: 'Conceptes clau', link: '/ca/getting-started/concepts' },
+        { text: 'Autoallotjament', link: '/ca/getting-started/self-hosting' },
+      ],
+    },
+  ],
+  '/ca/cli/': [
+    {
+      text: 'CLI',
+      items: [{ text: 'Referència de la CLI', link: '/ca/cli/' }],
+    },
+  ],
+  '/ca/sdks/': [
+    {
+      text: 'SDKs',
+      items: [{ text: 'Resum', link: '/ca/sdks/' }],
+    },
+  ],
+  '/ca/features/': [
+    {
+      text: 'Funcionalitats',
+      items: [
+        { text: 'Secrets', link: '/features/secrets' },
+        { text: 'Proveïdors', link: '/features/providers' },
+        { text: 'Projectes', link: '/features/projects' },
+        { text: 'Entorns', link: '/features/environments' },
+        { text: 'API keys', link: '/features/api-keys' },
+        { text: 'SPIFFE i ZKE', link: '/ca/features/spiffe-zke' },
+      ],
+    },
+  ],
+  '/ca/integrations/': [
+    {
+      text: 'Integracions',
+      items: [
+        { text: 'GitHub Actions', link: '/integrations/github-actions' },
+        { text: 'MCP / IA', link: '/ca/integrations/mcp-ai' },
+        { text: 'Agents de programació', link: '/ca/integrations/ai-coding-agents' },
+      ],
+    },
+  ],
+  '/ca/audit/': [
+    {
+      text: 'Auditoria',
+      items: [{ text: "Logs d'auditoria", link: '/ca/audit/' }],
+    },
+  ],
+  '/ca/api-reference/': [
+    {
+      text: 'API',
+      items: [{ text: "Referència de l'API", link: '/ca/api-reference/' }],
+    },
+  ],
+};
+
 export default defineConfig({
   title: 'Bella Baxter',
   description:
@@ -295,6 +386,16 @@ export default defineConfig({
       themeConfig: {
         nav: esNav,
         sidebar: esSidebar,
+      },
+    },
+    ca: {
+      label: 'Català',
+      lang: 'ca',
+      title: 'Bella Baxter',
+      description: 'Passarel·la unificada de gestió de secrets',
+      themeConfig: {
+        nav: caNav,
+        sidebar: caSidebar,
       },
     },
   },
