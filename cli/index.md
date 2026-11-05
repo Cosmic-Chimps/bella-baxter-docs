@@ -395,6 +395,37 @@ To manage your subscription or view invoices, visit the **Billing** page in the 
 
 ---
 
+## Registered Devices
+
+### Revoking a device
+
+```sh
+bella auth devices revoke <device>            # revoke, after showing what it received
+bella auth devices revoke <device> --rotate   # revoke, then rotate its keys
+bella auth devices revoke <device> -o json    # one JSON document, no prompts
+```
+
+`<device>` is the device id or its full `SHA256:` fingerprint. The command first prints the projects and
+environments the device received keys for, then revokes it, then (with `--rotate`) starts a rotation that
+puts those projects on new keys and re-seals their values in the background.
+
+| Flag | Meaning |
+|---|---|
+| `--rotate` | After revoking, start the key rotation. In a terminal without this flag the command asks, when the device received keys. |
+| `-y`, `--yes` | Skip every prompt. It does **not** imply `--rotate`. |
+| `-o`, `--output <format>` | `table` (default) or `json`. `json` prints one document with the preview and the run and never prompts. |
+
+Revoking a device that is already revoked is not an error, so the same command with `--rotate` rotates a
+device revoked earlier. The revoke always happens first and is never undone if the rotation cannot start.
+Exit code `2` means the device was revoked but `--rotate` did not start a rotation (not permitted, one
+already running, or the key store could not be read), so a script can tell that from a failure.
+
+Revocation stops access, not knowledge. Rotation does not make the device forget what it already read,
+keeps past versions of a secret under their original sealing, and does not rotate organisation-level
+records. See [What revoking a device does, and rotating its keys](/features/device-revocation).
+
+---
+
 ## Commands Reference
 
 ```
@@ -403,6 +434,9 @@ bella logout                  Log out
 bella whoami                  Show logged-in user (verified against the server)
 bella whoami --offline        Same, from the local credential cache only
 bella auth status / refresh
+bella auth devices list [--all]   List registered devices
+bella auth devices revoke <device> [--rotate] [-y] [-o json]
+                              Revoke a device; --rotate also rotates the keys it received
 
 bella org current             Show active org
 bella org list                List all orgs you belong to

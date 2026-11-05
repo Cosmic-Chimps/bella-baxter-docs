@@ -182,13 +182,16 @@ to send, including one generated seconds earlier by a machine nobody had ever se
 bella auth devices list           # your devices in this tenant
 bella auth devices list --all     # every device in the tenant (Owner/Admin)
 bella auth devices revoke <id|fingerprint>
+bella auth devices revoke <id|fingerprint> --rotate   # also put its projects on new keys
 ```
 
 The console shows the same list under **Settings → Devices**.
 
 **Revocation is effective on that machine's next request** — there is no cache to wait out. What it does
-*not* do is un-share knowledge: an environment key already cached on that machine still decrypts the
-values it decrypted before. Rotate the environment key if that matters.
+*not* do is un-share knowledge: a key already handed to that machine still decrypts the values it
+decrypted before. Revoking offers to **rotate the keys** of every project the device received keys for,
+so the old keys open no current value. Rotation does not make the device forget what it already read, so
+rotate those secrets as well. See [What revoking a device does, and rotating its keys](/features/device-revocation).
 
 A machine credential is a device too: an API key registers its public key when the key is *created*
 (`publicKey` on `createApiKey`). A key created without one is refused where enforcement is on, and the
