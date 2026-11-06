@@ -15,7 +15,7 @@ ansible-galaxy collection install jjchiw.bella_baxter
 > currently a pre-release, so `--pre` is the contract until a stable `0.1.x` ships. (npm is
 > unaffected: its `latest` dist-tag points at the preview and `npm install` honours it regardless.)
 
-**Requirements:** Ansible 2.14+, Python 3.9+.
+**Requirements:** Ansible 2.14+, Python 3.10+.
 
 Pin a specific version:
 

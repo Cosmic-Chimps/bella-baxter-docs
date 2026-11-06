@@ -17,7 +17,7 @@ Official Bella Baxter SDKs for every major platform. Each SDK provides:
 
 [![JavaScript](https://img.shields.io/badge/JavaScript-TypeScript-yellow?logo=javascript)](/sdks/javascript)
 [![.NET](https://img.shields.io/badge/.NET-C%23-512BD4?logo=dotnet)](/sdks/dotnet)
-[![Python](https://img.shields.io/badge/Python-3.9+-3776AB?logo=python)](/sdks/python)
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python)](/sdks/python)
 [![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go)](/sdks/go)
 [![Ruby](https://img.shields.io/badge/Ruby-3.1+-CC342D?logo=ruby)](/sdks/ruby)
 [![PHP](https://img.shields.io/badge/PHP-8.1+-777BB4?logo=php)](/sdks/php)
