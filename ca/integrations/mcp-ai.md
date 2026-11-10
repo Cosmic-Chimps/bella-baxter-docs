@@ -92,7 +92,7 @@ Quan `BELLA_BAXTER_API_KEY` est√† configurada, `bella mcp` arrenca directament ‚
       "command": "bella",
       "args": ["mcp"],
       "env": {
-        "BELLA_API_URL": "https://tu-bella.ejemplo.com",
+        "BELLA_API_URL": "https://la-teva-bella.exemple.com",
         "BELLA_BAXTER_API_KEY": "bax-<la-teva-api-key>"
       }
     }

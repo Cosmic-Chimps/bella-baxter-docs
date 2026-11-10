@@ -3,7 +3,7 @@
 > 🌐 **English version**: [What revoking a device does, and rotating its keys](/features/device-revocation)
 
 Revocar un [dispositivo registrado](/features/e2ee-zke#registered-devices) lo deja sin acceso. No hace
-que la máquina olvide. Esta página explica qué hace la revocación, qué añade rotar las claves del
+que la máquina olvide. Esta página explica qué hace la revocación, qué agrega rotar las claves del
 dispositivo y qué no puede hacer ninguna de las dos.
 
 ---

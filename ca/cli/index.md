@@ -58,7 +58,7 @@ rotació de certificats i a Scout. Aquesta passarel·la només reenvia `/api/**`
 A GitHub Actions (amb `id-token: write`) o Kubernetes, `bella run`, `bella sdk run`, `bella exec` i `bella auth oidc` intercanvien el token OIDC de la plataforma per una clau Bella de curta durada. L'intercanvi necessita el tenant, el projecte i l'entorn: `-t`/`--tenant`, `-p`/`--project` i `-e`/`--env` (o `BELLA_BAXTER_TENANT`, `BELLA_BAXTER_PROJECT` i `BELLA_BAXTER_ENV`, o un fitxer `.bella`):
 
 ```sh
-bella run -t mi-org -p mi-api -e production -- ./deploy.sh
+bella run -t la-meva-org -p la-meva-api -e production -- ./deploy.sh
 ```
 
 Cada valor es resol per separat: el flag guanya a la variable d'entorn, i aquesta al `.bella`, i un flag mai no canvia els altres dos. Si encara en falta algun, l'ordre s'atura abans de contactar amb Bella i anomena el que falta (per exemple "missing: environment", juntament amb `--env <slug>`, `BELLA_BAXTER_ENV` o la clau `environment` de `.bella` per indicar-lo) en lloc de dir "Not logged in". Si el runner té a més una sessió desada amb `bella login`, continua usant-la.

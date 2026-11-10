@@ -18,9 +18,9 @@ Tu Aplicación
 
 ## Conceptos Clave
 
-### Tenant (Inquilino)
+### Organización
 
-El límite de aislamiento de nivel superior. Cuando te registras (o despliegas una instancia auto-alojada), obtienes un tenant. Tu equipo, proyectos y proveedores viven dentro de tu tenant.
+El límite de aislamiento de nivel superior. Cuando te registras (o despliegas una instancia auto-alojada), obtienes una organización. Tu equipo, proyectos y proveedores viven dentro de tu organización.
 
 ### Proveedor
 
@@ -37,7 +37,7 @@ Tipos de proveedores soportados:
 | `GoogleSecretManager` | GCP Secret Manager |
 | `HttpRest` | Cualquier API HTTP genérica de secretos |
 
-Cada tenant obtiene automáticamente un **Proveedor del Sistema** — una instancia de OpenBao gestionada por Bella. Puedes usarlo inmediatamente sin ninguna configuración.
+Cada organización obtiene automáticamente un **Proveedor del Sistema** — una instancia de OpenBao gestionada por Bella. Puedes usarlo inmediatamente sin ninguna configuración.
 
 ### Proyecto
 
@@ -71,8 +71,8 @@ Un **Trust Domain** habilita la **autenticación sin credenciales** — sin API 
 ## Jerarquía de Datos
 
 ```
-Tenant
- └── Proveedores (ámbito de tenant, reutilizables entre proyectos)
+Organización
+ └── Proveedores (ámbito de organización, reutilizables entre proyectos)
  └── Proyectos
       └── Proveedores (asignados a este proyecto)
       └── Miembros (con roles)

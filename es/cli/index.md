@@ -55,7 +55,7 @@ rotación de certificados y a Scout. Esa pasarela solo reenvía `/api/**`, y `be
 
 ## Identidad de carga de trabajo (sin claves)
 
-En GitHub Actions (con `id-token: write`) o Kubernetes, `bella run`, `bella sdk run`, `bella exec` y `bella auth oidc` intercambian el token OIDC de la plataforma por una clave Bella de corta duración. El intercambio necesita el tenant, el proyecto y el entorno: `-t`/`--tenant`, `-p`/`--project` y `-e`/`--env` (o `BELLA_BAXTER_TENANT`, `BELLA_BAXTER_PROJECT` y `BELLA_BAXTER_ENV`, o un archivo `.bella`):
+En GitHub Actions (con `id-token: write`) o Kubernetes, `bella run`, `bella sdk run`, `bella exec` y `bella auth oidc` intercambian el token OIDC de la plataforma por una clave Bella de corta duración. El intercambio necesita la organización, el proyecto y el entorno: `-t`/`--tenant`, `-p`/`--project` y `-e`/`--env` (o `BELLA_BAXTER_TENANT`, `BELLA_BAXTER_PROJECT` y `BELLA_BAXTER_ENV`, o un archivo `.bella`):
 
 ```sh
 bella run -t mi-org -p mi-api -e production -- ./deploy.sh

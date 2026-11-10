@@ -93,7 +93,7 @@ Tienes tres formas de hacerlo:
 3. **Usar un proveedor de identidad que operas tú.** Conecta tu propio
    directorio al realm de Keycloak como operador de la plataforma. Las
    direcciones que afirma se consideran de confianza. Las conexiones de inicio de
-   sesión único que una organización añade por su cuenta en la consola no lo son:
+   sesión único que una organización agrega por su cuenta en la consola no lo son:
    dan fe solo dentro de esa organización.
 
 Si alguien cambia después su dirección por sí mismo, Keycloak la vuelve a marcar

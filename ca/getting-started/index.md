@@ -43,7 +43,7 @@ Això crea un fitxer `.bella` que fixa el projecte/entorn per a aquest directori
 O estableix el context de manera no interactiva amb una API key:
 
 ```sh
-export BELLA_BAXTER_URL=https://tu-instancia.bella-baxter.io
+export BELLA_BAXTER_URL=https://la-teva-instancia.bella-baxter.io
 export BELLA_BAXTER_API_KEY=bax-...
 ```
 

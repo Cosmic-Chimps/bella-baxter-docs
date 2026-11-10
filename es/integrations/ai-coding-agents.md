@@ -29,7 +29,7 @@ contiene.
 
 ### 1. La app obtiene sus propios secretos: `bella sdk run` + el SDK
 
-En una app de larga duración, el agente no pasa ningún secreto. La app añade Bella como fuente de
+En una app de larga duración, el agente no pasa ningún secreto. La app agrega Bella como fuente de
 configuración con `BellaBaxter.AspNet.Configuration`, y el agente la arranca a través de la CLI:
 
 ```bash
@@ -100,15 +100,15 @@ repositorio usa el proyecto y el entorno correctos sin `-p` ni `-e`.
 
 La separación se mantuvo limpia toda la sesión:
 
-- **La persona**: registró las apps de Discord y MyAnimeList, añadió los valores en la web de
+- **La persona**: registró las apps de Discord y MyAnimeList, agregó los valores en la web de
   Bella y ejecutó `bella login` cuando caducó la sesión de la CLI.
 - **El agente**: escribió el código y los comandos, y le dijo a la persona el **nombre** que debía
-  usar, por ejemplo "añade el Client ID en Bella como `Frunchy__Mal__ClientId`; no lo pegues
+  usar, por ejemplo "agrega el Client ID en Bella como `Frunchy__Mal__ClientId`; no lo pegues
   aquí". Luego ejecutó los comandos.
 
 Cuando la persona preguntó si también hacía falta el *client secret* de MyAnimeList, el agente
 consultó antes la referencia de la API. Solo hacía falta el client id, así que el secreto nunca se
-añadió al entorno de la app.
+agregó al entorno de la app.
 
 ### 5. Fallos que le dicen al agente qué hacer
 
@@ -148,9 +148,9 @@ Ponlas en el archivo de instrucciones del agente (`CLAUDE.md`, `AGENTS.md`, `.cu
   desde el directorio actual. Un comando lanzado desde una carpeta temporal fuera del repositorio
   se quedó sin contexto de proyecto sin avisar, y su petición nunca se ejecutó. El mismo comando
   desde el repositorio funcionó.
-- **Precedencia.** `AddBellaSecrets()` se añade después de appsettings y de user secrets, así que
+- **Precedencia.** `AddBellaSecrets()` se agrega después de appsettings y de user secrets, así que
   los valores de Bella ganan a ambos. Para que las variables de entorno y los argumentos de línea
-  de comandos sigan por encima (útil para un cambio local rápido), vuelve a añadir esas fuentes
+  de comandos sigan por encima (útil para un cambio local rápido), vuelve a agregar esas fuentes
   después de Bella.
 - **`bella sdk run` con login OAuth** (no con API key) necesita el proyecto y el entorno; `.bella`
   los proporciona.
