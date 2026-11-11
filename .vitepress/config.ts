@@ -103,6 +103,7 @@ const enSidebar = {
         { text: 'TOTP / 2FA Keys', link: '/features/totp' },
         { text: 'Keyless / Workload Identity', link: '/features/keyless' },
         { text: 'Workload Identity on EC2', link: '/features/spiffe-ec2' },
+        { text: 'Workload Identity on Nomad', link: '/features/spiffe-nomad' },
         { text: 'Secret Leases', link: '/features/secret-leases' },
         { text: 'Dynamic Secrets', link: '/features/dynamic-secrets' },
         { text: 'Secure Shares', link: '/features/secure-shares' },
