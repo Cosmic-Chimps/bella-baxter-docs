@@ -64,9 +64,40 @@ Mark anything the scanner still misjudges as **ignore in scan** on the secret it
 | Known breached | The value appears in the HIBP breached-password corpus | Critical |
 | Known key format | Matches a published credential format — AWS, GitHub, Stripe, Slack, a PEM private key, a credential embedded in a connection string, and ~20 more | As published for that format |
 | Stale secret | Not updated in over 365 days | Medium |
+| Shared across environments | The same credential is stored in another environment of the project | High |
 
 Severity for the value-based rules depends on the **key name** as well as the value: `changeme` in
 `JWT_SECRET` is a credential you must rotate; the same word in a display label is not.
+
+### Shared across environments
+
+When dev and prod hold the same database password, a leak from dev is a leak of prod. Bella reports
+that on both environments, on the key that holds it, even when the two keys have different names.
+
+**What is compared.** Only values Bella knows to be credentials: text or Base64, held in a key whose
+name says credential (`*_PASSWORD`, `*_SECRET`, `*_TOKEN`, `*_KEY`, …), or matching a known key format.
+Configuration that environments legitimately share is never compared:
+- flags, numbers, UUIDs, URLs, JSON and certificates;
+- plain words under ordinary names, such as `LOG_LEVEL=info` or a region;
+- keys marked **ignore in scan** in either environment;
+- project-level (global) secrets.
+
+Only environments of the same project are compared.
+
+**What is stored.** Each environment's own scan compares its values with the other environments of the
+project. It never reads another environment's secrets to do it. What it keeps is a keyed digest of each
+credential (HMAC-SHA256 under a key held in Bella's secret store), never the value and never a plain
+hash, so a copy of Bella's database cannot be used to test a guessed password.
+
+**Who sees what.** The finding names the other environments, and their keys, only to someone who can
+see those environments. Anyone else reads that the value "is also stored in another environment of
+this project", with no name and no count. API keys only ever see their own environment, so they always
+get that wording.
+
+**When it clears.** Once the sharing ends (a value changed, a secret deleted, an environment deleted),
+the finding is gone from every environment by the next scheduled scan, at most an hour later. It can
+be acknowledged like any other finding, and the acknowledgement lapses when that environment's value
+changes.
 
 The Critical / High / Medium / Low tiles count **secrets**, not findings — one secret breaking three
 rules is one Critical, and the four tiles plus "passed" always add up to the number scanned.
