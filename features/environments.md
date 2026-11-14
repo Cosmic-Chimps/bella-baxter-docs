@@ -69,18 +69,17 @@ This copies secret values from one provider to another. Ensure both environments
 
 ## Lease Policy
 
-You can configure an automatic lease policy on an environment — secrets expire after a set duration and must be explicitly re-issued:
+Each environment has a lease policy. It sets how long the [lease](/features/secret-leases) recorded for each bulk fetch of the environment's secrets stays active, and it caps the lifetime of workload leases. It does not make secrets expire and it does not take access away.
 
 ::: warning Planned — not in the CLI yet
-`bella environments set-lease-policy` is on the roadmap and is not in the CLI yet. Until then, set the lease policy in the WebApp or with the [REST API](/api-reference/). The example below shows the planned syntax.
+`bella environments set-lease-policy` is on the roadmap and is not in the CLI yet. Until then, set the lease policy with the [REST API](/api-reference/).
 :::
 
-```sh
-bella environments set-lease-policy \
-  --project my-api \
-  --environment production \
-  --ttl 24h \
-  --warn-before 2h
+```http
+PUT /api/v1/projects/{project}/environments/{env}/lease-policy
+Content-Type: application/json
+
+{ "defaultTtlMinutes": 1440, "maxTtlMinutes": 10080, "allowRenewal": true }
 ```
 
 See [Secret Leases](/features/secret-leases) for full details.

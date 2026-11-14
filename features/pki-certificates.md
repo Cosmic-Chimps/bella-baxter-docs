@@ -145,7 +145,7 @@ bella pki ca --output /etc/ssl/certs/acme-corp-ca.pem
 
 ## ACME — Automated Certificate Renewal
 
-Bella exposes an **ACME proxy endpoint** compatible with any RFC 8555 client (certbot, acme.sh, Caddy, cert-manager). Certificates are renewed automatically before expiry.
+Bella exposes an **ACME proxy endpoint** compatible with any RFC 8555 client (certbot, acme.sh, Caddy, cert-manager). Your ACME client requests each certificate and renews it on its own schedule; Bella does not renew certificates for you.
 
 The ACME Directory URL is displayed in the WebApp after CA setup:
 ```
@@ -223,12 +223,12 @@ Rotate the CA keypair to instantly invalidate **all** certificates issued by thi
 1. **Certificates → Rotate CA** in the WebApp
 2. Download new CA certificate
 3. Redistribute to trust stores
-4. All services auto-renew via ACME on next request
+4. Services that use ACME get a certificate from the new CA at their client's next renewal; force a renewal on the client if you cannot wait
 
 ## Security Notes
 
 - **Private keys never leave OpenBao** — the CA private key is generated inside OpenBao and never extracted
 - **Short-lived by default** — 24–72h certs expire automatically; no revocation needed for routine cert rotation
-- **All issuances are audit logged** — full trail of who requested what certificate and when
+- **Issuance through the API or the WebApp is audit logged** — the PKI log records who issued or revoked which certificate and when, with the role, common name and serial number. Certificates issued through the ACME endpoint are not written to Bella's audit log
 - **ACME authentication** — ACME uses RFC 8555 JWS signatures; the proxy is transparent and OpenBao enforces account-level security
 - **Role-constrained issuance** — CN and SANs must match the role's `allowed_domains`; prevents unauthorized wildcard certs

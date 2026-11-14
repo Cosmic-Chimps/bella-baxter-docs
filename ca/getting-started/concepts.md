@@ -4,14 +4,14 @@ Com organitza Bella Baxter els teus secrets.
 
 ## Visió general de l'arquitectura
 
-Bella Baxter és una **passarel·la**, no un magatzem de secrets. Els valors dels teus secrets viuen al proveïdor extern que ja operes. Bella Baxter gestiona l'accés, el context i la identitat — mai no emmagatzema els valors raw dels secrets.
+Bella Baxter és una **passarel·la**, no un magatzem de secrets. Els valors dels teus secrets viuen en un proveïdor: un que ja operes o el proveïdor del sistema que Bella gestiona per tu. Bella Baxter gestiona l'accés, el context i la identitat; els valors dels teus propis magatzems no es desen a la base de dades de Bella.
 
 ```
 La teva aplicació
   └── Bella CLI / SDK
         └── API de Bella Baxter
               └── Proveïdor de secrets (Vault, AWS, Azure, GCP...)
-                    └── Els teus valors de secrets (emmagatzemats aquí, no a Bella)
+                    └── Els teus valors de secrets (emmagatzemats al proveïdor)
 ```
 
 ---
@@ -37,7 +37,7 @@ Tipus de proveïdors suportats:
 | `GoogleSecretManager` | GCP Secret Manager |
 | `HttpRest` | Qualsevol API HTTP genèrica de secrets |
 
-Cada tenant obté automàticament un **proveïdor del sistema** — una instància d'OpenBao gestionada per Bella. Pots fer-lo servir immediatament, sense cap configuració.
+Cada tenant obté automàticament un **proveïdor del sistema** — una instància d'OpenBao gestionada per Bella. Pots fer-lo servir immediatament, sense cap configuració. Els secrets que desis al proveïdor del sistema s'emmagatzemen en aquest OpenBao gestionat per Bella.
 
 ### Projecte
 
@@ -56,7 +56,7 @@ Un secret per a `DATABASE_URL` a `dev` està completament separat de `DATABASE_U
 
 ### Secret
 
-Un **secret** és un parell clau-valor emmagatzemat en un proveïdor. Bella Baxter mai no emmagatzema el valor en si — fa de proxy per a les lectures i escriptures al proveïdor.
+Un **secret** és un parell clau-valor emmagatzemat en un proveïdor. Bella Baxter fa de proxy per a les lectures i escriptures al proveïdor; el valor no s'escriu a la base de dades de Bella.
 
 ### API key
 
@@ -93,4 +93,4 @@ Tenant
 5. Els secrets es retornen a la CLI
 6. La CLI els escriu a `.env` o els injecta en un procés fill
 
-Els valors dels secrets viatgen des del proveïdor → API → CLI. **Mai no s'emmagatzemen a la base de dades de Bella**.
+Els valors dels secrets viatgen des del proveïdor → API → CLI. **No s'escriuen a la base de dades de Bella**; l'API els pot mantenir en una memòria cau de curta durada (5 minuts per defecte) per no cridar el proveïdor a cada lectura.

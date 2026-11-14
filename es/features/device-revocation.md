@@ -48,14 +48,34 @@ Revocar nunca depende de rotar. Si la rotación no puede empezar, el dispositivo
 - **Las versiones anteriores conservan su sellado original.** Las versiones antiguas de un secreto siguen
   selladas con la clave con la que se escribieron, así que la clave antigua todavía las abre. Si eso
   importa, destruya esas versiones.
-- **Los registros de la organización no se rotan.** Las credenciales de proveedores, los secretos de
-  webhooks y notificaciones, y los ajustes de flujos de auditoría y alertas siguen bajo la clave de la
-  organización. Rotar esa clave es otro trabajo. Un dispositivo que leyó antes de que existieran las claves
-  por entorno puede tener además la propia clave de la organización.
+- **Revocar no rota los registros de la organización.** Las credenciales de proveedores, los secretos de
+  webhooks y notificaciones, y la credencial del flujo de auditoría siguen bajo la clave de la
+  organización. Rotar esa clave es una acción aparte, descrita más abajo. Un dispositivo que leyó antes de
+  que existieran las claves por entorno puede tener además la propia clave de la organización.
 :::
 
 Una ejecución que no pudo volver a sellar todo lo dice y nombra lo que dejó. Trátela como incompleta, no
 como terminada.
+
+### Rotar la clave de la organización
+
+El propietario de la organización puede rotar la clave de la organización en la consola: **Configuración** y
+después **Cifrado**.
+Los administradores y la CLI pueden ver cuántos registros volvería a sellar una rotación, pero solo el
+propietario puede iniciarla.
+Al revocar un dispositivo que usó la clave de la organización se ofrece, salvo que la clave ya se rotara
+después de la última lectura de ese dispositivo.
+
+La rotación primero da una clave propia a cada proyecto que aún usaba la clave de la organización.
+Después escribe una única clave nueva de la organización y vuelve a sellar con ella las credenciales de
+proveedores, los secretos de webhooks y notificaciones, y la credencial del flujo de auditoría.
+Por último, comprueba de nuevo cada registro.
+Un registro editado mientras la ejecución avanza nunca se sobrescribe.
+
+Puede volver a ejecutarla sin riesgo. Una ejecución que se detuvo a medias continúa y nunca crea una
+tercera clave.
+La clave antigua se conserva, así que nada deja de abrirse.
+Como cualquier rotación, no hace que un dispositivo olvide lo que ya leyó.
 
 ---
 

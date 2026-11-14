@@ -47,14 +47,34 @@ Revocar no depèn mai de rotar. Si la rotació no pot començar, el dispositiu q
 - **Les versions anteriors conserven el seu segellat original.** Les versions antigues d'un secret
   continuen segellades amb la clau amb què es van escriure, així que la clau antiga encara les obre. Si
   això importa, destruïu aquestes versions.
-- **Els registres de l'organització no es roten.** Les credencials de proveïdors, els secrets de webhooks i
-  notificacions, i els ajustos de fluxos d'auditoria i alertes continuen sota la clau de l'organització.
-  Rotar aquesta clau és una altra feina. Un dispositiu que va llegir abans que existissin les claus per
-  entorn pot tenir a més la clau mateixa de l'organització.
+- **Revocar no rota els registres de l'organització.** Les credencials de proveïdors, els secrets de
+  webhooks i notificacions, i la credencial del flux d'auditoria continuen sota la clau de l'organització.
+  Rotar aquesta clau és una acció a part, descrita més avall. Un dispositiu que va llegir abans que
+  existissin les claus per entorn pot tenir a més la clau mateixa de l'organització.
 :::
 
 Una execució que no ha pogut tornar a segellar-ho tot ho diu i anomena el que ha deixat. Tracteu-la com a
 incompleta, no com a acabada.
+
+### Rotar la clau de l'organització
+
+El propietari de l'organització pot rotar la clau de l'organització a la consola: **Configuració** i després
+**Xifratge**.
+Els administradors i la CLI poden veure quants registres tornaria a segellar una rotació, però només el
+propietari pot iniciar-la.
+En revocar un dispositiu que ha fet servir la clau de l'organització s'ofereix, tret que la clau ja s'hagi
+rotat després de l'última lectura d'aquest dispositiu.
+
+La rotació primer dona una clau pròpia a cada projecte que encara feia servir la clau de l'organització.
+Després escriu una única clau nova de l'organització i hi torna a segellar les credencials de proveïdors,
+els secrets de webhooks i notificacions, i la credencial del flux d'auditoria.
+Finalment, comprova de nou cada registre.
+Un registre editat mentre l'execució avança mai no se sobreescriu.
+
+La podeu tornar a executar sense risc. Una execució que s'ha aturat a mitges continua i no crea mai una
+tercera clau.
+La clau antiga es conserva, així que res deixa d'obrir-se.
+Com qualsevol rotació, no fa que un dispositiu oblidi el que ja ha llegit.
 
 ---
 

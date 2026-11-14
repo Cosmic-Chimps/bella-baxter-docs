@@ -42,13 +42,28 @@ Revoking never depends on rotating. If the rotation cannot start, the device is 
   source.
 - **Past versions keep their original sealing.** Earlier versions of a secret stay sealed under the key
   they were written with, so the old key still opens them. If that matters, destroy those versions.
-- **Organisation-level records are not rotated.** Provider credentials, webhook and notification secrets,
-  and audit-stream and alert settings stay under the organisation's key. Rotating that key is separate
-  work. A device that read before the per-environment keys were introduced may also hold the organisation's
-  key itself.
+- **Organisation-level records are not rotated by revoking.** Provider credentials, webhook and notification
+  secrets, and the audit-stream credential stay under the organisation's key. Rotating that key is a
+  separate action, described below. A device that read before the per-environment keys were introduced may
+  also hold the organisation's key itself.
 :::
 
 A run that could not re-seal everything says so and names what it left. Treat it as incomplete, not as done.
+
+### Rotating the organisation key
+
+The organisation Owner can rotate the organisation key in the console: **Settings**, then **Encryption**.
+Admins and the CLI can see how many records a rotation would re-seal, but only the Owner can start it.
+Revoking a device that used the organisation key offers it, unless the key was already rotated after that device's last read.
+
+The rotation first gives every project that still used the organisation key a key of its own.
+Then it writes one new organisation key and re-seals the provider credentials, the webhook and notification secrets, and the audit-stream credential under it.
+Last, it checks every record again.
+A record edited while the run moves is never overwritten.
+
+You can run it again safely. A run that stopped half way continues and never creates a third key.
+The old key is kept, so nothing stops opening.
+Like any rotation, it does not make a device forget what it already read.
 
 ---
 

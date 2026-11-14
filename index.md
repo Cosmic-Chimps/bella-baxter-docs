@@ -23,7 +23,7 @@ hero:
 features:
   - icon: 🔐
     title: Your Infrastructure, Your Rules
-    details: Bella Baxter never stores your secrets. It connects to the secret stores you already operate — Vault/OpenBao, AWS, Azure, GCP — and acts as a unified proxy.
+    details: Bella Baxter connects to the secret stores you already operate — Vault/OpenBao, AWS, Azure, GCP — and acts as a unified gateway. Values from your own stores are not kept in Bella's database.
   - icon: ⚡
     title: Zero-Friction Developer Experience
     details: Pull secrets with a single command. Run any process with secrets injected. No .env files committed, no credentials in CI/CD yaml.

@@ -1,39 +1,47 @@
 # Audit Logs
 
-Every operation in Bella Baxter is logged — secret reads, writes, deletes, authentication events, key rotations, and administrative changes.
+Bella Baxter records access to secrets and the administrative actions around them: reads, writes and deletes of secrets, token and workload identity exchanges, refused requests, share activity, and changes to members and their roles. Some operations are not recorded yet; see [What is not recorded](#what-is-not-recorded).
 
 ## Access the Audit Log
 
 From the WebApp: **Project → Audit Logs**
 
 ::: warning Planned — not in the CLI yet
-`bella audit list` is on the roadmap and is not in the CLI yet. Until then, read the audit log in the WebApp (**Project → Audit Logs**) or through the [REST API](/api-reference/). The CLI examples on this page, including the filtering and export ones, show the planned syntax.
+`bella audit list` is on the roadmap and is not in the CLI yet. Until then, read the audit log in the WebApp (**Project → Audit Logs**) or through the [REST API](/api-reference/).
 :::
 
 ```sh
-bella audit list --project my-api
-bella audit list --project my-api --environment production
-bella audit list --project my-api --since 2026-03-01
-bella audit list --project my-api --actor alice@example.com
-bella audit list --project my-api --event SecretRead
+curl "$BELLA_URL/api/v1/access-logs?projectSlug=my-api&from=2026-03-01T00:00:00Z" \
+  -H "Authorization: Bearer $TOKEN"
 ```
+
+The listing is paged (`page`, `size`; 50 rows by default, newest first). See [Filtering](#filtering) for the filters it accepts.
+
+An organisation administrator reads every row. Anyone else reads only the rows of the projects and environments they can reach, and the response says so with `scopeLimited: true`.
 
 ## Log Entry Fields
 
-Each log entry contains:
+Each row is a flat record:
 
 | Field | Description |
 |-------|-------------|
 | `timestamp` | UTC timestamp |
-| `event` | Event type (e.g. `SecretRead`, `SecretUpdated`, `ApiKeyRevoked`) |
-| `actor.type` | `User`, `ApiKey`, `TrustToken` |
-| `actor.email` / `actor.name` | Who performed the action |
-| `actor.ip` | The caller's IP address — see [Which address is recorded](#which-address-is-recorded) |
-| `projectSlug` | Project |
-| `environmentSlug` | Environment |
-| `resource` | What was acted upon (secret key name, provider name, etc.) |
-| `outcome` | `Success` or `Denied` |
-| `requestId` | Correlation ID for tracing |
+| `action` | What happened, for example `get`, `update`, `export_all` or `secret_access_denied`. See [Actions](#actions) |
+| `actorType` | `user`, `api_key`, `assistant`, `workload` or `anonymous`, or one of Bella's own components: `scheduler`, `cert-manager`, `internal_service` |
+| `userId` / `userName` | The person who acted, when the actor is a user |
+| `apiKeyId` / `apiKeyName` | The API key that acted, when the actor is a key |
+| `ipAddress` | The caller's IP address — see [Which address is recorded](#which-address-is-recorded) |
+| `userAgent` | The caller's `User-Agent` header |
+| `bellaClient` / `appClient` | Client labels reported by the caller — see below |
+| `projectSlug` / `environmentSlug` | Project and environment. Empty on rows that belong to neither |
+| `secretKey` | The name of the secret the action touched, when there is one. Never the value |
+| `detail` | Free-text detail of the action |
+| `deviceFingerprint` | The registered device that made the call, when the caller presented one |
+| `country` / `city` / `countryCode` | Present only when location lookups are on — see [Country and city labels](#country-and-city-labels-and-what-they-disclose) |
+
+A row has no `outcome` field and no request ID. A refusal is recorded as its own action (`secret_access_denied`, `secret_scope_denied`, `oidc_exchange_refused`). The envelope streamed to a SIEM adds an `outcome` of `success` or `denied`, derived from the action.
+
+Some rows written by Bella's own components carry `internal-service`, with a hyphen, as the actor type. Match both spellings in a rule.
 
 ### The "App" label is reported by the client, not verified
 
@@ -41,58 +49,75 @@ The console's **App** column, and the `bellaClient` / `appClient` fields of a st
 
 Bella limits what a caller can put there. `bellaClient` is one of Bella's own clients (`bella-cli`, `bella-webapp`, `bella-mcp`, `bella-dotnet-sdk`, `bella-js-sdk`, and the other `bella-*-sdk` names), or the literal `unrecognised` when the caller sent anything else; it is empty only when the caller sent nothing. `appClient` is the name you gave your own application (`bella exec --app`), with control characters removed and cut to 64 characters.
 
-## Event Types
+## Actions
 
-| Event | Description |
-|-------|-------------|
-| `SecretRead` | A secret value was read |
-| `SecretCreated` | A secret was created |
-| `SecretUpdated` | A secret was updated |
-| `SecretDeleted` | A secret was deleted |
-| `SecretsBulkPulled` | All secrets fetched (e.g. `bella pull`) |
-| `ApiKeyCreated` | An API key was created |
-| `ApiKeyRevoked` | An API key was revoked |
-| `UserLogin` | A user logged in |
-| `UserLoginFailed` | A failed login attempt |
-| `TrustTokenIssued` | A keyless OIDC exchange was accepted |
-| `TrustTokenRejected` | An OIDC exchange was rejected |
-| `LeaseIssued` | A short-lived lease was issued |
-| `LeaseRevoked` | A lease was revoked |
-| `MemberAdded` | A user was added to a project or environment |
-| `MemberRemoved` | A user was removed |
-| `ProviderCreated` | A new provider was configured |
-| `SshKeySigned` | An SSH public key was signed |
+The most common actions. This is not the full list: write rules against the action names you see in your own log.
+
+| Action | Recorded when |
+|--------|---------------|
+| `get` | One secret's value was read |
+| `list` | The keys held in a provider were listed |
+| `create`, `update`, `delete` | A secret was created, updated or deleted |
+| `export_all` | All of an environment's secrets were fetched together (for example `bella pull`) |
+| `import`, `upload` | Secrets were imported in bulk, or from an uploaded file |
+| `version_get`, `version_list` | An earlier version of a secret was read, or its history was listed |
+| `secret_access_denied` | A secret operation was attempted and refused |
+| `secret_scope_denied` | A scoped token was refused a secret outside its scopes, or was shown a narrowed listing |
+| `token_minted` | A short-lived scoped token was issued (`bella issue`) |
+| `oidc_token_exchanged`, `oidc_exchange_refused` | An OIDC token exchange was accepted or refused |
+| `svid_issued`, `jwt_svid_issued`, `attestation_denied` | A workload identity was issued, or a workload's attestation was refused |
+| `lease_revoked` | A workload lease was revoked |
+| `share_create`, `share_view`, `share_unlock`, `share_revoke` | [Secure share](/features/secure-shares) activity |
+| `member_role_changed`, `member_removed`, `member_suspended`, `member_restored` | A member's role or standing changed — see [Team members](/features/team-members) |
+| `security_insight_acknowledged`, `security_insight_acknowledgement_withdrawn` | A security finding was acknowledged, or the acknowledgement was undone |
+| `project_deleted` | A project was deleted |
+
+## What is not recorded
+
+These operations do not write an audit row today:
+
+- **Adding a member, and invitations.** Adding a person to a project or to an environment, inviting someone to the organisation and accepting an invitation write no row. Removing a member and changing a role are recorded.
+- **API keys created or revoked by a person.**
+- **Revoking a registered device.** The key rotation a person can start afterwards is recorded as `device_key_rotation_started`, `device_key_rotation_completed` or `device_key_rotation_refused`. The revocation itself is not.
+- **Revoking a secret lease.** Revoking a workload lease is recorded as `lease_revoked`. See [Secret Leases](/features/secret-leases).
+- **Certificates issued through the ACME endpoint.** Issuing or revoking a certificate through the API or the WebApp is recorded in the PKI log.
+
+If one of your controls depends on evidence of these operations, keep that evidence outside Bella for now.
 
 ## Filtering
 
+The listing accepts these query parameters, alone or combined:
+
+| Parameter | Filters by |
+|-----------|-----------|
+| `projectSlug`, `environmentId` | Project or environment |
+| `action` | One action name |
+| `actorType` | One actor type |
+| `apiKeyId` | One API key |
+| `deviceFingerprint` | One registered device |
+| `from`, `to` | Time range (ISO 8601) |
+| `search` | Free text |
+
 ```sh
-# All events for a specific user
-bella audit list --actor alice@example.com
+# Only reads of single secrets in one project
+curl "$BELLA_URL/api/v1/access-logs?projectSlug=my-api&action=get" \
+  -H "Authorization: Bearer $TOKEN"
 
-# Only secret reads in production
-bella audit list --environment production --event SecretRead
-
-# Denied access attempts (potential security issue)
-bella audit list --outcome Denied
-
-# Export as JSON
-bella audit list --output json > audit.json
-
-# Export as CSV
-bella audit list --output csv > audit.csv
+# Refused secret operations (worth an alert)
+curl "$BELLA_URL/api/v1/access-logs?action=secret_access_denied" \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
-## Access Log vs Audit Log
+## The four logs
 
-Bella maintains two distinct logs:
+Bella keeps four separate logs. Everything above describes the first, which is the one the console's **Audit Logs** page shows.
 
-| | **Access Log** | **Audit Log** |
-|--|--------------|--------------|
-| What it captures | Every API request (including reads) | All state changes + access (union of both) |
-| Retention | 90 days (default) | 365 days (default) |
-| Use for | Real-time monitoring | Compliance, investigations |
-
-The **Access Log** is the raw per-request log. The **Audit Log** is the curated, event-typed log for compliance use.
+| Log | What it records | REST listing |
+|-----|-----------------|--------------|
+| Secret access log | Access to secrets and the administrative actions described on this page | `GET /api/v1/access-logs` |
+| SSH log | SSH keys signed and SSH role changes (`ssh_sign`, `ssh_role_create`, `ssh_role_delete`) | `GET /api/v1/ssh/logs` |
+| PKI log | Certificates issued or revoked through the API or the WebApp, and PKI role changes (`pki_cert_issue`, `pki_cert_revoke`, `pki_role_create`, `pki_role_delete`) | `GET /api/v1/pki/logs` |
+| Certificate rotation log | Certificate rotation runs, on self-hosted deployments that use certificate rotation | `GET /api/v1/cert-rotation/logs` |
 
 ## Compliance
 
@@ -126,11 +151,11 @@ depends on those, use a JSON destination.
 
 ## Retention
 
-Default retention: 365 days. Contact your instance admin to adjust.
+Bella has no automatic retention or purge for audit rows, and no setting to configure one. Rows stay by default. That is the absence of a policy, not a retention guarantee: on a self-hosted instance, whoever operates the database can still delete rows. If you need a fixed retention period, or a copy outside Bella, stream the log to your SIEM and apply the retention there.
 
 ## Which address is recorded
 
-`actor.ip` is the address of the **caller**, not of the reverse proxy or CDN in front of Bella.
+`ipAddress` is the address of the **caller**, not of the reverse proxy or CDN in front of Bella.
 
 Bella reads the standard forwarding chain, and it believes an asserted originating address only when
 it arrives from a hop the deployment has declared trusted. Two consequences worth knowing:

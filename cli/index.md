@@ -106,7 +106,7 @@ The CLI reads the following environment variables. They take precedence over sto
 | `BELLA_BAXTER_PROJECT` | Project slug (session override) | Set by `bella context use` via shell function |
 | `BELLA_BAXTER_ENV` | Environment slug (session override) | Set by `bella context use` via shell function |
 | `BELLA_BAXTER_TENANT` | Org/tenant slug (session override) | Used alongside `BELLA_BAXTER_PROJECT`/`BELLA_BAXTER_ENV` |
-| `BELLA_BAXTER_PRIVATE_KEY` | ZKE private key (PEM) | Required for [Zero-Knowledge Encryption](/features/e2ee-zke) |
+| `BELLA_BAXTER_PRIVATE_KEY` | Device private key (PEM) | Identifies this machine as a registered device — see [ZKE and device keys](/features/e2ee-zke) |
 | `BELLA_BAXTER_APP_CLIENT` | App client identifier | Forwarded as a context header; useful for MCP/SDK integrations |
 | `BELLA_BAXTER_DEBUG` | Enable debug HTTP logging | Set to any non-empty value |
 
@@ -199,7 +199,7 @@ bella run --watch --signal sighup -- gunicorn app:app   # reload without restart
 Use this when your app has a Bella SDK installed (e.g. `@bella-baxter/express`, `BellaBaxter.AspNetCore`).
 Instead of fetching secrets itself, `bella sdk run` resolves the right credentials and injects them into
 the child process environment. The SDK inside your app then fetches secrets at runtime — enabling
-lazy loading, caching, and [Zero-Knowledge Encryption](/features/e2ee-zke).
+lazy loading, caching, and [ZKE device keys](/features/e2ee-zke).
 
 ```sh
 bella sdk run -- node server.js
@@ -422,7 +422,9 @@ already running, or the key store could not be read), so a script can tell that 
 
 Revocation stops access, not knowledge. Rotation does not make the device forget what it already read,
 keeps past versions of a secret under their original sealing, and does not rotate organisation-level
-records. See [What revoking a device does, and rotating its keys](/features/device-revocation).
+records. When the device used the organisation key, the command prints how many records a rotation would
+re-seal and how many projects it would give their own key, or says the count is unknown. The organisation
+Owner rotates the organisation key in the console: Settings, Encryption. See [What revoking a device does, and rotating its keys](/features/device-revocation).
 
 ---
 

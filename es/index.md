@@ -23,7 +23,7 @@ hero:
 features:
   - icon: 🔐
     title: Tu Infraestructura, Tus Reglas
-    details: Bella Baxter nunca almacena tus secretos. Se conecta a los almacenes de secretos que ya operas — Vault/OpenBao, AWS, Azure, GCP — y actúa como proxy unificado.
+    details: Bella Baxter se conecta a los almacenes de secretos que ya operas — Vault/OpenBao, AWS, Azure, GCP — y actúa como pasarela unificada. Los valores de tus propios almacenes no se guardan en la base de datos de Bella.
   - icon: ⚡
     title: Experiencia de Desarrollador Sin Fricciones
     details: Obtén secretos con un solo comando. Ejecuta cualquier proceso con secretos inyectados. Sin archivos .env comprometidos ni credenciales en el YAML de CI/CD.

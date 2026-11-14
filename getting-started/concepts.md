@@ -4,14 +4,14 @@ Understanding how Bella Baxter organises your secrets.
 
 ## Architecture Overview
 
-Bella Baxter is a **gateway**, not a secret store. Your secret values live in the external provider you already operate. Bella Baxter manages access, context, and identity — it never holds the raw secret values.
+Bella Baxter is a **gateway**, not a secret store. Your secret values live in a provider: one you already operate, or the System Provider that Bella manages for you. Bella Baxter manages access, context, and identity; values from your own stores are not kept in Bella's database.
 
 ```
 Your App
   └── Bella CLI / SDK
         └── Bella Baxter API
               └── Secret Provider (Vault, AWS, Azure, GCP...)
-                    └── Your secret values (stored here, not in Bella)
+                    └── Your secret values (stored in the provider)
 ```
 
 ---
@@ -39,7 +39,7 @@ Supported provider types:
 | `GoogleSecretManager` | GCP Secret Manager |
 | `HttpRest` | Any generic HTTP secret API |
 
-Every tenant automatically gets a **System Provider** — a Bella-managed OpenBao instance. You can use it immediately without any configuration.
+Every tenant automatically gets a **System Provider** — a Bella-managed OpenBao instance. You can use it immediately without any configuration. Secrets you put in the System Provider are stored in that Bella-managed OpenBao.
 
 ### Project
 
@@ -58,7 +58,7 @@ A secret for `DATABASE_URL` in `dev` is completely separate from `DATABASE_URL` 
 
 ### Secret
 
-A **Secret** is a key-value pair stored in a provider. Bella Baxter never stores the value itself — it proxies reads and writes to the provider.
+A **Secret** is a key-value pair stored in a provider. Bella Baxter proxies reads and writes to the provider; the value is not written to Bella's database.
 
 Secret values can be:
 - Plain strings (`my-api-key`)
@@ -102,4 +102,4 @@ Tenant
 5. Secrets are returned to the CLI
 6. CLI writes them to `.env` or injects them into a child process
 
-The secret values travel from provider → API → CLI. They are **never stored in Bella's database**.
+The secret values travel from provider → API → CLI. They are **not written to Bella's database**; the API may keep them in a short-lived cache (5 minutes by default) so that it does not call the provider on every read.

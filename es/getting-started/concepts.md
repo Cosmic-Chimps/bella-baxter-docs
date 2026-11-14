@@ -4,14 +4,14 @@ Cómo organiza Bella Baxter tus secretos.
 
 ## Visión General de la Arquitectura
 
-Bella Baxter es una **pasarela**, no un almacén de secretos. Los valores de tus secretos viven en el proveedor externo que ya operas. Bella Baxter gestiona el acceso, el contexto y la identidad — nunca almacena los valores raw de los secretos.
+Bella Baxter es una **pasarela**, no un almacén de secretos. Los valores de tus secretos viven en un proveedor: uno que ya operas o el Proveedor del Sistema que Bella gestiona por ti. Bella Baxter gestiona el acceso, el contexto y la identidad; los valores de tus propios almacenes no se guardan en la base de datos de Bella.
 
 ```
 Tu Aplicación
   └── Bella CLI / SDK
         └── API de Bella Baxter
               └── Proveedor de Secretos (Vault, AWS, Azure, GCP...)
-                    └── Tus valores de secretos (almacenados aquí, no en Bella)
+                    └── Tus valores de secretos (almacenados en el proveedor)
 ```
 
 ---
@@ -37,7 +37,7 @@ Tipos de proveedores soportados:
 | `GoogleSecretManager` | GCP Secret Manager |
 | `HttpRest` | Cualquier API HTTP genérica de secretos |
 
-Cada organización obtiene automáticamente un **Proveedor del Sistema** — una instancia de OpenBao gestionada por Bella. Puedes usarlo inmediatamente sin ninguna configuración.
+Cada organización obtiene automáticamente un **Proveedor del Sistema** — una instancia de OpenBao gestionada por Bella. Puedes usarlo inmediatamente sin ninguna configuración. Los secretos que guardes en el Proveedor del Sistema se almacenan en ese OpenBao gestionado por Bella.
 
 ### Proyecto
 
@@ -56,7 +56,7 @@ Un secreto para `DATABASE_URL` en `dev` está completamente separado de `DATABAS
 
 ### Secreto
 
-Un **Secreto** es un par clave-valor almacenado en un proveedor. Bella Baxter nunca almacena el valor en sí — hace de proxy para lecturas y escrituras al proveedor.
+Un **Secreto** es un par clave-valor almacenado en un proveedor. Bella Baxter hace de proxy para las lecturas y escrituras al proveedor; el valor no se escribe en la base de datos de Bella.
 
 ### API key
 
@@ -93,4 +93,4 @@ Organización
 5. Los secretos son devueltos a la CLI
 6. La CLI los escribe en `.env` o los inyecta en un proceso hijo
 
-Los valores de los secretos viajan desde proveedor → API → CLI. **Nunca se almacenan en la base de datos de Bella**.
+Los valores de los secretos viajan desde proveedor → API → CLI. **No se escriben en la base de datos de Bella**; la API puede mantenerlos en una caché de corta duración (5 minutos por defecto) para no llamar al proveedor en cada lectura.

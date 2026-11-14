@@ -17,17 +17,17 @@ Navigate to: **WebApp → Security → Dashboard**
 ## Run a Scan
 
 ::: warning Planned — not in the CLI yet
-The `bella security` commands (`scan`, `findings list|get|dismiss`, `policy set`) are on the roadmap and are not in the CLI yet. Until then, run scans and manage findings in the WebApp (**Security → Dashboard**) or with the [REST API](/api-reference/). The CLI examples on this page show the planned syntax.
+The `bella security` commands (`scan`, `findings list|get`) are on the roadmap and are not in the CLI yet. Until then, run scans and manage findings in the WebApp (**Security → Dashboard**) or with the [REST API](/api-reference/). The CLI examples on this page show the planned syntax.
 :::
 
 ```sh
 bella security scan --project my-api --environment production
 ```
 
-Scans run automatically on:
-- Secret creation/update
-- Scheduled scan (configurable, default: daily)
-- Manual trigger via CLI or WebApp
+Scans run:
+- When a secret is created or updated
+- Every hour, on a fixed schedule
+- When you trigger one from the WebApp or the REST API
 
 ## How it works
 
@@ -141,23 +141,12 @@ The same actions are available in the [REST API](/api-reference/):
 `POST` and `DELETE /api/v1/projects/{project}/environments/{env}/security/acknowledgements`, and
 `/api/v1/projects/{project}/security/acknowledgements` for global secrets.
 
-## Dismiss a Finding
+## Scan Schedule and Thresholds
 
-```sh
-bella security findings dismiss <finding-id> --reason "Intentional test environment value"
-```
+The schedule and the rule thresholds are fixed. There is no scan policy to configure per project.
 
-Dismissed findings are logged with the reason and the dismissing user.
-
-## Configure Scan Policy
-
-```sh
-bella security policy set \
-  --project my-api \
-  --min-entropy 3.5 \
-  --require-lease-policy true \
-  --scan-interval daily
-```
+- To keep the scanner away from a value it misjudges, mark the secret **ignore in scan**.
+- To take a finding you have reviewed out of the counts, [acknowledge it](#acknowledge-a-finding). There is no separate "dismiss" action.
 
 ## Notifications on Findings
 
@@ -182,13 +171,12 @@ See [Notifications](/features/notifications) for setup.
 
 ## API
 
-```http
-GET /api/v1/security/findings?projectId=...&severity=High
+| Request | What it does |
+|---------|--------------|
+| `GET /api/v1/environments/{environmentId}/security` | The latest report for one environment |
+| `POST /api/v1/environments/{environmentId}/security/scan` | Scan one environment now |
+| `GET /api/v1/projects/{projectSlug}/security` | The project overview: its global secrets and a summary of each environment |
+| `POST /api/v1/projects/{projectSlug}/security/scan` | Scan the project's global secrets now |
+| `GET /api/v1/security/summary` | The summary for the whole organisation |
 
-POST /api/v1/security/scans
-Content-Type: application/json
-{
-  "projectId": "...",
-  "environmentId": "..."
-}
-```
+Acknowledgements have their own routes; see [Acknowledge a Finding](#acknowledge-a-finding).
