@@ -56,7 +56,7 @@ Un secret per a `DATABASE_URL` a `dev` està completament separat de `DATABASE_U
 
 ### Secret
 
-Un **secret** és un parell clau-valor emmagatzemat en un proveïdor. Bella Baxter fa de proxy per a les lectures i escriptures al proveïdor; el valor no s'escriu a la base de dades de Bella.
+Un **secret** és un parell clau-valor emmagatzemat en un proveïdor. Bella Baxter fa de proxy per a les lectures i escriptures al proveïdor; el valor no s'escriu a la base de dades de Bella. Amb el proveïdor del sistema, el proveïdor és l'OpenBao que Bella gestiona per al teu tenant, de manera que aquests valors sí que els desa Bella.
 
 ### API key
 
@@ -93,4 +93,4 @@ Tenant
 5. Els secrets es retornen a la CLI
 6. La CLI els escriu a `.env` o els injecta en un procés fill
 
-Els valors dels secrets viatgen des del proveïdor → API → CLI. **No s'escriuen a la base de dades de Bella**; l'API els pot mantenir en una memòria cau de curta durada (5 minuts per defecte) per no cridar el proveïdor a cada lectura.
+Els valors dels secrets viatgen des del proveïdor → API → CLI. **No s'escriuen a la base de dades de Bella**; l'API els pot mantenir en una memòria cau xifrada de curta durada (5 minuts per defecte) per no cridar el proveïdor a cada lectura. Si les claus de xifratge de la memòria cau no estan disponibles, l'API se salta la memòria cau i llegeix del proveïdor cada vegada; no hi desa valors sense xifrar.

@@ -1,6 +1,6 @@
 # Secrets
 
-Bella Baxter manages secrets as key-value pairs stored in a provider: your own Vault, AWS, Azure or GCP store, or the Bella-managed System Provider. Secret **values are not written to Bella's database**. The API reads them from the provider and may keep them in a short-lived cache (5 minutes by default).
+Bella Baxter manages secrets as key-value pairs stored in a provider: your own Vault, AWS, Azure or GCP store, or the Bella-managed System Provider. Secret **values are not written to Bella's database**; with the System Provider they are stored in the OpenBao that Bella manages for your tenant. The API reads them from the provider and may keep them in a short-lived, encrypted cache (5 minutes by default).
 
 ## Create a Secret
 

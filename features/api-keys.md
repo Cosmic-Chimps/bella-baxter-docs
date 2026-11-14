@@ -46,7 +46,7 @@ Keys are prefixed with `bax-` for easy identification in logs and `git grep`.
 
 ## Issue Short-Lived Tokens
 
-For zero-trust patterns — issue a token that expires automatically:
+To give a job a credential limited to named scopes that expires on its own, issue a token:
 
 ```sh
 bella issue --scope stripe,payment --ttl 15

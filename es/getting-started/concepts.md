@@ -56,7 +56,7 @@ Un secreto para `DATABASE_URL` en `dev` está completamente separado de `DATABAS
 
 ### Secreto
 
-Un **Secreto** es un par clave-valor almacenado en un proveedor. Bella Baxter hace de proxy para las lecturas y escrituras al proveedor; el valor no se escribe en la base de datos de Bella.
+Un **Secreto** es un par clave-valor almacenado en un proveedor. Bella Baxter hace de proxy para las lecturas y escrituras al proveedor; el valor no se escribe en la base de datos de Bella. Con el Proveedor del Sistema, el proveedor es el OpenBao que Bella gestiona para tu organización, así que esos valores sí los guarda Bella.
 
 ### API key
 
@@ -93,4 +93,4 @@ Organización
 5. Los secretos son devueltos a la CLI
 6. La CLI los escribe en `.env` o los inyecta en un proceso hijo
 
-Los valores de los secretos viajan desde proveedor → API → CLI. **No se escriben en la base de datos de Bella**; la API puede mantenerlos en una caché de corta duración (5 minutos por defecto) para no llamar al proveedor en cada lectura.
+Los valores de los secretos viajan desde proveedor → API → CLI. **No se escriben en la base de datos de Bella**; la API puede mantenerlos en una caché cifrada de corta duración (5 minutos por defecto) para no llamar al proveedor en cada lectura. Si las claves de cifrado de la caché no están disponibles, la API se salta la caché y lee del proveedor cada vez; no guarda valores sin cifrar en la caché.

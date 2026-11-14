@@ -58,7 +58,7 @@ A secret for `DATABASE_URL` in `dev` is completely separate from `DATABASE_URL` 
 
 ### Secret
 
-A **Secret** is a key-value pair stored in a provider. Bella Baxter proxies reads and writes to the provider; the value is not written to Bella's database.
+A **Secret** is a key-value pair stored in a provider. Bella Baxter proxies reads and writes to the provider; the value is not written to Bella's database. With the System Provider, the provider is the OpenBao that Bella manages for your tenant, so Bella does hold those values.
 
 Secret values can be:
 - Plain strings (`my-api-key`)
@@ -69,7 +69,7 @@ Secret values can be:
 
 An **API Key** (`bax-...`) is a long-lived machine credential scoped to one project+environment. Use API keys in CI/CD pipelines, servers, and SDK clients.
 
-Short-lived tokens can be issued from an API key using `bella issue` for zero-trust patterns.
+Short-lived tokens limited to named scopes can be issued from an API key using `bella issue`.
 
 ### Trust Domain
 
@@ -102,4 +102,4 @@ Tenant
 5. Secrets are returned to the CLI
 6. CLI writes them to `.env` or injects them into a child process
 
-The secret values travel from provider → API → CLI. They are **not written to Bella's database**; the API may keep them in a short-lived cache (5 minutes by default) so that it does not call the provider on every read.
+The secret values travel from provider → API → CLI. They are **not written to Bella's database**; the API may keep them in a short-lived, encrypted cache (5 minutes by default) so that it does not call the provider on every read. If the cache's encryption keys are unavailable, the API skips the cache and reads from the provider each time; it does not cache values unencrypted.
