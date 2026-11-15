@@ -58,7 +58,6 @@ The list returns active leases unless you pass another `status`. Listing needs p
 Revoking a secret lease marks the record as `Revoked` and does nothing else:
 
 - No credential is invalidated. The holder can fetch the secrets again.
-- The reason asked for in the WebApp is not stored.
 - No audit row is written.
 
 An organisation administrator, or an owner or manager of the environment, can revoke any lease. Anyone else can revoke only their own.
