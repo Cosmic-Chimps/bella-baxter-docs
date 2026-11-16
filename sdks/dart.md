@@ -1,14 +1,16 @@
 # Dart / Flutter SDK
 
-Auto-generated Dart client for Bella Baxter. Works in Flutter apps, Dart CLI tools, and Shelf servers.
+Dart client for Bella Baxter, built on a generated API client. Works in Flutter apps, Dart CLI tools, and Shelf servers.
 
 ## Installation
 
 ```yaml
 # pubspec.yaml
 dependencies:
-  bella_baxter: ^1.0.0
+  bella_baxter: ^VERSION
 ```
+
+Replace `VERSION` with the latest version published on pub.dev. The SDK is a preview release (0.1.x), so a `^1.0.0` requirement will not resolve.
 
 ```sh
 dart pub get
@@ -17,13 +19,13 @@ dart pub get
 ## Quick Start
 
 ```dart
-import 'package:bella_baxter/bella_baxter.dart';
+import 'package:bella_baxter/bella_client.dart';
 
 // Recommended: read config from environment (injected by `bella sdk run`)
 final client = BellaClient.fromEnv();
 
 final secrets = await client.pullSecrets(
-  projectSlug: 'my-project',
+  projectRef: 'my-project',
   environmentSlug: 'production',
 );
 print(secrets['DATABASE_URL']);
@@ -38,7 +40,7 @@ final client = BellaClient(BellaClientOptions(
 ));
 
 final secrets = await client.pullSecrets(
-  projectSlug: 'my-project',
+  projectRef: 'my-project',
   environmentSlug: 'production',
 );
 ```
@@ -56,7 +58,7 @@ void main() async {
   ));
 
   final secrets = await client.pullSecrets(
-    projectSlug: 'my-project',
+    projectRef: 'my-project',
     environmentSlug: 'production',
   );
 
@@ -64,7 +66,7 @@ void main() async {
 }
 ```
 
-→ [Full Flutter sample](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/samples/05-flutter-app)
+→ [Full Flutter sample](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart-flutter/example/05-flutter-app)
 
 ## Dart Shelf Server
 
@@ -72,58 +74,59 @@ void main() async {
 // Inject secrets before starting the server
 final client = BellaClient.fromEnv();
 final secrets = await client.pullSecrets(
-  projectSlug: 'my-project',
+  projectRef: 'my-project',
   environmentSlug: 'production',
 );
 
 final handler = Pipeline()
-    .addMiddleware(secretsMiddleware(secrets))
-    .addHandler(_router);
+    .addMiddleware(logRequests())
+    .addHandler(_router(secrets)); // your own router that closes over the secrets
 
 await io.serve(handler, 'localhost', 8080);
 ```
 
-→ [Full Shelf sample](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/samples/04-dart-shelf)
+→ [Full Shelf sample](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/example/04-dart-shelf)
 
 ## Zero-Knowledge Encryption (ZKE)
 
-By default the SDK generates a fresh P-256 keypair per request (ephemeral E2EE). With ZKE you supply a **persistent device key** — the server audits which host fetched each secret and the SDK caches the wrapped DEK.
+By default the SDK generates a fresh P-256 keypair per client (ephemeral E2EE). With ZKE the app presents a **persistent device key**. The server audits which host fetched each secret. The SDK passes the wrapped DEK it receives to your `onWrappedDekReceived` callback, so you can cache it.
 
-**Generate your device key once:**
+**Create a device key once, on each machine:**
 
 ```sh
-bella auth setup   # stores it owner-only under ~/.config/bella-cli; copy the PKCS#8 PEM
+bella auth setup
 ```
 
-**Load the key bytes and pass them in:**
+This creates a P-256 key on the machine, stores it encrypted under `~/.config/bella-cli`, and registers the public half with Bella. It prints the device's fingerprint, not the key. The private key stays on the machine.
+
+**Run your app under `bella sdk run`:**
+
+```sh
+bella sdk run -- dart run main.dart
+```
+
+`bella sdk run` sets `BELLA_BAXTER_PRIVATE_KEY` in the process it starts, and `BellaClient.fromEnv()` reads that variable. If you sign in with an API key (`bax-...`), the CLI sets it only when the server confirms that this machine's device is the one recorded against the key.
+
+If the variable is set but is not a readable P-256 key, `fromEnv()` throws a `StateError`. It does not fall back to an ephemeral key.
+
+If you build the client yourself, pass the key bytes with `bellaPrivateKeyFromEnvValue`, which accepts a PEM or bare base64 PKCS#8 DER:
 
 ```dart
-import 'dart:convert';
-import 'dart:typed_data';
-import 'package:bella_baxter/bella_baxter.dart';
-
-// Decode PKCS#8 PEM → raw DER bytes
-Uint8List _pemToBytes(String pem) {
-  final b64 = pem
-      .replaceAll('-----BEGIN PRIVATE KEY-----', '')
-      .replaceAll('-----END PRIVATE KEY-----', '')
-      .replaceAll(RegExp(r'\s'), '');
-  return Uint8List.fromList(base64.decode(b64));
-}
-
-final keyPem = Platform.environment['BELLA_BAXTER_PRIVATE_KEY'];
+import 'dart:io';
+import 'package:bella_baxter/bella_client.dart';
 
 final client = BellaClient(BellaClientOptions(
   baseUrl: Platform.environment['BELLA_BAXTER_URL']!,
   apiKey: Platform.environment['BELLA_BAXTER_API_KEY']!,
-  privateKey: keyPem != null ? _pemToBytes(keyPem) : null,
+  privateKey: bellaPrivateKeyFromEnvValue(
+      Platform.environment['BELLA_BAXTER_PRIVATE_KEY']),
   onWrappedDekReceived: (project, env, wrappedDek, leaseExpires) {
-    debugPrint('DEK for $project/$env expires $leaseExpires');
+    print('DEK for $project/$env expires $leaseExpires');
   },
 ));
 ```
 
-If `privateKey` is null the SDK falls back to ephemeral E2EE — fully backward-compatible.
+If `privateKey` is null the SDK uses ephemeral E2EE.
 
 ## `BellaClientOptions` Reference
 
@@ -150,8 +153,8 @@ Generates a typed `AppSecrets` class with final fields.
 
 | Sample | Pattern | Link |
 |--------|---------|------|
-| `01-dart-dotenv` | `bella pull` → dotenv Dart | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/samples/01-dart-dotenv) |
-| `02-process-inject` | `bella sdk run -- dart run main.dart` | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/samples/02-process-inject) |
-| `03-dart-cli` | SDK in Dart CLI tool | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/samples/03-dart-cli) |
-| `04-dart-shelf` | SDK in Shelf server | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/samples/04-dart-shelf) |
-| `05-flutter-app` | SDK in Flutter app | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/samples/05-flutter-app) |
+| `01-dart-dotenv` | `bella pull` → dotenv Dart | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/example/01-dart-dotenv) |
+| `02-process-inject` | `bella sdk run -- dart run main.dart` | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/example/02-process-inject) |
+| `03-dart-cli` | SDK in Dart CLI tool | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/example/03-dart-cli) |
+| `04-dart-shelf` | SDK in Shelf server | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/example/04-dart-shelf) |
+| `05-flutter-app` | SDK in Flutter app | [GitHub](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart-flutter/example/05-flutter-app) |

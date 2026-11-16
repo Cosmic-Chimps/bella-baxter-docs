@@ -6,9 +6,9 @@ Bella Baxter integrates with the [OpenBao / HashiCorp Vault PKI Secrets Engine](
 
 ```
 Admin configures CA
-  → Environment → Certificates → Configure CA
+  → Environment → PKI / TLS → Configure PKI CA
   → OpenBao generates CA keypair (private key never leaves OpenBao)
-  → Public CA cert downloaded and added to trust stores
+  → Public CA cert copied and added to trust stores
 
 Developer/service requests a certificate
   → Via WebApp, CLI, API, or ACME client
@@ -26,23 +26,33 @@ Services auto-renew with ACME
 
 ### 1. Configure the CA
 
-Open **Environment → Certificates → Configure CA**. Choose:
+Open the environment's **PKI / TLS** tab and click **Configure PKI CA**. The environment needs a Vault/OpenBao provider first. Bella generates a new root CA in the environment's secret store. It does not create an intermediate CA, and it cannot sign the CA with an existing corporate root CA.
 
-- **Generate new root CA** — best for development and isolated environments
-- **Generate intermediate CA** — for production; the CSR is signed by your existing corporate root CA
+Settings in the dialog:
 
-Key settings:
 | Field | Description | Example |
 |-------|-------------|---------|
-| Common Name | CA display name | `My Company Internal CA` |
-| Max TTL | How long certs can be valid | `87600h` (10 years for CA) |
-| Key Type | Algorithm | `rsa-4096` or `ec-p256` |
+| Common Name | Common name of the root CA | `My Company Internal CA` |
+| CA Lifetime (TTL) | How long the CA certificate is valid | `87600h` (10 years, the default) |
+| Key Type | Algorithm: `rsa` or `ec` | `rsa` |
+| Organization | Optional organisation (O) | `Acme Corp` |
+| Country | Optional country code (C) | `US` |
 
-After setup, download the **CA certificate** (PEM) — you'll need to add it to trust stores on all machines that connect to services using certs from this CA.
+The console uses the default key size for the key type: 4096 bits for `rsa` and 256 bits for `ec`. The API and the CLI also accept `ed25519` and a key size (`--key-bits` in the CLI). A root CA accepts:
+
+- `rsa` with 3072, 4096 or 8192 bits (default 4096)
+- `ec` with 256, 384 or 521 bits (default 256)
+- `ed25519`, with no key size
+
+Smaller keys are refused, because a root CA is valid for 10 years by default.
+
+If the environment is linked to more than one secret store, the dialog also asks which store should hold the CA key. Bella records your choice and uses it for every later PKI operation.
+
+After setup, copy the **CA Certificate (PEM)** shown on the tab. You need to add it to the trust stores of all machines that connect to services using certificates from this CA. You can also save it with `bella pki ca --output`.
 
 ### 2. Create a PKI Role
 
-Roles control what certificates can be issued. Go to **Certificates → Roles → Add Role**:
+Roles control what certificates can be issued. On the **PKI / TLS** tab, find the **PKI Roles** card and click **Add Role**:
 
 | Field | Description | Example |
 |-------|-------------|---------|
@@ -50,46 +60,55 @@ Roles control what certificates can be issued. Go to **Certificates → Roles �
 | Allowed Domains | Domains this role can issue certs for | `internal.example.com` |
 | Allow Subdomains | Allows `*.internal.example.com` | yes |
 | Max TTL | Maximum certificate validity | `72h` |
+| Default TTL | Validity used when a request does not ask for one | `24h` |
 
 ### 3. (Optional) Enable ACME for Automated Renewal
 
-ACME is automatically configured when you set up a CA. The **ACME Directory URL** appears in the WebApp under **Certificates**. Provide this URL to your ACME clients.
+ACME is automatically configured when you set up a CA. The **ACME Directory** URL appears on the **PKI / TLS** tab, below the CA certificate. Provide this URL to your ACME clients.
 
 ## Issuing Certificates
 
 ### Via WebApp
 
-1. Open **Environment → Certificates → Issue Certificate**
-2. Select a role, enter Common Name and optional SANs
-3. Click **Issue** — the certificate, private key, and CA chain are shown
-4. Download as PEM — the private key is shown once and never stored by Bella
+1. Open the environment's **PKI / TLS** tab and click **Issue Certificate** in the **PKI Roles** card (it needs at least one role)
+2. Select a role, enter the Common Name and optional SANs and IP SANs
+3. Click **Issue Certificate** — the certificate, private key and issuing CA are shown
+4. Copy them — the private key is shown once and never stored by Bella
 
 ### Via API
 
 ```http
-POST /api/v1/projects/{projectRef}/environments/{envSlug}/providers/{providerSlug}/pki/issue
+POST /api/v1/projects/{projectRef}/environments/{envSlug}/pki/issue
 Authorization: Bearer <token>
 Content-Type: application/json
 
 {
-  "role": "web-server",
   "commonName": "api.internal.example.com",
-  "altNames": ["api.staging.internal"],
+  "roleName": "web-server",
+  "altNames": "api.staging.internal,www.internal.example.com",
+  "ipSans": "10.0.0.12",
   "ttl": "24h"
 }
 ```
 
+`commonName` and `roleName` are required. `altNames` and `ipSans` are each one comma-separated string. `ttl` is optional and defaults to the role's default TTL.
+
 Response:
 ```json
 {
-  "serialNumber": "1a:2b:3c:...",
+  "success": true,
   "certificate": "-----BEGIN CERTIFICATE-----\n...",
   "privateKey": "-----BEGIN RSA PRIVATE KEY-----\n...",
-  "caChain": ["-----BEGIN CERTIFICATE-----\n..."],
+  "privateKeyType": "rsa",
   "issuingCa": "-----BEGIN CERTIFICATE-----\n...",
-  "expiresAt": "2026-03-18T17:00:00Z"
+  "caChain": ["-----BEGIN CERTIFICATE-----\n..."],
+  "serialNumber": "1a:2b:3c:...",
+  "expiration": 1773853200,
+  "instructions": "..."
 }
 ```
+
+`expiration` is a Unix timestamp in seconds. `instructions` is text explaining how to save and use the files.
 
 > **The private key is shown once.** Bella never stores private keys — save it immediately.
 
@@ -207,23 +226,24 @@ spec:
 ### Manual Revocation
 
 ```http
-POST /api/v1/projects/{projectRef}/environments/{envSlug}/providers/{providerSlug}/pki/revoke
+POST /api/v1/projects/{projectRef}/environments/{envSlug}/pki/revoke
 Authorization: Bearer <token>
 Content-Type: application/json
 
 { "serialNumber": "1a:2b:3c:..." }
 ```
 
-Or via WebApp: **Certificates → View Active Certificates → Revoke**.
+Or in the WebApp: on the **PKI / TLS** tab, open the **Issued Certificates** card and click the revoke button on the certificate's row. Only people who can manage the environment see this card.
 
 ### Emergency Revocation
 
-Rotate the CA keypair to instantly invalidate **all** certificates issued by this CA:
+Bella has no one-step action that rotates the CA keypair and invalidates every certificate at once. The **Reconfigure** button on the **PKI / TLS** tab opens the same configuration dialog as the first setup. The only confirmation the dialog asks for is when you point the CA at a different secret store while a CA key already exists in the current one (**Re-bind anyway**), because clients then keep trusting a CA the environment no longer uses.
 
-1. **Certificates → Rotate CA** in the WebApp
-2. Download new CA certificate
-3. Redistribute to trust stores
-4. Services that use ACME get a certificate from the new CA at their client's next renewal; force a renewal on the client if you cannot wait
+To respond to a compromised certificate:
+
+1. Revoke the certificate by serial number, in the **Issued Certificates** card, with the API, or with `bella pki revoke`
+2. Issue a replacement certificate
+3. Services that use ACME get a new certificate at their client's next renewal; force a renewal on the client if you cannot wait
 
 ## Security Notes
 

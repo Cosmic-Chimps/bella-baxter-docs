@@ -59,6 +59,7 @@ Bella Baxter s'ha construït diferent:
 - **Projectes i entorns il·limitats** — sense límits artificials
 - **La teva pròpia infraestructura** — connecta Vault, AWS, Azure o GCP. Les dades són teves.
 - **Gratis per començar** — 2.000 peticions a l'API per mes incloses, sense targeta de crèdit
+  La quota gratuïta pertany a la primera organització que crea una persona. Una organització que creï després comença sense quota, i les seves peticions amb API key retornen `429` fins que s'afegeixi un mètode de pagament.
   Quan s'esgota la quota gratuïta i no hi ha cap mètode de pagament registrat, les peticions amb API key retornen `429` fins que n'afegeixis un. Iniciar la sessió a la consola o al CLI no es mesura.
 - **Autoallotjable** — executa'l tu mateix amb Docker o .NET Aspire, sempre gratis sota ELv2
 

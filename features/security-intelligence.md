@@ -1,23 +1,22 @@
 # Security Intelligence
 
-Security Intelligence scans your environments for security issues — weak passwords, exposed credentials, policy violations, and misconfigured secrets — and surfaces them in a unified security dashboard.
+Security Intelligence scans your environments for security issues — weak passwords, exposed credentials, policy violations, and misconfigured secrets — and surfaces them on one security page.
 
 Security Intelligence is always free. Detecting a weak password should not require an enterprise contract.
 
-## Security Dashboard
+## Security Page
 
-The WebApp security dashboard shows:
-- Open security findings per project/environment
-- Severity breakdown (Critical, High, Medium, Low)
-- Finding trends over time
-- Quick-fix actions
+Choose **Security** in the WebApp's main menu. The page shows:
+- Four count cards: **Critical Environments**, **High Risk Environments**, **Healthy Environments** and **Environments Scanned** (with the total number of environments next to it)
+- A **Risk Breakdown**: the number of Critical, High, Medium and Low findings across all environments, with their total
+- An **Environments by Risk** table with one row per scanned environment: its **Risk**, **Environment**, **Project**, the **Critical**, **High**, **Medium** and **Low** counts, and when it was **Last Scanned**. You can sort it by any column.
 
-Navigate to: **WebApp → Security → Dashboard**
+Use **Refresh** to load the latest figures. The details of each finding are in the **Security** tab of the environment, which shows its **Security Report**.
 
 ## Run a Scan
 
 ::: warning Planned — not in the CLI yet
-The `bella security` commands (`scan`, `findings list|get`) are on the roadmap and are not in the CLI yet. Until then, run scans and manage findings in the WebApp (**Security → Dashboard**) or with the [REST API](/api-reference/). The CLI examples on this page show the planned syntax.
+The `bella security` commands (`scan`, `findings list|get`) are on the roadmap and are not in the CLI yet. Until then, run scans and manage findings in the WebApp (the **Security** tab of an environment, where **Scan Now** starts a scan) or with the [REST API](/api-reference/). The CLI examples on this page show the planned syntax.
 :::
 
 ```sh

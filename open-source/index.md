@@ -4,7 +4,7 @@ Bella Baxter is open-core, source-available under the [ELv2 License](https://www
 
 ## The Guiding Principle
 
-> **Cap organizational features (SSO, audit streaming, multi-team governance) — not operational features (resources you need to do your job).**
+> **Cap organizational features (audit streaming, multi-team governance) — not operational features (resources you need to do your job).**
 
 A solo developer or a 3-person startup should never hit a wall while doing legitimate work.
 
@@ -36,16 +36,19 @@ These are gated because they're only relevant at **organisational scale** — sm
 
 | Feature | Why it's paid |
 |---------|--------------|
-| **SSO (SAML / OIDC login)** | Only matters when IT centrally manages logins. Individuals use username+password or social login. |
 | **Audit log streaming / SIEM export** | Compliance at company scale (SOC2, ISO27001). The audit log UI stays free — only streaming to Splunk/Datadog/Azure Monitor is gated. |
-| **Advanced RBAC** | Fine-grained permissions beyond Owner/Manager/Member/Consumer. Relevant when security teams need granular control across dozens of teams. |
-| **Multi-tenant (multiple organisations on one instance)** | Relevant when running Bella as an internal platform for multiple business units. |
+| **Advanced RBAC** | Fine-grained permissions beyond the built-in project and environment roles. Relevant when security teams need granular control across dozens of teams. |
+
+Single sign-on (SAML or OIDC) is not gated. Every plan includes it. An organisation requests it, and a platform operator approves the request. See [Single sign-on](/features/sso).
+
+Running more than one organisation on one instance is not gated. Any signed-in person can create another organisation today.
 
 ## Cloud Pricing (PAYG)
 
 The Bella Baxter managed cloud runs on a **pay-as-you-go** model:
 
 - **Free**: 2,000 API requests per month, no credit card required
+  The free allowance belongs to the first organisation a person creates. An organisation they create afterwards starts with none, and its API key requests return `429` until a payment method is added. A person's own console and CLI sessions are never metered.
   When the free allowance is used up and no payment method is on file, API key requests return `429` until you add one. Signing in to the console or the CLI is not metered.
 - **Overage**: $0.005 per request beyond 2,000 (~$5 per 1,000 requests)
 - **Enterprise**: Contact us — flat monthly, custom volume, SLA, dedicated support
@@ -79,8 +82,8 @@ You pay more when you ship more (or your AI agents are very busy). The bill grow
 | Cost | Free forever | $0 to start, $0.005/req overage |
 | Infrastructure | You manage (Docker/Aspire/K8s) | Managed by Cosmic Chimps |
 | Data residency | Your infrastructure | Cosmic Chimps (EU / US) |
-| SSO | Enterprise plan | Enterprise plan |
-| Audit streaming | Enterprise plan | Enterprise plan |
+| SSO | Included. The operator of the installation approves each request | Included on every plan. Cosmic Chimps approves each request |
+| Audit streaming | No plan check. The operator of the installation switches it on per organisation | Enterprise plan |
 | Updates | Manual | Automatic |
 
 ## License

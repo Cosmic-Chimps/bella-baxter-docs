@@ -128,8 +128,11 @@ same exact, case-sensitive names. The message a channel receives:
 | `certificate.rotation.missed` | ⏭️ Scheduled Rotation Did Not Start — why it could not start |
 
 When each event fires, and which events reach which scope, is described in the
-[webhook event table](/features/webhooks#event-types). The same names are refused, or accepted and
-never delivered, as described [there](/features/webhooks#names-that-are-refused-and-names-that-deliver-nothing).
+[webhook event table](/features/webhooks#event-types). A name the platform does not recognise is refused
+with `400 Bad Request`, as described [there](/features/webhooks#names-that-are-refused-and-names-that-deliver-nothing).
+That includes the six names that look like events but are never sent (`secret.rotated`,
+`provider.created`, `provider.deleted`, `secret.changed`, `scan.environment.complete` and
+`scan.project.complete`). A channel that already stores one of them keeps it and receives nothing for it.
 
 ### Certificate rotation messages
 

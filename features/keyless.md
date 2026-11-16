@@ -64,7 +64,7 @@ Switching it off again takes effect on the next exchange.
 
 ### 1. Create a Trust Domain (admin, once)
 
-From the console: **Environment → Trust Domains → New Trust Domain**.
+From the console: open the environment, go to its **Identity** tab, and choose **Add Trust Domain** in the **Workload Identity** panel.
 
 Or over the API. This is the only scripted route; there is no `bella` command for it:
 
@@ -109,7 +109,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v6
-      - uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.109
+      - uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.147
         with:
           oidc: 'true'
           tenant: my-org          # slugs of the environment the trust domain belongs to
@@ -172,10 +172,12 @@ A tenant can require a [registered device](/features/e2ee-zke#registered-devices
 - **On GitHub Actions the private half is exported too.** It goes to later steps as `BELLA_BAXTER_PRIVATE_KEY` (PKCS#8 PEM), next to the API key. The CLI masks the API key and every line of the PEM before it writes either to `$GITHUB_ENV`. `bella run -- ./deploy.sh` needs no key options, and the action needs no new input.
 - **One command.** `bella run`, `bella exec` and `bella sdk run` sign in on their own when they find no key. They keep the device key in memory and write nothing to disk. `bella exec` and `bella sdk run` hand the child process `BELLA_BAXTER_PRIVATE_KEY` as PEM.
 - **GitLab and other platforms.** `bella auth oidc` prints the API key and never the private half, because a pipeline log is not a secret store. It prints a `#` comment pointing at `bella run`, which signs in and reads in one command. `--json` has no private key either.
-- **Which key a command uses.** `bella run`, `bella secrets get`, `bella secrets list`, `bella pull`, `bella sdk run` and `bella issue` take the first of these:
+- **Which key a command uses.** `bella run`, `bella secrets get`, `bella secrets list` and `bella pull` take the first of these:
   1. `--private-key`.
   2. `BELLA_BAXTER_PRIVATE_KEY`, as PEM or base64 PKCS#8.
   3. The device file on the machine.
+
+  `bella sdk run` and `bella issue` have no `--private-key` option. They take the second, then the third.
 
   If the variable is set but cannot be read, the command stops on a tenant that requires devices and names the variable. It does not fall back to the device file.
 
@@ -216,7 +218,7 @@ spec:
   automountServiceAccountToken: false      # the default token is not for Bella
   containers:
     - name: my-app
-      command: ["bella", "exec", "-p", "my-api", "-e", "production", "--", "node", "server.js"]
+      command: ["bella", "sdk", "run", "-t", "my-org", "-p", "my-api", "-e", "production", "--", "node", "server.js"]
       volumeMounts:
         - name: bella-token
           mountPath: /var/run/secrets/bella   # bella looks here first, no flag needed
@@ -289,13 +291,17 @@ Response:
 |--------|---------|
 | 400 `device_key_malformed` | a trust domain admitted the token, but `publicKey` is not a base64 SPKI P-256 public key |
 | 401 `token_audience_mismatch` | a trust domain would have admitted the token, but it was minted for another audience — request an accepted one |
+| 401 | the environment has no enabled trust domain |
 | 401 `no_matching_trust_domain` | no trust domain admitted the token (issuer, signature, lifetime or a claim rule) |
 | 403 `device_key_required` | a trust domain admitted the token, but the tenant requires registered devices and no `publicKey` was sent: send one with the sign-in |
 | 403 `trust_domain_role_not_grantable` | the trust domain admitted the token but grants a role other than `Consumer` or `Manager` — an administrator must change its role |
 | 403 `trust_domain_has_no_claim_rules` | the only trust domain that matched has no claim rule, so it bounds no one — an administrator must add a rule |
 | 403 `trust_domain_claim_rule_not_accepted` | the only trust domain that matched holds a `Contains` rule or a `StartsWith` value not ending in `/`, `:` or `@` — an administrator must fix the rule |
-| 422 | the token is not a JWT, or has no issuer |
-| 429 | too many attempts for this issuer and subject — 10 per minute |
+| 404 `environment_not_found` | the tenant, project and environment slugs (or the environment id) name no environment |
+| 422 `missing_context` | `POST /api/v1/token` only: `tenantSlug`, `projectSlug` or `environmentSlug` is missing |
+| 422 `invalid_token`, `missing_issuer` | the token is not a JWT, or has no issuer |
+| 429 | too many attempts for this environment, issuer and subject — 10 per minute |
+| 500 | Bella admitted the token but could not store the issued key — an operator must check the API log |
 
 ## Security Notes
 

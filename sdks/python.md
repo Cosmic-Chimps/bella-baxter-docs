@@ -1,6 +1,6 @@
 # Python SDK
 
-Zero-dependency async Python client for Bella Baxter. Works with Flask, Django, FastAPI, and any Python application.
+Python client for Bella Baxter, built on `httpx`, `cryptography` and the Kiota client libraries. Requires Python 3.10+. Works with Flask, Django, FastAPI, and any Python application.
 
 ## Installation
 
@@ -24,9 +24,11 @@ client = BaxterClient(BaxterClientOptions(
     api_key="bax-...",
 ))
 
-secrets = client.get_all_secrets()
-print(secrets["DATABASE_URL"])
+response = client.get_all_secrets()
+print(response.secrets["DATABASE_URL"])
 ```
+
+`get_all_secrets()` returns a dataclass. The values are in `.secrets`, a `dict[str, str]`. The project and environment default to the ones your API key is scoped to. You can pass `project_slug` and `env_slug` to choose others.
 
 All methods are **synchronous** by default. Async variants (e.g. `get_all_secrets_async()`) are available for use inside async frameworks.
 
@@ -55,7 +57,7 @@ client.delete_secret("OLD_KEY", provider="vault-main")
 ```python
 # app/__init__.py
 def create_app():
-    secrets = client.get_all_secrets()
+    secrets = client.get_all_secrets().secrets
     app = Flask(__name__)
     app.config["DATABASE_URL"] = secrets["DATABASE_URL"]
     return app
@@ -69,7 +71,7 @@ def create_app():
 # apps.py
 class MyAppConfig(AppConfig):
     def ready(self):
-        secrets = client.get_all_secrets()
+        secrets = client.get_all_secrets().secrets
         os.environ.setdefault("DATABASE_URL", secrets["DATABASE_URL"])
 ```
 
@@ -81,7 +83,8 @@ class MyAppConfig(AppConfig):
 # main.py
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.secrets = await client.get_all_secrets_async()
+    response = await client.get_all_secrets_async()
+    app.state.secrets = response.secrets
     yield
 
 app = FastAPI(lifespan=lifespan)
@@ -91,23 +94,33 @@ app = FastAPI(lifespan=lifespan)
 
 ## Zero-Knowledge Encryption (ZKE)
 
-By default the SDK generates a fresh P-256 keypair per request (ephemeral E2EE). With ZKE you supply a **persistent device key** — the server audits which host fetched each secret and the SDK caches the wrapped DEK.
+By default the SDK generates a fresh P-256 keypair per request (ephemeral E2EE). With ZKE the app presents a **persistent device key**. The server audits which host fetched each secret. The SDK passes the wrapped DEK it receives to your `on_wrapped_dek_received` callback, so you can cache it.
 
-**Generate your device key once:**
+**Create a device key once, on each machine:**
 
 ```sh
-bella auth setup   # stores it owner-only under ~/.config/bella-cli; copy the printed PEM
+bella auth setup
 ```
 
-**Use it in your app:**
+This creates a P-256 key on the machine, stores it encrypted under `~/.config/bella-cli`, and registers the public half with Bella. It prints the device's fingerprint, not the key. The private key stays on the machine.
+
+**Run your app under `bella sdk run`:**
+
+```sh
+bella sdk run -- python app.py
+```
+
+`bella sdk run` sets `BELLA_BAXTER_PRIVATE_KEY` in the process it starts, and the SDK reads that variable. You need no code change. If you sign in with an API key (`bax-...`), the CLI sets it only when the server confirms that this machine's device is the one recorded against the key.
+
+To receive the wrapped DEK, add a callback. `private_key` takes the key as PEM; when it is not set, the SDK reads `BELLA_BAXTER_PRIVATE_KEY`:
 
 ```python
+import os
 from bella_baxter import BaxterClient, BaxterClientOptions
 
 client = BaxterClient(BaxterClientOptions(
     baxter_url="https://your-instance.bella-baxter.io",
     api_key="bax-...",
-    # Optional — reads BELLA_BAXTER_PRIVATE_KEY env var automatically
     private_key=os.environ.get("BELLA_BAXTER_PRIVATE_KEY"),
     on_wrapped_dek_received=lambda project, env, wrapped_dek, lease_expires: (
         print(f"DEK for {project}/{env} expires {lease_expires}")
@@ -115,13 +128,7 @@ client = BaxterClient(BaxterClientOptions(
 ))
 ```
 
-Or just set the environment variable — **Django, FastAPI, and Flask** integrations all read it automatically:
-
-```sh
-export BELLA_BAXTER_PRIVATE_KEY="$(cat ~/.bella/device-key.pem)"
-```
-
-If the variable is not set the SDK falls back to ephemeral E2EE — no behavior change.
+If no device key is set, the SDK uses ephemeral E2EE.
 
 ## Typed Secrets
 

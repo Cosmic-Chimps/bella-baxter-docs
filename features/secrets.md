@@ -19,7 +19,7 @@ bella secrets set DATABASE_URL "postgres://user:pass@host/db"        # convenien
 > becomes part of the value.
 
 ```http [API]
-POST /api/v1/environments/{envId}/providers/{providerId}/secrets
+POST /api/v1/projects/{projectRef}/environments/{envSlug}/providers/{providerSlug}/secrets
 Content-Type: application/json
 
 {
@@ -80,10 +80,12 @@ bella secrets push -i .env -p my-api -e staging   # into a specific environment
 ## Export to `.env` File
 
 ```sh
-bella pull                  # write .env in current directory
-bella pull -o json          # write secrets.json
-bella pull -o yaml          # write secrets.yaml
+bella pull                          # write .env in current directory
+bella pull -o secrets.json          # write secrets.json (format taken from the .json extension)
+bella pull --format json -o out.json   # flat JSON, whatever the file name
 ```
+
+`-o|--output` is the name of the file to write. The format comes from `--format` (`env`, `json` or `json-nested`) or, when you do not pass it, from the file extension (`.env` or `.json`). YAML is not supported.
 
 ## Secret Versioning
 
@@ -102,13 +104,13 @@ bella secrets rollback DATABASE_URL   # revert to previous version
 
 ## Secret Path Convention
 
-Secrets are namespaced per environment to prevent cross-environment collisions:
+Secrets are namespaced per project and environment to prevent collisions. Inside the provider, an environment's secrets live under this path:
 
 ```
-{tenant}/{environment_slug}/{key}
+{namespace_prefix}/{project}/{environment}
 ```
 
-Example: `acme/production/DATABASE_URL`
+Example: `myapp/billing/production`, with the secret's key stored under that path. If the provider has no `namespace_prefix`, the path is `{project}/{environment}`. A project's project-wide ("global") secrets live under `{project}/_global`, with the prefix in front when there is one.
 
 This path is managed by Bella — you never need to set it manually.
 

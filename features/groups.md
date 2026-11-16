@@ -4,10 +4,10 @@ Groups let you manage access for multiple users at once. Assign a group to a pro
 
 ## Create a Group
 
-From the WebApp: **Settings → Groups → Create Group**
+From the WebApp: choose **Groups** in the main menu, then **Create Group**
 
 ::: warning Planned — not in the CLI yet
-The `bella groups` commands (`create`, `list`, `members`, `add-member`, `remove-member`, `assign-project`, `assign-environment`, `unassign-project`) are on the roadmap and are not in the CLI yet. Until then, manage groups in the WebApp (**Settings → Groups**) or with the [REST API](/api-reference/). The CLI examples on this page show the planned syntax.
+The `bella groups` commands (`create`, `list`, `members`, `add-member`, `remove-member`, `assign-project`, `assign-environment`, `unassign-project`) are on the roadmap and are not in the CLI yet. Until then, manage groups in the WebApp (**Groups** in the main menu) or with the [REST API](/api-reference/). The CLI examples on this page show the planned syntax.
 :::
 
 ```sh
@@ -28,10 +28,15 @@ bella groups add-member --group "Backend Team" --user bob@example.com
 bella groups assign-project \
   --group "Backend Team" \
   --project my-api \
-  --role MEMBER
+  --role PROJECT_CONSUMER
 ```
 
-All current and future members of **Backend Team** will have `MEMBER` access to `my-api`.
+All current and future members of **Backend Team** will have `PROJECT_CONSUMER` access to `my-api`.
+
+A project role is one of two values. Any other value is refused with a `400` error.
+
+- `PROJECT_MANAGER` gives full management of the project: read, write and delete, and managing its users and secrets.
+- `PROJECT_CONSUMER` gives read-only access: members can view the project and its secrets.
 
 ## Assign a Group to an Environment
 

@@ -41,7 +41,7 @@ Cada tenant obté automàticament un **proveïdor del sistema** — una instànc
 
 ### Projecte
 
-Un **projecte** és una agrupació lògica de secrets, normalment corresponent a una aplicació o un servei. Els projectes tenen membres amb rols (Propietari, Gestor, Membre, Consumidor).
+Un **projecte** és una agrupació lògica de secrets, normalment corresponent a una aplicació o un servei. Un projecte té un propietari i membres. Un membre té el rol Gestor o Consumidor.
 
 Els projectes s'assignen a un o més proveïdors. Els secrets d'un projecte s'emmagatzemen en aquests proveïdors.
 
@@ -50,7 +50,7 @@ Els projectes s'assignen a un o més proveïdors. Els secrets d'un projecte s'em
 Un **entorn** és una part d'un projecte per a una etapa de desplegament: `dev`, `staging`, `production`, etc. Cada entorn:
 - Té el seu propi conjunt de secrets (aïllat dels altres entorns)
 - Es pot assignar a un subconjunt dels proveïdors del projecte
-- Pot tenir la seva pròpia llista d'accés de membres
+- Pot tenir la seva pròpia llista d'accés de membres, amb els seus propis rols (Propietari, Administrador, Membre, Visitant)
 
 Un secret per a `DATABASE_URL` a `dev` està completament separat de `DATABASE_URL` a `production`.
 

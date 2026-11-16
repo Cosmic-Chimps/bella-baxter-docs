@@ -38,7 +38,8 @@ This enables the Vault SSH secrets engine for the environment and generates a CA
 bella ssh roles create \
   --name ops \
   --allowed-users "ec2-user,ubuntu,admin" \
-  --ttl 1h \
+  --default-ttl 1h \
+  --max-ttl 8h \
   -p myproject -e prod
 ```
 

@@ -41,7 +41,7 @@ Cada organización obtiene automáticamente un **Proveedor del Sistema** — una
 
 ### Proyecto
 
-Un **Proyecto** es una agrupación lógica de secretos, generalmente correspondiente a una aplicación o servicio. Los proyectos tienen miembros con roles (Propietario, Gestor, Miembro, Consumidor).
+Un **Proyecto** es una agrupación lógica de secretos, generalmente correspondiente a una aplicación o servicio. Un proyecto tiene un propietario y miembros. Un miembro tiene el rol Gestor o Consumidor.
 
 Los proyectos se asignan a uno o más Proveedores. Los secretos de un proyecto se almacenan en esos proveedores.
 
@@ -50,7 +50,7 @@ Los proyectos se asignan a uno o más Proveedores. Los secretos de un proyecto s
 Un **Entorno** es una parte de un proyecto para una etapa de despliegue: `dev`, `staging`, `production`, etc. Cada entorno:
 - Tiene su propio conjunto de secretos (aislado de otros entornos)
 - Puede ser asignado a un subconjunto de los proveedores del proyecto
-- Puede tener su propia lista de acceso de miembros
+- Puede tener su propia lista de acceso de miembros, con sus propios roles (Propietario, Administrador, Miembro, Visitante)
 
 Un secreto para `DATABASE_URL` en `dev` está completamente separado de `DATABASE_URL` en `production`.
 

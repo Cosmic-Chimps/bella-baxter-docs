@@ -108,7 +108,7 @@ The CLI reads the following environment variables. They take precedence over sto
 | `BELLA_BAXTER_TENANT` | Org/tenant slug (session override) | Used alongside `BELLA_BAXTER_PROJECT`/`BELLA_BAXTER_ENV` |
 | `BELLA_BAXTER_PRIVATE_KEY` | Device private key (PEM) | Identifies this machine as a registered device — see [ZKE and device keys](/features/e2ee-zke) |
 | `BELLA_BAXTER_APP_CLIENT` | App client identifier | Forwarded as a context header; useful for MCP/SDK integrations |
-| `BELLA_BAXTER_DEBUG` | Enable debug HTTP logging | Set to any non-empty value |
+| `BELLA_BAXTER_DEBUG` | Enable debug HTTP logging | Set to `1` (any other value leaves it off) |
 
 ::: details Deprecated variables
 | Old variable | Replaced by |
@@ -233,17 +233,19 @@ recommended name — it makes clear that the child process must have a Bella SDK
 |---|---|---|
 | SDK required in child | No | Yes |
 | What's injected | All secrets as env vars | Credentials + URL (+ ZKE key) |
-| ZKE support | ❌ | ✅ |
+| ZKE support | ✅ (the CLI decrypts) | ✅ (the SDK decrypts) |
 | Workload identity (CI/CD) | ✅ | ✅ |
 | Credential scrubbing | ✅ | ✅ |
 | Watch / auto-reload | ✅ `--watch` | ❌ |
 | Best for | Scripts, legacy apps | SDK-powered apps, ZKE workloads |
 
+Both support zero-knowledge secrets. With `bella run` the CLI decrypts them (use `--private-key` or `BELLA_BAXTER_PRIVATE_KEY`). With `bella sdk run` the SDK decrypts them inside your app.
+
 ### `bella pull`
 
 ```sh
 bella pull           # write .env in current directory
-bella pull -o json   # write secrets.json
+bella pull -o secrets.json   # write secrets.json (JSON is chosen by the .json name)
 ```
 
 ---
@@ -366,12 +368,16 @@ bella usage --json   # machine-readable JSON output
 Sample output:
 
 ```
-Bella Baxter Usage — 2026-04
-Plan:    PayAsYouGo
-Billing: Active subscription
+📊 API Usage
+────────────────────────────────────────────────────────────
+Plan: PayAsYouGo
+Month: 2026-04
+Subscription: No active subscription (free tier)
 
-Requests: 1,243 / 2,000 free  (757 remaining)
-[████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]
+██████████████████████████████░░░░░░░░░░░░░░░░░░░░
+Requests used: 1,243 / 2,000 free
+Remaining: 757 requests
+────────────────────────────────────────────────────────────
 ```
 
 Fields returned:
@@ -390,7 +396,7 @@ Fields returned:
 | `estimatedOverageCost` | Estimated overage charge for the current month |
 
 ::: tip
-To manage your subscription or view invoices, visit the **Billing** page in the Bella Baxter web app → **Settings → Billing**.
+To manage your subscription or view invoices, open **Plan & Usage** in the **Administration** section of the Bella Baxter web app's navigation. Only admins see it.
 :::
 
 ---
@@ -513,7 +519,7 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.109
+      - uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.147
         with:
           oidc: 'true'
           tenant: my-org
@@ -712,10 +718,10 @@ bella secrets generate typescript
 bella secrets generate csharp --namespace MyApp --output AppSecrets.g.cs
 bella secrets generate python --output app_secrets.py
 bella secrets generate go
-bella secrets generate java
 bella secrets generate php
 bella secrets generate ruby
 bella secrets generate swift
+bella secrets generate fsharp
 bella secrets generate dart
 ```
 

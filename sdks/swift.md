@@ -1,13 +1,17 @@
 # Swift SDK
 
-`BellaBaxterSwift` is a Swift Package Manager library for macOS, iOS, and server-side Swift (Vapor, Hummingbird).
+`BellaBaxterSwift` is a Swift Package Manager library for macOS, iOS, watchOS, tvOS, and server-side Swift (Vapor, Hummingbird).
+
+**Requirements:** Swift 6.2 or later (Xcode 26 or later). Minimum platforms: macOS 14, iOS 17, watchOS 10, tvOS 17.
 
 ## Installation
 
 ```swift
 // Package.swift
-.package(url: "https://github.com/cosmic-chimps/bella-baxter-swift.git", from: "1.0.0")
+.package(url: "https://github.com/cosmic-chimps/bella-baxter-swift.git", from: "VERSION")
 ```
+
+Replace `VERSION` with the latest published version. The SDK is a preview release (0.1.x), so a requirement such as `from: "1.0.0"` will not resolve.
 
 Or in Xcode: **File → Add Package Dependencies** → paste the URL above.
 
@@ -16,14 +20,20 @@ Or in Xcode: **File → Add Package Dependencies** → paste the URL above.
 ```swift
 import BellaBaxterSwift
 
-let client = BellaClient(
-    baxterURL: URL(string: ProcessInfo.processInfo.environment["BELLA_BAXTER_URL"]!)!,
+let options = BellaClientOptions(
+    baseURL: URL(string: ProcessInfo.processInfo.environment["BELLA_BAXTER_URL"]!)!,
     apiKey: ProcessInfo.processInfo.environment["BELLA_BAXTER_API_KEY"]!
 )
+let client = try BellaClient(options)
 
-let secrets = try await client.getAllSecrets()
+let secrets = try await client.pullSecrets(
+    projectRef: "my-project",
+    environmentSlug: "production"
+)
 print(secrets["DATABASE_URL"] ?? "not found")
 ```
+
+`pullSecrets` returns a `[String: String]`. If you leave out `projectRef` and `environmentSlug`, the client uses the project and environment your API key is scoped to.
 
 ## iOS / SwiftUI Integration
 
@@ -45,13 +55,25 @@ struct MyApp: App {
 
 ## Zero-Knowledge Encryption (ZKE)
 
-By default the SDK generates a fresh P-256 keypair per request (ephemeral E2EE). With ZKE you supply a **persistent device key** — the server audits which host fetched each secret and the SDK caches the wrapped DEK.
+By default the SDK generates a fresh P-256 keypair per request (ephemeral E2EE). With ZKE the app presents a **persistent device key**. The server audits which host fetched each secret. The SDK passes the wrapped DEK it receives to your `onWrappedDekReceived` callback, so you can cache it.
 
-**Generate your device key once:**
+**Create a device key once, on each machine:**
 
 ```sh
-bella auth setup   # stores it owner-only under ~/.config/bella-cli; copy the PKCS#8 PEM
+bella auth setup
 ```
+
+This creates a P-256 key on the machine, stores it encrypted under `~/.config/bella-cli`, and registers the public half with Bella. It prints the device's fingerprint, not the key. The private key stays on the machine.
+
+**Run your app under `bella sdk run`:**
+
+```sh
+bella sdk run -- swift run
+```
+
+`bella sdk run` sets `BELLA_BAXTER_PRIVATE_KEY` in the process it starts. `BellaClientOptions` reads that variable when you do not pass a `privateKey`. If you sign in with an API key (`bax-...`), the CLI sets it only when the server confirms that this machine's device is the one recorded against the key.
+
+If the variable is set but is not a readable P-256 key, `try BellaClient(options)` throws. It does not fall back to an ephemeral key.
 
 **Use it in your Swift app:**
 
@@ -59,13 +81,13 @@ bella auth setup   # stores it owner-only under ~/.config/bella-cli; copy the PK
 import BellaBaxterSwift
 import CryptoKit
 
-// Load from a PEM string (e.g. from environment or secure storage)
+// Optional: BellaClientOptions reads BELLA_BAXTER_PRIVATE_KEY itself when privateKey is nil.
 let privateKey = try BellaClient.loadPrivateKey(
     pkcs8Pem: ProcessInfo.processInfo.environment["BELLA_BAXTER_PRIVATE_KEY"] ?? ""
 )
 
 let options = BellaClientOptions(
-    baxterURL: URL(string: ProcessInfo.processInfo.environment["BELLA_BAXTER_URL"]!)!,
+    baseURL: URL(string: ProcessInfo.processInfo.environment["BELLA_BAXTER_URL"]!)!,
     apiKey: ProcessInfo.processInfo.environment["BELLA_BAXTER_API_KEY"]!,
     privateKey: privateKey,
     onWrappedDekReceived: { project, env, wrappedDek, leaseExpires in
@@ -73,11 +95,11 @@ let options = BellaClientOptions(
     }
 )
 
-let client = BellaClient(options: options)
-let secrets = try await client.getAllSecrets()
+let client = try BellaClient(options)
+let secrets = try await client.pullSecrets()
 ```
 
-If `privateKey` is nil the SDK falls back to ephemeral E2EE — fully backward-compatible.
+If there is no device key, the SDK uses ephemeral E2EE.
 
 ## Typed Secrets
 

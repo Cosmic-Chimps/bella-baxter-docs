@@ -1,6 +1,6 @@
 # Go SDK
 
-Zero-dependency Go client for Bella Baxter. Works with stdlib, Gin, Echo, Fiber, and any Go application.
+Go client for Bella Baxter, built on the Kiota-generated API client. Works with stdlib, Gin, Echo, Fiber, and any Go application. Requires Go 1.25+.
 
 ## Installation
 
@@ -14,24 +14,36 @@ go get github.com/cosmic-chimps/bella-baxter-go
 package main
 
 import (
+    "context"
     "fmt"
+    "log"
     "os"
+
     "github.com/cosmic-chimps/bella-baxter-go/bellabaxter"
 )
 
 func main() {
-    client := bellabaxter.NewClient(bellabaxter.ClientOptions{
+    client, err := bellabaxter.New(bellabaxter.Options{
         BaxterURL: os.Getenv("BELLA_BAXTER_URL"),
-        APIKey:    os.Getenv("BELLA_BAXTER_API_KEY"),
+        ApiKey:    os.Getenv("BELLA_BAXTER_API_KEY"),
     })
-
-    secrets, err := client.GetAllSecrets(ctx)
     if err != nil {
         log.Fatal(err)
     }
-    fmt.Println(secrets["DATABASE_URL"])
+    defer client.Close()
+
+    ctx := context.Background()
+    resp, err := client.GetAllSecrets(ctx, "my-project", "production")
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Println(resp.Secrets["DATABASE_URL"])
 }
 ```
+
+`GetAllSecrets` takes the project reference and the environment slug. The values are in `resp.Secrets`, a `map[string]string`.
+
+If you do not want to hard-code them, `client.GetKeyContext(ctx)` returns the `ProjectSlug` and `EnvironmentSlug` that your API key is scoped to.
 
 ## Framework Integrations
 
@@ -39,8 +51,11 @@ func main() {
 
 ```go
 // main.go — load before starting the server
-secrets, _ := client.GetAllSecrets(ctx)
-config := Config{DatabaseURL: secrets["DATABASE_URL"]}
+resp, err := client.GetAllSecrets(ctx, "my-project", "production")
+if err != nil {
+    log.Fatal(err)
+}
+config := Config{DatabaseURL: resp.Secrets["DATABASE_URL"]}
 srv := NewServer(config)
 srv.ListenAndServe(":8080")
 ```
@@ -49,12 +64,25 @@ srv.ListenAndServe(":8080")
 
 ### Gin
 
+The SDK does not ship a Gin middleware. You write a small one yourself that holds the secrets you loaded at startup:
+
 ```go
-// Use the BellaMiddleware to make secrets available in handlers
-r.Use(bellabaxter.GinMiddleware(client))
+// Load once at startup
+resp, err := client.GetAllSecrets(ctx, "my-project", "production")
+if err != nil {
+    log.Fatal(err)
+}
+secrets := resp.Secrets
+
+// Your own middleware: put the loaded secrets on every request context
+r.Use(func(c *gin.Context) {
+    c.Set("bella_secrets", secrets)
+    c.Next()
+})
+
 r.GET("/health", func(c *gin.Context) {
-    secrets := bellabaxter.SecretsFromContext(c)
-    c.JSON(200, gin.H{"db": secrets["DATABASE_URL"]})
+    s := c.MustGet("bella_secrets").(map[string]string)
+    c.JSON(200, gin.H{"db": s["DATABASE_URL"] != ""})
 })
 ```
 
@@ -62,38 +90,39 @@ r.GET("/health", func(c *gin.Context) {
 
 ## Zero-Knowledge Encryption (ZKE)
 
-With ZKE you supply a **persistent device key**. The server audits which host fetched each secret, the SDK can cache the wrapped DEK, and under ZKE enforcement it is what lets the app read at all: a secrets request that presents no registered key is refused with a 403.
+With ZKE the app presents a **persistent device key**. The server audits which host fetched each secret, and under ZKE enforcement the key is what lets the app read at all: a secrets request that presents no registered key is refused with a 403. The SDK passes the wrapped DEK it receives to your `OnWrappedDEK` callback, so you can cache it.
 
 Supplying the key is all it takes. The client then presents it as `X-E2E-Public-Key` on every secrets request and decrypts the response with it. You do **not** need `EnableE2EE`; that option is only for end-to-end encryption *without* a device key, using an ephemeral key per client.
 
-**Generate your device key once:**
+**Create a device key once, on each machine:**
 
 ```sh
-bella auth setup   # stores it owner-only under ~/.config/bella-cli; copy the printed PEM
+bella auth setup
 ```
 
-**Use it in your app:**
+This creates a P-256 key on the machine, stores it encrypted under `~/.config/bella-cli`, and registers the public half with Bella. It prints the device's fingerprint, not the key. The private key stays on the machine.
+
+**Run your app under `bella sdk run`:**
+
+```sh
+bella sdk run -- go run .
+```
+
+`bella sdk run` sets `BELLA_BAXTER_PRIVATE_KEY` in the process it starts, and `New()` reads that variable. If you sign in with an API key (`bax-...`), the CLI sets it only when the server confirms that this machine's device is the one recorded against the key.
+
+To receive the wrapped DEK, set `OnWrappedDEK`. `Options.PrivateKeyPEM` takes the key as PEM or bare base64 PKCS#8 DER; when it is empty, `New` reads `BELLA_BAXTER_PRIVATE_KEY`:
 
 ```go
 client, err := bellabaxter.New(bellabaxter.Options{
     BaxterURL: os.Getenv("BELLA_BAXTER_URL"),
     ApiKey:    os.Getenv("BELLA_BAXTER_API_KEY"),
-    // Optional — New reads BELLA_BAXTER_PRIVATE_KEY itself when this is empty.
-    // PEM or bare base64 PKCS#8 DER.
+    // Optional. When empty, New reads BELLA_BAXTER_PRIVATE_KEY itself.
     PrivateKeyPEM: os.Getenv("BELLA_BAXTER_PRIVATE_KEY"),
     OnWrappedDEK: func(project, env, wrappedDEK string, leaseExpires *time.Time) {
         log.Printf("DEK for %s/%s expires %v", project, env, leaseExpires)
     },
 })
 ```
-
-Or just set the environment variable — `New()` reads `BELLA_BAXTER_PRIVATE_KEY` automatically:
-
-```sh
-export BELLA_BAXTER_PRIVATE_KEY="$(cat ~/.bella/device-key.pem)"
-```
-
-`bella sdk run` injects that variable for you once the device is set up.
 
 - **A key that is set but unreadable is an error.** `New` returns one naming `BELLA_BAXTER_PRIVATE_KEY` (or `Options.PrivateKeyPEM`) and never continues with a throwaway key in its place.
 - **Opting out:** `DisableE2EE: true` keeps the key off the wire. `New` logs one warning through the standard `log` package when a key is supplied anyway, because under enforcement every read will then be refused. Setting both `EnableE2EE` and `DisableE2EE` is an error.

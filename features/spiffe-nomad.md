@@ -52,7 +52,7 @@ bella spiffe set-mode --strict \
   --nomad-audience-recommended
 ```
 
-The console's SPIFFE tab has the same two fields. To clear them, use `--clear-nomad-oidc` and `--clear-nomad-audience`; clearing the audience goes back to the shared default. Node evidence is checked only in Strict mode.
+The environment's **Workload Identities** tab in the console has the same two fields. To clear them, use `--clear-nomad-oidc` and `--clear-nomad-audience`; clearing the audience goes back to the shared default. Node evidence is checked only in Strict mode.
 
 ## 3. Register the workload with Nomad constraints
 

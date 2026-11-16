@@ -67,7 +67,7 @@ bella spiffe node-bindings
 bella spiffe node-bindings release <id>
 ```
 
-The console shows the same list under the environment's **Identity → Bound EC2 instances**.
+The console shows the same list in the **Bound EC2 instances** card on the environment's **Workload Identities** tab. The card appears once an instance has attested with AWS evidence, or when a workload has an AWS constraint.
 
 Release a binding when:
 
@@ -100,4 +100,4 @@ In a tenant that [enforces zero-knowledge encryption](/features/e2ee-zke#zke-enf
 
 **What to use instead.** A workload that needs values should use a credential that carries a registered device key: an [API key](/features/api-keys) created under enforcement together with its public key, or a [keyless](/features/keyless#_3-tenants-that-require-registered-devices) sign-in, which binds a device key to the key it issues.
 
-The environment's SPIFFE tab in the console shows the same notice when the tenant enforces ZKE.
+The environment's **Workload Identities** tab in the console shows the same notice when the tenant enforces ZKE.

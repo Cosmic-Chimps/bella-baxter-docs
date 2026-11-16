@@ -22,7 +22,7 @@ Your App
 
 The top-level isolation boundary. When you sign up (or deploy a self-hosted instance), you get one tenant. Your team, projects, and providers all live inside your tenant.
 
-Multi-tenant setups (running Bella for multiple organisations on one instance) are an Enterprise feature.
+You can run more than one organisation on the same instance. Any signed-in person can create another organisation today, and it is not limited to a paid plan.
 
 ### Provider
 
@@ -43,7 +43,7 @@ Every tenant automatically gets a **System Provider** — a Bella-managed OpenBa
 
 ### Project
 
-A **Project** is a logical grouping of secrets, usually corresponding to one application or service. Projects have members with roles (Owner, Manager, Member, Consumer).
+A **Project** is a logical grouping of secrets, usually corresponding to one application or service. A project has an owner and members. A member has the role Manager or Consumer.
 
 Projects are assigned one or more Providers. Secrets for a project are stored in those providers.
 
@@ -52,7 +52,7 @@ Projects are assigned one or more Providers. Secrets for a project are stored in
 An **Environment** is a slice of a project for a deployment stage: `dev`, `staging`, `production`, etc. Each environment:
 - Has its own set of secrets (isolated from other environments)
 - Can be assigned a subset of the project's providers
-- Can have its own member access list
+- Can have its own member access list, with its own roles (Owner, Manager, Member, Viewer)
 
 A secret for `DATABASE_URL` in `dev` is completely separate from `DATABASE_URL` in `production`.
 

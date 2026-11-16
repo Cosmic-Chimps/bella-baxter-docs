@@ -112,7 +112,7 @@ X-Bella-Signature: t=1720000000,v1=abc123...
    - **Interval** — how often to rotate (e.g. every 30 days)
    - **Revoke previous after** — grace period before revoking the old value (HttpWebhook only)
    - **Strategy** — `Generate Random` or `HTTP Webhook`
-   - For **HTTP Webhook**: endpoint URL, signing secret, optional API key
+   - For **HTTP Webhook**: endpoint URL, optional API key header and API key. Bella generates the signing secret when you save and shows it once.
    - For **Generate Random**: value format
 5. Save. Bella schedules the first rotation.
 
@@ -128,10 +128,28 @@ Content-Type: application/json
   "intervalDays": 30,
   "strategy": "HttpWebhook",
   "endpoint": "https://your-function.example.com/rotate",
-  "signingSecret": "your-hmac-secret",
   "revokePreviousAfterDays": 7
 }
 ```
+
+The request has no signing secret field. For the `HttpWebhook` strategy, Bella generates the signing secret itself (it starts with `whsec-`). The response to the first save returns it once, in `signingSecret`:
+
+```json
+{
+  "success": true,
+  "message": "Rotation policy set: every 30 days (HttpWebhook)",
+  "signingSecret": "whsec-...",
+  "signingSecretKeyPrefix": "whsec-..."
+}
+```
+
+Copy `signingSecret` straight away and give it to your rotation function. It is not shown again, and later saves return `null` because Bella keeps the existing secret. To replace it, call the rotate-signing-secret route, which returns the new secret once:
+
+```http
+POST /api/v1/projects/{project}/environments/{env}/providers/{provider}/secrets/{key}/rotation-policy/rotate-signing-secret
+```
+
+In the WebApp, use **Rotate signing secret** in the rotation dialog.
 
 For `GenerateRandom`:
 
@@ -218,7 +236,7 @@ Bella uses a two-phase approach to avoid breaking running services:
 Yes. When `bella run` or `bella agent` is active, secrets are refreshed according to their poll interval. New rotated values are picked up automatically.
 
 **What happens if a rotation fails?**
-Bella marks the secret as `Error` and retries with exponential backoff. Your existing value continues to work.
+Bella marks the secret as `Error`. There is no backoff: the rotation scheduler runs every 15 minutes and picks up every secret in `Error` that is overdue, so a failed rotation is tried again at the next run. Your existing value continues to work.
 
 **What if I don't want to revoke the old key?**
 Don't return `newHandle` from your rotate function. Bella will never call revoke.

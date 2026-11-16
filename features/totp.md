@@ -7,23 +7,35 @@ Use this to store 2FA backup seeds securely in Vault and generate codes on deman
 ## Generate a New TOTP Key
 
 ```sh
-bella totp generate \
-  --name github-2fa \
+bella totp generate github-2fa \
   --issuer "GitHub" \
-  --account-name alice@example.com
+  --account alice@example.com
 ```
 
+The key name is the first argument. Bella asks for the issuer and the account if you leave them out. In a script or with `--json` you must pass both.
+
+TOTP keys belong to an environment. Use `--project <slug>` and `--environment <slug>` to choose one, or leave them out to use your current context.
+
 Bella generates a new TOTP seed, stores it in your Vault provider, and returns:
-- The **QR code URI** (scan with an authenticator app)
-- The **base32 seed** (for backup)
+- The **otpauth URL** (`otpauth://...`), which the CLI prints. Bella does not return the seed as a separate base32 value.
+- A **QR code**, which you can scan with an authenticator app. The CLI does not draw it: open the key in the web console to see it.
 
 ## Import an Existing TOTP Key
 
+Import a key from the `otpauth://` URL that a service shows when you set up 2FA. A bare base32 secret is not accepted.
+
 ```sh
-bella totp import \
-  --name github-2fa \
-  --secret JBSWY3DPEHPK3PXP   # base32 seed
+# From a file (recommended)
+bella totp import github-2fa --from-file ./github-otpauth.txt
+
+# From stdin
+printf %s "$OTPAUTH_URL" | bella totp import github-2fa --stdin
+
+# As an argument
+bella totp import github-2fa "otpauth://totp/GitHub:alice@example.com?secret=JBSWY3DPEHPK3PXP&issuer=GitHub"
 ```
+
+The URL contains the seed. Passing it as an argument leaves it in your shell history and visible in the process list, so for scripts and CI use `--stdin` or `--from-file`. If you give none of the three, Bella prompts for the URL on a terminal. The `--project` and `--environment` options work as for `generate`.
 
 ## Get a Current TOTP Code
 
@@ -31,7 +43,7 @@ bella totp import \
 bella totp code github-2fa
 ```
 
-Returns the current 6-digit code (valid for 30 seconds).
+Returns the current code and how long it stays valid (30 seconds for most services). Add `--quiet` (`-q`) to print only the code, which is useful in scripts.
 
 The MCP tool `get_totp_code` exposes this to AI agents — Claude or Copilot can retrieve a 2FA code when it needs to log in to a service on your behalf.
 
@@ -46,6 +58,8 @@ bella totp list
 ```sh
 bella totp delete github-2fa
 ```
+
+Bella asks you to confirm. Add `--force` (`-f`) to skip the question.
 
 ## Use Cases
 

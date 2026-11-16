@@ -1,6 +1,6 @@
 # Ruby SDK
 
-Zero-dependency Ruby client for Bella Baxter. First-class Rails Railtie integration — secrets are available before `database.yml` is evaluated.
+Ruby client for Bella Baxter, built on the Kiota client libraries and Faraday. Requires Ruby 4.0+. A Rails Railtie is included — secrets are available before `database.yml` is evaluated.
 
 ## Installation
 
@@ -43,21 +43,30 @@ end
 
 ## Zero-Knowledge Encryption (ZKE)
 
-By default the SDK generates a fresh P-256 keypair per request (ephemeral E2EE). With ZKE you supply a **persistent device key** — the server audits which host fetched each secret and the SDK caches the wrapped DEK.
+By default the SDK generates an ephemeral P-256 keypair (ephemeral E2EE). With ZKE the app presents a **persistent device key**. The server audits which host fetched each secret. The SDK passes the wrapped DEK it receives to your `on_wrapped_dek_received` callback, so you can cache it.
 
-**Generate your device key once:**
+**Create a device key once, on each machine:**
 
 ```sh
-bella auth setup   # stores it owner-only under ~/.config/bella-cli; copy the printed PEM
+bella auth setup
 ```
 
-**Use it in your app:**
+This creates a P-256 key on the machine, stores it encrypted under `~/.config/bella-cli`, and registers the public half with Bella. It prints the device's fingerprint, not the key. The private key stays on the machine.
+
+**Run your app under `bella sdk run`:**
+
+```sh
+bella sdk run -- bundle exec rails server
+```
+
+`bella sdk run` sets `BELLA_BAXTER_PRIVATE_KEY` in the process it starts. The client and the Rails Railtie read that variable, so you need no code change. If you sign in with an API key (`bax-...`), the CLI sets it only when the server confirms that this machine's device is the one recorded against the key.
+
+To receive the wrapped DEK, add a callback. `private_key` takes a PEM; when it is not set, the client reads `BELLA_BAXTER_PRIVATE_KEY`:
 
 ```ruby
 client = BellaBaxter::Client.new(
   baxter_url:  ENV["BELLA_BAXTER_URL"],
   api_key:     ENV["BELLA_BAXTER_API_KEY"],
-  # Optional — reads BELLA_BAXTER_PRIVATE_KEY env var automatically
   private_key: ENV["BELLA_BAXTER_PRIVATE_KEY"],
   on_wrapped_dek_received: ->(project, env, wrapped_dek, lease_expires) {
     puts "DEK for #{project}/#{env} expires #{lease_expires}"
@@ -65,13 +74,7 @@ client = BellaBaxter::Client.new(
 )
 ```
 
-**Rails:** just set the environment variable — the Railtie reads `BELLA_BAXTER_PRIVATE_KEY` automatically. No code changes needed.
-
-```sh
-export BELLA_BAXTER_PRIVATE_KEY="$(cat ~/.bella/device-key.pem)"
-```
-
-If the variable is not set the SDK falls back to ephemeral E2EE — fully backward-compatible.
+If no device key is set, the SDK uses ephemeral E2EE.
 
 ## Typed Secrets
 

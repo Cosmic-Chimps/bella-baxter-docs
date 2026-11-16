@@ -18,6 +18,8 @@ plataforma, así que nunca puede divergir de la topología real.
 
 - Un host Linux con Docker Engine + el plugin `docker compose`
 - Credenciales del registro de contenedores de Bella Baxter (te las damos al configurar tu instancia)
+- [`cosign`](https://docs.sigstore.dev) versión 3. El bundle verifica la firma de cada imagen antes de arrancar nada, y se niega a arrancar una imagen que no ha podido verificar
+- La CLI `aws` versión 2, solo si descargas las imágenes de nuestro registro ECR
 - Tres puertos: `443` (aplicación), `8444` (plano de administración), `9443` (setup)
 
 ### Instalación
@@ -30,9 +32,11 @@ cd bella-selfhosted-<version>
 ./bella.sh up
 ```
 
-`up` arranca el plano de infraestructura (PostgreSQL, Redis, dos vaults
-OpenBao, Keycloak) y el **asistente de configuración**, e imprime la URL del
-asistente y un token de un solo uso.
+Antes de arrancar nada, `up` verifica la firma de cada imagen y se niega a
+arrancar si alguna no se verifica. Después arranca el plano de infraestructura
+(PostgreSQL, Redis, dos vaults OpenBao, Keycloak y su proxy de salida) y el
+**asistente de configuración**, e imprime la URL del asistente y un token de un
+solo uso.
 
 El asistente automatiza todo lo que antes era un runbook manual:
 

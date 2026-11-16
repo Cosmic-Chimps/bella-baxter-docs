@@ -4,10 +4,10 @@ Bella Baxter records access to secrets and the administrative actions around the
 
 ## Access the Audit Log
 
-From the WebApp: **Project → Audit Logs**
+From the WebApp: choose **Audit** in the navigation menu. The page is titled **Audit Logs**. It lists the whole organisation. To see one project, use the **Filter by project** control.
 
 ::: warning Planned — not in the CLI yet
-`bella audit list` is on the roadmap and is not in the CLI yet. Until then, read the audit log in the WebApp (**Project → Audit Logs**) or through the [REST API](/api-reference/).
+`bella audit list` is on the roadmap and is not in the CLI yet. Until then, read the audit log in the WebApp (**Audit** in the navigation menu) or through the [REST API](/api-reference/).
 :::
 
 ```sh
@@ -27,9 +27,10 @@ Each row is a flat record:
 |-------|-------------|
 | `timestamp` | UTC timestamp |
 | `action` | What happened, for example `get`, `update`, `export_all` or `secret_access_denied`. See [Actions](#actions) |
-| `actorType` | `user`, `api_key`, `assistant`, `workload` or `anonymous`, or one of Bella's own components: `scheduler`, `cert-manager`, `internal_service` |
-| `userId` / `userName` | The person who acted, when the actor is a user |
+| `actorType` | `user`, `api_key`, `assistant`, `workload`, `application` or `anonymous`, or one of Bella's own components: `scheduler`, `cert-manager`, `internal_service` |
+| `userId` / `userName` | The person who acted, when the actor is a user. When the actor is an `application`, the person who connected the app |
 | `apiKeyId` / `apiKeyName` | The API key that acted, when the actor is a key |
+| `appId` / `appName` / `grantId` | The connected app, and the connection it read through. Set only on rows written for a [connected app](/features/connected-apps-manage) |
 | `ipAddress` | The caller's IP address — see [Which address is recorded](#which-address-is-recorded) |
 | `userAgent` | The caller's `User-Agent` header |
 | `bellaClient` / `appClient` | Client labels reported by the caller — see below |
@@ -39,15 +40,28 @@ Each row is a flat record:
 | `deviceFingerprint` | The registered device that made the call, when the caller presented one |
 | `country` / `city` / `countryCode` | Present only when location lookups are on — see [Country and city labels](#country-and-city-labels-and-what-they-disclose) |
 
-A row has no `outcome` field and no request ID. A refusal is recorded as its own action (`secret_access_denied`, `secret_scope_denied`, `oidc_exchange_refused`). The envelope streamed to a SIEM adds an `outcome` of `success` or `denied`, derived from the action.
+A row has no `outcome` field and no request ID. A refusal is recorded as its own action (`secret_access_denied`, `secret_scope_denied`, `oidc_exchange_refused`, `connected_app_read_denied`). The envelope streamed to a SIEM adds an `outcome` of `success` or `denied`, derived from the action. `connected_app_read_denied` is streamed as `denied`.
 
 Some rows written by Bella's own components carry `internal-service`, with a hyphen, as the actor type. Match both spellings in a rule.
+
+### Connected app rows
+
+A connected app is a third-party app that a person let read one environment. See [Manage connected apps](/features/connected-apps-manage) for the person's side and [Connect with Bella Baxter](/features/connected-apps) for the developer's. Bella writes these rows in the organisation that granted access, never in the app owner's.
+
+On a row whose `actorType` is `application`:
+
+- `appId`, `appName` and `grantId` name the app and the connection.
+- `userId` and `userName` are the person who connected the app, not a person who acted.
+- `bellaClient` is `connected-app`. Bella sets it, so it is not reported by the caller.
+- `apiKeyId` is empty.
+
+The console shows the actor as `application: <app name>`, with `Connected by <person>` beneath it. In a `connected_app_read_denied` row, `userName` can be empty while `userId` is set.
 
 ### The "App" label is reported by the client, not verified
 
 The console's **App** column, and the `bellaClient` / `appClient` fields of a streamed audit record (`client.bellaClient` and `client.app` in the envelope), are what the caller *said* it was, taken from the `X-Bella-Client` and `X-App-Client` request headers. Bella does not verify them, so do not write a rule that treats either as proof of who called; the actor, API key or user id and the IP address are the fields Bella establishes.
 
-Bella limits what a caller can put there. `bellaClient` is one of Bella's own clients (`bella-cli`, `bella-webapp`, `bella-mcp`, `bella-dotnet-sdk`, `bella-js-sdk`, and the other `bella-*-sdk` names), or the literal `unrecognised` when the caller sent anything else; it is empty only when the caller sent nothing. `appClient` is the name you gave your own application (`bella exec --app`), with control characters removed and cut to 64 characters.
+Bella limits what a caller can put there. `bellaClient` is one of Bella's own clients (`bella-cli`, `bella-webapp`, `bella-mcp`, `bella-dotnet-sdk`, `bella-js-sdk`, and the other `bella-*-sdk` names), or the literal `unrecognised` when the caller sent anything else; it is empty only when the caller sent nothing. Two values are not reported by the caller: Bella sets them itself. `mcp` marks rows written for the AI assistant surface, and `connected-app` marks rows written for a connected app. `appClient` is the name you gave your own application (`bella exec --app`), with control characters removed and cut to 64 characters.
 
 ## Actions
 
@@ -58,10 +72,11 @@ The most common actions. This is not the full list: write rules against the acti
 | `get` | One secret's value was read |
 | `list` | The keys held in a provider were listed |
 | `create`, `update`, `delete` | A secret was created, updated or deleted |
-| `export_all` | All of an environment's secrets were fetched together (for example `bella pull`) |
+| `export_all` | All of an environment's secrets were fetched together (for example `bella pull`). A connected app's allowed read is also `export_all`, with the actor `application` |
 | `import`, `upload` | Secrets were imported in bulk, or from an uploaded file |
 | `version_get`, `version_list` | An earlier version of a secret was read, or its history was listed |
 | `secret_access_denied` | A secret operation was attempted and refused |
+| `connected_app_read_denied` | A connected app's read was refused through a connection that exists, for example because it was revoked, expired or switched off. The reason is in `detail`. A request that matches no connection is not recorded |
 | `secret_scope_denied` | A scoped token was refused a secret outside its scopes, or was shown a narrowed listing |
 | `token_minted` | A short-lived scoped token was issued (`bella issue`) |
 | `oidc_token_exchanged`, `oidc_exchange_refused` | An OIDC token exchange was accepted or refused |
@@ -80,6 +95,7 @@ These operations do not write an audit row today:
 - **API keys created or revoked by a person.**
 - **Revoking a registered device.** The key rotation a person can start afterwards is recorded as `device_key_rotation_started`, `device_key_rotation_completed` or `device_key_rotation_refused`. The revocation itself is not.
 - **Revoking a secret lease.** Revoking a workload lease is recorded as `lease_revoked`. See [Secret Leases](/features/secret-leases).
+- **Connected app lifecycle.** Connecting an app, revoking a connection, switching connected apps on or off for the organisation, and registering or changing a developer app write no row. The app's reads, and its refused reads through an existing connection, are recorded. See [Manage connected apps](/features/connected-apps-manage).
 - **Certificates issued through the ACME endpoint.** Issuing or revoking a certificate through the API or the WebApp is recorded in the PKI log.
 
 If one of your controls depends on evidence of these operations, keep that evidence outside Bella for now.

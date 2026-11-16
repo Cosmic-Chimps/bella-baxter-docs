@@ -39,9 +39,14 @@ again — store it where your receiver can read it.
 
 ::: tip Some events carry no project, or no environment
 `lease.expired` and `api_key.expired` carry no project, so only a **tenant-wide** webhook receives
-them. The `global_secret.*` events, and `security.scan.risk_detected` for a project's global secrets,
-carry no environment, so a tenant-wide or **project** webhook receives them and an environment webhook
-does not.
+them. The `global_secret.*` events carry no environment (`environmentId` and `environmentSlug` are
+`null`), so a tenant-wide or **project** webhook receives them and an environment webhook does not.
+
+`security.scan.risk_detected` for a project's global secrets is different: it does carry an
+environment, but a placeholder one. Its `environmentSlug` is `_global` and its `environmentId` is the
+all-zero ID (`00000000-0000-0000-0000-000000000000`). A tenant-wide or **project** webhook receives
+it and an environment webhook does not. To tell this scan from an ordinary one, test
+`data.metadata.scope`, which is `global`, rather than looking for a missing environment.
 :::
 
 ---
@@ -84,7 +89,8 @@ Notes on individual events:
   re-arms both alerts.
 - **`security.scan.risk_detected`** fires on a change of verdict, not on every scan. Scans re-run after
   every secret write and periodically, and repeating an unchanged finding would bury the new ones. A
-  scan of a project's global secrets reports `environmentSlug` `_global` and `metadata.scope` `global`.
+  scan of a project's global secrets reports `environmentSlug` `_global`, an all-zero `environmentId` and
+  `metadata.scope` `global`.
 - **Secret values are never in a payload.** A secret event tells you *that* something changed, never
   what it changed to.
 
@@ -122,12 +128,15 @@ A name the platform does not recognise is **refused** with `400 Bad Request`, an
 valid names. Editing an existing webhook re-checks only the names you are adding, so a webhook created
 before names were validated can still be edited, or have a dead name removed.
 
-A few names are **accepted but never delivered** to a webhook. Do not subscribe to them:
+Six names that look like events are **refused** in the same way, because nothing sends them to a webhook:
 
 - `secret.rotated`, `provider.created`, `provider.deleted` — nothing in the product sends them. For
   rotations use `secret.rotation.succeeded`.
 - `secret.changed`, `scan.environment.complete`, `scan.project.complete` — these are live-update
-  messages for the console, not webhook events, although the validator currently accepts them.
+  messages for the console, not webhook events.
+
+A webhook that already stores one of these six names keeps it, and receives nothing for it. You can
+still edit that webhook, and you can remove the name.
 
 > **Retired in 2026-09.** `cert_rotation.completed` and `cert_rotation.failed` appeared in the
 > subscription picker between 2026-05-03 and 2026-09-15 but were never emitted by any part of the
@@ -219,7 +228,14 @@ app.post('/webhooks', express.raw({ type: '*/*' }), async (req, res) => {
   const signature = req.headers['x-bella-signature'] as string ?? ''
 
   if (secret) {
-    const valid = await verifyWebhookSignature(secret, signature, rawBody)
+    // verifyWebhookSignature returns false for a wrong signature and THROWS for a
+    // malformed header or a timestamp outside the 5-minute window.
+    let valid = false
+    try {
+      valid = await verifyWebhookSignature(secret, signature, rawBody)
+    } catch {
+      valid = false
+    }
     if (!valid) return res.status(401).json({ error: 'Invalid signature' })
   }
 
@@ -286,7 +302,10 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 
     if secret != "" {
         sig := r.Header.Get("X-Bella-Signature")
-        if !bellabaxter.VerifyWebhookSignature(secret, sig, rawBody) {
+        // The last argument is the replay window in seconds. It returns (bool, error):
+        // the error is set only when the header is malformed.
+        valid, err := bellabaxter.VerifyWebhookSignature(secret, sig, rawBody, 300)
+        if err != nil || !valid {
             http.Error(w, `{"error":"Invalid signature"}`, http.StatusUnauthorized)
             return
         }
@@ -331,8 +350,11 @@ app.MapPost("/webhooks", async (HttpContext ctx) =>
     }
 
     // Parse payload
-    var payload = System.Text.Json.JsonSerializer.Deserialize<BellaWebhookPayload>(rawBody);
-    Console.WriteLine($"Event: {payload?.Type} / {payload?.Data?.Key}");
+    using var doc = System.Text.Json.JsonDocument.Parse(rawBody);
+    var root = doc.RootElement;
+    var type = root.GetProperty("type").GetString();
+    var key = root.GetProperty("data").TryGetProperty("key", out var k) ? k.GetString() : null;
+    Console.WriteLine($"Event: {type} / {key}");
 
     return Results.Json(new { received = true });
 });
@@ -348,7 +370,7 @@ public class WebhookController {
 
     private final String secret = System.getenv("BELLA_WEBHOOK_SECRET");
 
-    @PostMapping(consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @PostMapping(consumes = MediaType.ALL_VALUE)   // Bella sends application/json
     public ResponseEntity<?> receive(
             @RequestBody byte[] rawBody,          // raw bytes — don't use String binding
             @RequestHeader("X-Bella-Signature") String signature) {

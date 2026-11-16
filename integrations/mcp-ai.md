@@ -4,17 +4,30 @@ Bella Baxter exposes an [MCP (Model Context Protocol)](https://modelcontextproto
 
 ## Authentication
 
-`bella mcp` supports three authentication methods, checked in this order:
+`bella mcp` needs an API key. It does not use a browser sign-in (`bella login` without a key), because `bella mcp` is a long-running process and a browser session expires within minutes. It looks for a key in this order:
 
 | Method | How | Best for |
 |--------|-----|----------|
-| **API key in config** (recommended) | `BELLA_BAXTER_API_KEY` env var | Claude Desktop, VS Code, Cursor — no prior login needed |
-| **Stored API key** | `bella login` once | Shared developer machines |
-| **OAuth session** | `bella login` (browser) | Interactive personal accounts |
+| **API key in config** (recommended) | `BELLA_BAXTER_API_KEY` env var | VS Code, Cursor, Claude Desktop with `bella mcp` — no prior login needed |
+| **Stored API key** | `bella login --api-key bax-...` once | Shared developer machines |
 
 The API key option is recommended for AI host configs because you set it once in the config file and never need to run `bella login` again.
 
-Get an API key from **WebApp → Project → Settings → API Keys → Create Key**.
+Create an API key in the console. `bella mcp` does not require a particular kind of key:
+
+- An **environment API key**: open the environment and go to its **API Keys** tab, then click **Create API Key**. It can read only that environment.
+- A **personal API key**: open **My Profile**, go to the **Personal API Keys** tab and click **New Key**.
+
+### claude.ai and Claude Desktop connector
+
+claude.ai and Claude Desktop can connect to Bella without `bella mcp` and without an API key. You sign in to your Bella account instead:
+
+1. In claude.ai or Claude Desktop, open **Settings → Connectors** and add a custom connector.
+2. Set the connector address to your Bella address followed by `/mcp`, for example `https://your-bella.example.com/mcp`.
+3. In the advanced settings, set the OAuth Client ID to `bella-mcp-connector`. Leave the client secret empty.
+4. Sign in to your Bella account when asked.
+
+The connection then appears in the console under **My Profile → Connected AI clients**, where you can revoke it. A revoked connector stops working within 5 minutes.
 
 ## Setup
 
@@ -90,7 +103,7 @@ When `BELLA_BAXTER_API_KEY` is set, `bella mcp` starts immediately — no `bella
       "command": "bella",
       "args": ["mcp"],
       "env": {
-        "BELLA_API_URL": "https://your-bella.example.com",
+        "BELLA_BAXTER_URL": "https://your-bella.example.com",
         "BELLA_BAXTER_API_KEY": "bax-<your-api-key>"
       }
     }
@@ -129,7 +142,7 @@ Once Bella is configured as an MCP server, you can ask your AI:
 
 ## Security Design
 
-- **Per-request HMAC signing** — API key auth uses HMAC-SHA256 with a timestamp and request signature. The raw key never travels in `Authorization: Bearer`
+- **Per-request HMAC signing** — `bella mcp` signs every request to Bella with HMAC-SHA256, a timestamp and a request signature. It never sends the raw key in an `Authorization: Bearer` header
 - **RBAC enforced** — if you can't access a secret in the CLI, the AI can't either
 - **Values never in prompt context** — `list_secret_keys` lists key names only, without values. `get_secret` fetches one value when explicitly requested
 - **Scoped tokens for agents** — `bella_issue_token` lets the AI issue a short-lived credential for a subtask, scoped to specific secret names, so it never needs your full API key
@@ -154,6 +167,6 @@ See [Keyless / Workload Identity](/features/keyless) for setup.
 
 ```sh
 bella mcp                          # start MCP server (auto-detected by AI host)
-bella mcp --api-url <url>          # override API URL (or set BELLA_API_URL env var)
+bella mcp --api-url <url>          # override API URL (or set BELLA_BAXTER_URL env var)
 bella mcp --print-config           # print config snippets for all supported hosts
 ```

@@ -1,12 +1,13 @@
 # Single Sign-On
 
-The Owner of an organisation on the Org plan can connect the organisation's own identity provider, over OIDC or SAML, so the team signs in with it. This page covers what Bella does when you connect one, what each message means, and what to do about it.
+The Owner of an organisation whose plan includes single sign-on can connect the organisation's own identity provider, over OIDC or SAML, so the team signs in with it. Every current plan includes it. This page covers what Bella does when you connect one, what each message means, and what to do about it.
 
 ## Before you start
 
-- Your organisation is on the Org plan, and you are its Owner.
-- Your SSO access is approved. Request it from **Settings, SSO**. A platform administrator decides the request, and a rejected request can be made again.
-- On the hosted plane, tenant SSO is offered once the platform runs the identity broker's built-in egress policy (see [Self-hosted installations](#self-hosted-installations) for what it does); until then requests there are not approved (#1555). On a self-hosted installation you can use it now.
+- Your organisation's plan includes single sign-on. Every current plan does.
+- You are the Owner of the organisation. An Admin can request SSO access, but only the Owner can connect, update, enforce or remove the connection.
+- Your SSO access is approved. Request it from **Single Sign-On (SSO)**, under **Administration** in the console menu. An Owner or an Admin can send the request. A platform administrator decides it, and a rejected request can be made again.
+- SSO is offered by default. The operator of your installation can switch it off. If a request or an approval is refused with `sso-not-offered`, SSO has been switched off for your installation, so ask your operator.
 
 ## How Bella reads your identity provider
 
@@ -45,11 +46,17 @@ The SSO page shows the state of the connection. It is read from the identity bro
 
 For SAML, the page warns from 30 days before the signing certificate expires, and again once it has expired. Ask your provider to publish a new certificate, then update the connection so Bella reads it.
 
+## Verifying your email domains
+
+Each email domain you list must be proven to be yours. Bella shows a TXT record for the domain: the name is `_bella-challenge.<your domain>` and the value starts with `bella-domain-verification=`. Publish it in your domain's DNS, then choose **Verify**. The domain shows **Verified** once Bella finds the record. Only the Owner can verify or release a domain, and public email domains such as gmail.com cannot be used.
+
+A domain that was already listed before domain proof existed keeps enforcing for 30 days. Verify it within that time, or enforcement stops for people on that domain.
+
 ## Enforcing SSO
 
 Turn on **Enforce SSO** to require the team to sign in through your provider. It turns on only over a complete connection. Turning it off is always possible.
 
-When enforcement is on, a person whose email domain is registered to your connection is refused unless they signed in through your provider. This applies to the console, the CLI and AI assistant connections alike. The SSO settings themselves stay reachable, so an Owner can always turn enforcement off.
+When enforcement is on, a person whose email domain is one of your verified domains is refused unless they signed in through your provider. A domain you have typed in but not yet verified does not enforce. This applies to the console, the CLI and AI assistant connections alike. The SSO settings themselves stay reachable, so an Owner can always turn enforcement off.
 
 If an enforced connection becomes incomplete, your team cannot sign in through SSO until it is fixed. It does not let them in another way. Turn enforcement off first if you need them back in.
 

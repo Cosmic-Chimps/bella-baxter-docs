@@ -37,7 +37,7 @@ Two actions help a member who lost their authenticator app or whose password may
 
 | Action | What it does |
 |---|---|
-| **Require a password change** | The member must choose a new password at their next sign-in, and every open session of theirs is ended. |
+| **Require a password change** | The member must choose a new password at their next sign-in, and every open session of theirs is ended. It also revokes the member's AI assistant (MCP) connections in this organisation. |
 | **Remove second factor** | Removes their one-time-password authenticator. At their next sign-in they are asked to set up a new one. Open sessions are not ended. |
 
 ### Who can take them

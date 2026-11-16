@@ -34,9 +34,10 @@ Append `?url=https://your-instance.bella-baxter.io/openapi.json` to this page UR
 :::
 
 ::: info Authentication
-All API endpoints require either:
+All API endpoints require one of these:
 - **Bearer token** — `Authorization: Bearer <jwt>` (from `bella login`)
-- **HMAC API Key** — `Authorization: BaxterHmac ...` (from `bella login`)
+- **API key** — an API key (`bax-...`) created in the console, on an environment's **API Keys** tab. Send it as `Authorization: Bearer bax-...`. Or sign each request with the headers `X-Bella-Key-Id`, `X-Bella-Timestamp` and `X-Bella-Signature`. See [API Keys](/features/api-keys).
+- **Connected app token** — a token for a [connected app](/features/connected-apps) is accepted only on the three routes under `/api/v1/connected-apps/` (setup, grant and grant/secrets). Every other route refuses it.
 
 Use the **Authorize** button in the Scalar UI to set your credentials.
 :::

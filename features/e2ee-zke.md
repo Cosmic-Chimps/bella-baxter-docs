@@ -107,8 +107,10 @@ That fingerprint is what the console's **Devices** page and the audit trail show
 to a machine by eye. The private key never leaves the machine — keep it as you would a private SSH key.
 
 Registration is **per tenant**: the same laptop registers separately in each tenant it works in. The
-command is safe to re-run (it updates the label and nothing else), and `--force` generates a *new*
-device, leaving the previous one registered until you revoke it.
+command is safe to re-run. If this machine's key is already registered in the organisation, it prints
+"Already registered." and changes nothing, so a new label is not applied. If the machine has a key that is
+not registered in this organisation yet, it registers that key. `--force` generates a *new* device,
+leaving the previous one registered until you revoke it.
 
 ### 2. Hand the key to your SDK process
 

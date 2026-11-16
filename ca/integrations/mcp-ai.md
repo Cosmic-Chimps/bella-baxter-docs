@@ -6,17 +6,30 @@ Bella Baxter exposa un servidor [MCP (Model Context Protocol)](https://modelcont
 
 ## Autenticació
 
-`bella mcp` admet tres mètodes d'autenticació, avaluats en aquest ordre:
+`bella mcp` necessita una API key. No fa servir l'inici de sessió pel navegador (`bella login` sense clau), perquè `bella mcp` és un procés de llarga durada i una sessió de navegador caduca en pocs minuts. Cerca la clau en aquest ordre:
 
 | Mètode | Com | Ideal per a |
 |--------|------|-----------|
-| **API key a la config** (recomanat) | Variable d'entorn `BELLA_BAXTER_API_KEY` | Claude Desktop, VS Code, Cursor — sense `bella login` previ |
-| **API key desada** | `bella login` una vegada | Màquines de desenvolupament compartides |
-| **Sessió OAuth** | `bella login` (navegador) | Comptes personals interactius |
+| **API key a la config** (recomanat) | Variable d'entorn `BELLA_BAXTER_API_KEY` | VS Code, Cursor, Claude Desktop amb `bella mcp` — sense `bella login` previ |
+| **API key desada** | `bella login --api-key bax-...` una vegada | Màquines de desenvolupament compartides |
 
 L'opció d'API key és la recomanada per a configuracions de hosts d'IA: es configura una vegada al fitxer i no cal tornar a executar `bella login`.
 
-Obtén una API key des de **WebApp → Projecte → Ajustaments → API Keys → Crear clau**.
+Crea una API key a la consola. `bella mcp` no exigeix un tipus de clau concret:
+
+- Una **API key d'entorn**: obre l'entorn, ves a la pestanya **API Keys** i prem **Crea una API Key**. Només pot llegir aquest entorn.
+- Una **API key personal**: obre **El meu perfil**, ves a la pestanya **API keys personals** i prem **Nova clau**.
+
+### Connector de claude.ai i Claude Desktop
+
+claude.ai i Claude Desktop poden connectar-se a Bella sense `bella mcp` i sense API key. En lloc d'això, inicies sessió amb el teu compte de Bella:
+
+1. A claude.ai o Claude Desktop, obre **Settings → Connectors** i afegeix un connector personalitzat.
+2. Posa com a adreça del connector l'adreça de la teva Bella seguida de `/mcp`, per exemple `https://la-teva-bella.exemple.com/mcp`.
+3. A la configuració avançada, posa `bella-mcp-connector` com a OAuth Client ID. Deixa buit el client secret.
+4. Inicia sessió amb el teu compte de Bella quan es demani.
+
+La connexió apareix llavors a la consola, a **El meu perfil → Clients d'IA connectats**, on la pots revocar. Un connector revocat deixa de funcionar en un màxim de 5 minuts.
 
 ## Configuració
 
@@ -92,7 +105,7 @@ Quan `BELLA_BAXTER_API_KEY` està configurada, `bella mcp` arrenca directament �
       "command": "bella",
       "args": ["mcp"],
       "env": {
-        "BELLA_API_URL": "https://la-teva-bella.exemple.com",
+        "BELLA_BAXTER_URL": "https://la-teva-bella.exemple.com",
         "BELLA_BAXTER_API_KEY": "bax-<la-teva-api-key>"
       }
     }
@@ -131,7 +144,7 @@ Un cop configurada Bella com a servidor MCP, pots demanar a la teva IA:
 
 ## Disseny de seguretat
 
-- **Signatura HMAC per petició** — l'autenticació amb API key usa HMAC-SHA256 amb marca de temps i signatura de la petició. La clau mai no viatja com a `Authorization: Bearer` pla
+- **Signatura HMAC per petició** — `bella mcp` signa cada petició a Bella amb HMAC-SHA256, una marca de temps i una signatura de la petició. Mai no envia la clau en brut en una capçalera `Authorization: Bearer`
 - **RBAC aplicat** — si no pots accedir a un secret des de la CLI, la IA tampoc no hi pot accedir
 - **Valors mai al context del prompt** — `list_secret_keys` llista només els noms, sense valors. `get_secret` obté un únic valor quan se sol·licita explícitament
 - **Tokens amb àmbit per a agents** — `bella_issue_token` permet a l'agent emetre una credencial efímera per a una subtasca, sense necessitat de la teva API key completa
@@ -156,6 +169,6 @@ Consulta [Keyless / Identitat de càrrega de treball](/features/keyless) per a l
 
 ```sh
 bella mcp                          # inicia el servidor MCP
-bella mcp --api-url <url>          # canvia la URL de l'API (o usa la variable BELLA_API_URL)
+bella mcp --api-url <url>          # canvia la URL de l'API (o usa la variable BELLA_BAXTER_URL)
 bella mcp --print-config           # imprimeix snippets de configuració per a tots els hosts
 ```

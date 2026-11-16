@@ -12,13 +12,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.109
+      - uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.147
         with:
           bella-url: ${{ vars.BELLA_BAXTER_URL }}
 
       # The CLI reads BELLA_BAXTER_API_KEY from the environment. A key passed as a command
       # argument is visible in the runner's process list and in its command log (#833).
-      - run: bella sdk run -p my-api -e production -- ./deploy.sh
+      - run: bella run -p my-api -e production -- ./deploy.sh
         env:
           BELLA_BAXTER_API_KEY: ${{ secrets.BELLA_BAXTER_API_KEY }}
         # DATABASE_URL, STRIPE_KEY, etc. are injected as env vars
@@ -45,9 +45,9 @@ Bella runs at all. Check
 
 ### Keyless instead of a stored key
 
-Every example below authenticates with `bella login`, which means a long-lived credential in
-your repository secrets. If you would rather not have one, `oidc: 'true'` replaces both the secret and
-the login step:
+Every example below that is not keyless authenticates with the `BELLA_BAXTER_API_KEY` environment variable, which
+means a long-lived credential in your repository secrets. If you would rather not have one, `oidc: 'true'`
+replaces the secret:
 
 ```yaml
 jobs:
@@ -58,7 +58,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v6
-      - uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.109
+      - uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.147
         with:
           bella-url: ${{ vars.BELLA_BAXTER_URL }}   # optional; default https://api.bella-baxter.io
           oidc: 'true'
@@ -110,10 +110,10 @@ it, so a trust domain enforcing its audience refuses it.
 
 ### Option A: API Key
 
-Store your API key as a GitHub Actions secret, then pass it to `bella login`:
+Store your API key as a GitHub Actions secret, then set it as the `BELLA_BAXTER_API_KEY` environment variable:
 
 ```yaml
-- uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.109
+- uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.147
   with:
     bella-url: ${{ vars.BELLA_BAXTER_URL }}
 
@@ -134,7 +134,7 @@ permissions:
   contents: read
 
 steps:
-  - uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.109
+  - uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.147
     with:
       bella-url: ${{ vars.BELLA_BAXTER_URL }}
       oidc: 'true'
@@ -150,16 +150,16 @@ steps:
 
 ### Pattern 1 — Inject secrets as environment variables
 
-`bella sdk run` wraps your command and injects all secrets as environment variables. Nothing is written to disk.
+`bella run` wraps your command and injects all secrets as environment variables. Nothing is written to disk.
 
 ```yaml
-- uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.109
+- uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.147
   with:
     bella-url: ${{ vars.BELLA_BAXTER_URL }}
 
 # The CLI reads BELLA_BAXTER_API_KEY from the environment. A key passed as a command
 # argument is visible in the runner's process list and in its command log (#833).
-- run: bella sdk run -p my-api -e production -- ./deploy.sh
+- run: bella run -p my-api -e production -- ./deploy.sh
   env:
     BELLA_BAXTER_API_KEY: ${{ secrets.BELLA_BAXTER_API_KEY }}
 ```
@@ -177,7 +177,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.109
+      - uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.147
         with:
           bella-url: ${{ vars.BELLA_BAXTER_URL }}
           oidc: 'true'
@@ -193,7 +193,7 @@ jobs:
 Issue a short-lived SSH certificate via Bella's SSH CA for passwordless access to production:
 
 ```yaml
-- uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.109
+- uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.147
   with:
     bella-url: ${{ vars.BELLA_BAXTER_URL }}
 
@@ -211,7 +211,7 @@ Issue a short-lived SSH certificate via Bella's SSH CA for passwordless access t
 `bella generate` runs fully offline (pure crypto — no API call). Useful for secret rotation pipelines:
 
 ```yaml
-- uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.109
+- uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.147
   with:
     bella-url: ${{ vars.BELLA_BAXTER_URL }}
 
@@ -234,13 +234,13 @@ strategy:
   matrix:
     environment: [staging, production]
 steps:
-  - uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.109
+  - uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.147
     with:
       bella-url: ${{ vars.BELLA_BAXTER_URL }}
 
   # The CLI reads BELLA_BAXTER_API_KEY from the environment. A key passed as a command
   # argument is visible in the runner's process list and in its command log (#833).
-  - run: bella sdk run -p my-api -e ${{ matrix.environment }} -- ./deploy.sh
+  - run: bella run -p my-api -e ${{ matrix.environment }} -- ./deploy.sh
     env:
       BELLA_BAXTER_API_KEY: ${{ secrets.BELLA_BAXTER_API_KEY }}
 ```
@@ -249,7 +249,7 @@ steps:
 
 ```yaml
 # Pin both the action version AND the CLI binary version independently
-- uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.109
+- uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.147
   with:
     version: '1.2.3'          # CLI binary (from GitHub Releases)
     bella-url: ${{ vars.BELLA_BAXTER_URL }}
@@ -260,7 +260,7 @@ steps:
 When running GitHub Copilot coding agent workflows or custom AI pipelines, `bella mcp` acts as an MCP proxy server — giving the agent access to secrets, TOTP codes, SSH signing, and token issuance as MCP tools.
 
 ```yaml
-- uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.109
+- uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.147
   with:
     bella-url: ${{ vars.BELLA_BAXTER_URL }}
 

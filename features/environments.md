@@ -5,10 +5,10 @@ An **Environment** represents a deployment stage (e.g., `dev`, `staging`, `produ
 ## Create an Environment
 
 ```sh
-bella environments create --project my-api --name "Production" --slug production
+bella environments create --project my-api --name "Production"
 ```
 
-Environments have a slug used in API keys and CLI commands.
+Environments have a slug used in API keys and CLI commands. You do not choose the slug: Bella derives it from the name (`Production` becomes `production`). If the project already has an environment with that slug, Bella adds a short suffix. Run `bella environments list --project my-api` to see the slug.
 
 ## Assign a Provider
 
@@ -22,7 +22,7 @@ bella environments add-provider production \
 
 ## Members and Access
 
-By default, project members inherit access to all environments. You can restrict a sensitive environment (e.g., `production`) to a subset of users:
+Access to an environment is separate from access to its project. A person can reach an environment only if they are a member of it (directly or through a group), or if they are an organisation Owner or Admin. The person who creates an environment becomes its Owner. You choose who else can use it, which lets you keep a sensitive environment (e.g., `production`) to a subset of users:
 
 ::: warning Planned — not in the CLI yet
 `bella environments add-member` and `remove-member` are on the roadmap and are not in the CLI yet. Until then, manage environment access in the WebApp or with the [REST API](/api-reference/). The examples below show the planned syntax.
@@ -34,7 +34,7 @@ bella environments add-member \
   --project my-api \
   --environment production \
   --user alice@example.com \
-  --role MEMBER
+  --role ENVIRONMENT_MEMBER
 
 # Remove user from environment
 bella environments remove-member \
@@ -45,9 +45,12 @@ bella environments remove-member \
 
 | Role | Permissions |
 |------|-------------|
-| `ENVIRONMENT_OWNER` | Full control of this environment |
-| `MEMBER` | Read and write secrets |
-| `CONSUMER` | Read-only |
+| `ENVIRONMENT_OWNER` | Full control of this environment: change, delete or restore it, decide who belongs to it and which providers it uses, and manage its secrets |
+| `ENVIRONMENT_MANAGER` | Manage the environment's secrets and other content, and administer the environment itself, the same as the Owner in practice |
+| `ENVIRONMENT_MEMBER` | Read the environment's secrets |
+| `ENVIRONMENT_VIEWER` | Read the environment's secrets |
+
+Creating, changing and deleting secrets, assigning providers and managing members all need `ENVIRONMENT_OWNER` or `ENVIRONMENT_MANAGER` (or an organisation Owner or Admin). The `ENVIRONMENT_MEMBER` and `ENVIRONMENT_VIEWER` roles can read.
 
 ## Copy an Environment
 
@@ -90,7 +93,7 @@ See [Secret Leases](/features/secret-leases) for full details.
 bella environments delete --project my-api --environment staging
 ```
 
-Secrets in the external provider are **not** deleted when an environment is removed from Bella.
+Deleting an environment archives it; it does not destroy it. The environment's secrets in the external provider are **not** deleted. Bella also withdraws the environment's own certificate authority: it can no longer issue certificates, but nothing is destroyed. You can restore the environment from the WebApp or with `POST /api/v1/projects/{projectRef}/environments/{envSlug}/restore`, and the authority works again. If the environment stays deleted for 30 days, Bella destroys the authority, and restoring the environment after that does not bring it back.
 
 ## Directory Context (`.bella` file)
 

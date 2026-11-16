@@ -18,6 +18,8 @@ application model, so it can never drift from the real topology.
 
 - A Linux host with Docker Engine + the `docker compose` plugin
 - Credentials for the Bella Baxter container registry (we provide them when we set up your instance)
+- [`cosign`](https://docs.sigstore.dev) version 3. The bundle verifies the signature of every image before it starts anything, and it refuses to start an image it could not verify
+- The `aws` CLI version 2, only if you pull the images from our ECR registry
 - Three host ports: `443` (application), `8444` (admin plane), `9443` (setup)
 
 ### Install
@@ -30,9 +32,10 @@ cd bella-selfhosted-<version>
 ./bella.sh up
 ```
 
-`up` starts the infrastructure plane (PostgreSQL, Redis, two OpenBao vaults,
-Keycloak) and the **setup wizard**, then prints the wizard URL and a one-time
-setup token:
+Before it starts anything, `up` verifies the signature of every image and
+refuses to start if one does not verify. It then starts the infrastructure plane
+(PostgreSQL, Redis, two OpenBao vaults, Keycloak and its egress proxy) and the
+**setup wizard**, then prints the wizard URL and a one-time setup token:
 
 ```
 Setup wizard:  https://<your-ip>:9443
@@ -45,7 +48,7 @@ The wizard walks you through everything that used to be a manual runbook:
    `bella-config/pki/`; the wizard verifies and uses it as-is), or let the
    wizard mint an internal CA and a server certificate with your IP/hostname
    in the SAN — you then install `ca.crt` on client machines once.
-2. **Vault initialization** — initializes the seal vault (Shamir 3-of-2) and
+2. **Vault initialization** — initializes the seal vault (Shamir, 2 of 3 unseal keys) and
    the main vault (transit auto-unseal), showing each recovery kit **exactly
    once** behind a forced download.
 3. **Provisioning** — policies, AppRoles, and service credentials, verified by

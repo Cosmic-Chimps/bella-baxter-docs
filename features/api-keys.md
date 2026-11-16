@@ -4,12 +4,12 @@ API keys (`bax-...`) are long-lived machine credentials for CI/CD pipelines, ser
 
 ## Create an API Key
 
-From the WebApp: **Project → Settings → API Keys → Create Key**
+An API key belongs to one environment. From the WebApp: open a project, choose the **Environments** tab, open the environment, choose its **API Keys** tab, then choose **Create API Key**.
 
 Or via CLI:
 
 ::: warning Planned — not in the CLI yet
-The `bella api-keys` commands (`create`, `list`, `rotate`, `revoke`) are on the roadmap and are not available in the CLI yet. Until then, manage keys from the WebApp (**Project → Settings → API Keys**) or the [REST API](/api-reference/). The examples below show the planned syntax.
+The `bella api-keys` commands (`create`, `list`, `revoke`) are on the roadmap and are not available in the CLI yet. Until then, manage keys from the WebApp (the environment's **API Keys** tab) or the [REST API](/api-reference/). The examples below show the planned syntax.
 :::
 
 ```sh
@@ -19,10 +19,7 @@ bella api-keys create \
   --name "GitHub Actions deploy"
 ```
 
-An API key encodes:
-- The project slug
-- The environment slug
-- A signing secret for HMAC request authentication
+The key is a token of the form `bax-{keyId}-{signingSecret}`. It holds only an identifier and a secret. Bella keeps the project, the environment and the key's role on the server, so the token tells a reader nothing about what it can reach.
 
 ## Using API Keys
 
@@ -62,20 +59,18 @@ The scoped token (`bax-...`) can only access the named secret scopes and expires
 
 ## Rotate a Key
 
-::: warning Planned — not in the CLI yet
-`bella api-keys rotate` is on the roadmap and is not in the CLI yet. Until then, rotate from the WebApp (**Project → Settings → API Keys**) or the [REST API](/api-reference/).
-:::
+There is no rotate action yet, so a key cannot be replaced in one step. To rotate a key:
 
-```sh
-bella api-keys rotate my-key-id
-```
+1. Create a new key for the same environment, with the same role.
+2. Move each service to the new key.
+3. Once nothing uses the old key, revoke it. See [Revoke a Key](#revoke-a-key).
 
-The old key is invalidated immediately. Issue a new key and update your services.
+The old key keeps working until you revoke it.
 
 ## Revoke a Key
 
 ::: warning Planned — not in the CLI yet
-`bella api-keys revoke` is on the roadmap and is not in the CLI yet. Until then, revoke from the WebApp (**Project → Settings → API Keys**) or the [REST API](/api-reference/).
+`bella api-keys revoke` is on the roadmap and is not in the CLI yet. Until then, revoke from the WebApp (the environment's **API Keys** tab) or the [REST API](/api-reference/).
 :::
 
 ```sh
@@ -84,10 +79,12 @@ bella api-keys revoke my-key-id
 
 Revoked keys are rejected immediately by all API endpoints.
 
+In the WebApp, **Delete API Key** on the environment's **API Keys** tab revokes the key. It cannot be undone. To stop a key without ending it, choose **Deactivate**. A deactivated key is refused until you choose **Activate**.
+
 ## List Keys
 
 ::: warning Planned — not in the CLI yet
-`bella api-keys list` is on the roadmap and is not in the CLI yet. Until then, list keys in the WebApp (**Project → Settings → API Keys**) or with the [REST API](/api-reference/).
+`bella api-keys list` is on the roadmap and is not in the CLI yet. Until then, list keys in the WebApp (the environment's **API Keys** tab) or with the [REST API](/api-reference/).
 :::
 
 ```sh
@@ -105,5 +102,5 @@ For GitHub Actions and Kubernetes, you don't need a stored API key at all. See [
 - **One key per service** — if a key leaks, you can revoke just that service
 - **Name keys descriptively** — `"GitHub Actions - deploy"` vs just `"CI"`
 - **Use short-lived tokens** (`bella issue`) when passing credentials to subprocesses or AI agents
-- **Rotate regularly** — set a calendar reminder to rotate keys every 90 days
+- **Rotate regularly** — set a calendar reminder to replace keys every 90 days (create a new key, move your services, then revoke the old one)
 - **Use keyless auth** in GitHub Actions and Kubernetes — no stored keys at all

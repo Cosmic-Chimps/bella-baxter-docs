@@ -6,17 +6,30 @@ Bella Baxter expone un servidor [MCP (Model Context Protocol)](https://modelcont
 
 ## Autenticación
 
-`bella mcp` admite tres métodos de autenticación, evaluados en este orden:
+`bella mcp` necesita una API key. No usa el inicio de sesión por navegador (`bella login` sin clave), porque `bella mcp` es un proceso de larga duración y una sesión de navegador caduca en pocos minutos. Busca la clave en este orden:
 
 | Método | Cómo | Ideal para |
 |--------|------|-----------|
-| **API key en la config** (recomendado) | Variable de entorno `BELLA_BAXTER_API_KEY` | Claude Desktop, VS Code, Cursor — sin `bella login` previo |
-| **API key guardada** | `bella login` una vez | Máquinas de desarrollo compartidas |
-| **Sesión OAuth** | `bella login` (navegador) | Cuentas personales interactivas |
+| **API key en la config** (recomendado) | Variable de entorno `BELLA_BAXTER_API_KEY` | VS Code, Cursor, Claude Desktop con `bella mcp` — sin `bella login` previo |
+| **API key guardada** | `bella login --api-key bax-...` una vez | Máquinas de desarrollo compartidas |
 
 La opción de API key es la recomendada para configuraciones de hosts de IA: se configura una vez en el archivo y no es necesario ejecutar `bella login` de nuevo.
 
-Obtén una API key desde **WebApp → Proyecto → Ajustes → API Keys → Crear clave**.
+Crea una API key en la consola. `bella mcp` no exige un tipo de clave concreto:
+
+- Una **API key de entorno**: abre el entorno, ve a su pestaña **API Keys** y pulsa **Crear API Key**. Solo puede leer ese entorno.
+- Una **API key personal**: abre **Mi Perfil**, ve a la pestaña **API keys Personales** y pulsa **Nueva Clave**.
+
+### Conector de claude.ai y Claude Desktop
+
+claude.ai y Claude Desktop pueden conectarse a Bella sin `bella mcp` y sin API key. En su lugar, inicias sesión con tu cuenta de Bella:
+
+1. En claude.ai o Claude Desktop, abre **Settings → Connectors** y añade un conector personalizado.
+2. Pon como dirección del conector la dirección de tu Bella seguida de `/mcp`, por ejemplo `https://tu-bella.ejemplo.com/mcp`.
+3. En los ajustes avanzados, pon `bella-mcp-connector` como OAuth Client ID. Deja vacío el client secret.
+4. Inicia sesión con tu cuenta de Bella cuando se te pida.
+
+La conexión aparece entonces en la consola, en **Mi Perfil → Clientes de IA conectados**, donde puedes revocarla. Un conector revocado deja de funcionar en un máximo de 5 minutos.
 
 ## Configuración
 
@@ -92,7 +105,7 @@ Cuando `BELLA_BAXTER_API_KEY` está configurada, `bella mcp` arranca directament
       "command": "bella",
       "args": ["mcp"],
       "env": {
-        "BELLA_API_URL": "https://tu-bella.ejemplo.com",
+        "BELLA_BAXTER_URL": "https://tu-bella.ejemplo.com",
         "BELLA_BAXTER_API_KEY": "bax-<tu-api-key>"
       }
     }
@@ -131,7 +144,7 @@ Una vez configurada Bella como servidor MCP, puedes pedirle a tu IA:
 
 ## Diseño de seguridad
 
-- **Firma HMAC por petición** — la autenticación con API key usa HMAC-SHA256 con marca de tiempo y firma de la petición. La clave nunca viaja como `Authorization: Bearer` plano
+- **Firma HMAC por petición** — `bella mcp` firma cada petición a Bella con HMAC-SHA256, una marca de tiempo y una firma de la petición. Nunca envía la clave en bruto en una cabecera `Authorization: Bearer`
 - **RBAC aplicado** — si no puedes acceder a un secreto desde la CLI, la IA tampoco puede
 - **Valores nunca en el contexto del prompt** — `list_secret_keys` lista solo los nombres, sin valores. `get_secret` obtiene un único valor cuando se solicita explícitamente
 - **Tokens con alcance para agentes** — `bella_issue_token` permite al agente emitir una credencial efímera para una subtarea, sin necesidad de tu API key completa
@@ -156,6 +169,6 @@ Consulta [Keyless / Identidad de Carga de Trabajo](/features/keyless) para la co
 
 ```sh
 bella mcp                          # inicia el servidor MCP
-bella mcp --api-url <url>          # cambia la URL de la API (o usa la variable BELLA_API_URL)
+bella mcp --api-url <url>          # cambia la URL de la API (o usa la variable BELLA_BAXTER_URL)
 bella mcp --print-config           # imprime snippets de configuración para todos los hosts
 ```

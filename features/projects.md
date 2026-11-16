@@ -5,28 +5,30 @@ A **Project** is a logical grouping of secrets and environments, typically corre
 ## Create a Project
 
 ```sh
-bella projects create --name "My API" --slug my-api
+bella projects create --name "My API"
 ```
 
 Or from the WebApp: **Dashboard → New Project**
 
-Projects have a slug (used in API calls and `.bella` files) and a human-readable name.
+Projects have a slug (used in API calls and `.bella` files) and a human-readable name. You do not choose the slug: Bella derives it from the name (`My API` becomes `my-api`) and prints it when the project is created. `bella projects list` shows it too.
 
 ## Members and Roles
 
 | Role | Permissions |
 |------|-------------|
-| `OWNER` | Full control, including deleting the project; manages all members |
-| `PROJECT_MANAGER` | Can manage environments, providers, and members |
-| `MEMBER` | Can read and write secrets in assigned environments |
-| `CONSUMER` | Read-only access to secrets |
+| `PROJECT_MANAGER` | Can manage the project: change its settings, add and remove members and groups, assign providers, manage project-wide secrets and create environments. Cannot delete the project |
+| `PROJECT_CONSUMER` | Read-only access to the project |
+
+The project's **owner** is the person who owns it (its creator, unless ownership was transferred). Ownership is not a role. The owner can manage the project like a project manager, and the owner or an organisation Owner or Admin can delete it.
+
+A project role does not by itself give access to an environment's secrets. Access to an environment is granted on the environment (see [Environments](/features/environments#members-and-access)).
 
 ::: warning Planned — not in the CLI yet
 `bella projects add-member` and `remove-member` are on the roadmap and are not in the CLI yet. Until then, manage project members in the WebApp or with the [REST API](/api-reference/). The example below shows the planned syntax.
 :::
 
 ```sh
-bella projects add-member --project my-api --user alice@example.com --role MEMBER
+bella projects add-member --project my-api --user alice@example.com --role PROJECT_CONSUMER
 bella projects remove-member --project my-api --user alice@example.com
 ```
 
@@ -42,7 +44,7 @@ Providers must be assigned to a project before they can be used by its environme
 bella providers assign --project my-api --provider "AWS Production"
 ```
 
-Multiple providers can be assigned. Each environment picks which one to use.
+Multiple providers can be assigned to a project. Each environment then has providers assigned to it from that set. If an environment has several, Bella reads all of them and merges the results (see [Providers](/features/providers#assign-a-provider-to-an-environment)).
 
 ## Drift Detection
 

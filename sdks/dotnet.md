@@ -66,7 +66,7 @@ The simplest approach — no code changes at all:
 bella sdk run -- dotnet run
 ```
 
-`bella sdk run` injects `BELLA_BAXTER_URL`, `BELLA_BAXTER_API_KEY`, and all your secrets directly into the process environment. `AddBellaSecrets()` auto-reads the injected env vars.
+`bella sdk run` puts `BELLA_BAXTER_URL` and your credentials (`BELLA_BAXTER_API_KEY`, or an access token when you signed in with `bella login`) into the environment of the process it starts. It does not fetch your secrets. `AddBellaSecrets()` reads those variables and loads the secrets.
 
 ## .NET Aspire Integration
 
@@ -74,11 +74,13 @@ Connect an existing Bella Baxter instance to your Aspire AppHost:
 
 ```csharp
 // AppHost/Program.cs
-var baxter = builder.AddBaxter("baxter"); // reads BELLA_BAXTER_URL + BELLA_BAXTER_API_KEY
+var baxter = builder.AddBaxter("baxter", baxterUrl: "https://your-instance.bella-baxter.io");
 
 var api = builder.AddProject<Projects.MyApi>("api")
     .WithReference(baxter);  // injects URL + API key into the service
 ```
+
+`AddBaxter(name, baxterUrl, apiKeyParameterName = "bella-api-key")` takes the Baxter URL as an argument. The API key is an Aspire secret parameter, named `bella-api-key` unless you pass another name. Set it in the AppHost's user secrets, for example under `Parameters:bella-api-key`, or supply it from the environment when you run the AppHost.
 
 → [Full Aspire sample](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dotnet/samples/04-aspire)
 
@@ -98,23 +100,25 @@ var api = builder.AddProject<Projects.MyApi>("api")
 
 ## Zero-Knowledge Encryption (ZKE)
 
-By default each poll generates a fresh P-256 keypair (ephemeral E2EE). With ZKE you supply a **persistent device key** so the server can audit which host fetched secrets and the SDK caches the wrapped DEK between polls.
+By default each poll generates a fresh P-256 keypair (ephemeral E2EE). With ZKE the app presents a **persistent device key**, so the server can audit which host fetched secrets. The SDK keeps the wrapped DEK lease it receives in memory. It does not persist it.
 
-**Generate your device key once:**
-
-```sh
-bella auth setup   # stores it owner-only under ~/.config/bella-cli; copy the printed PEM
-```
-
-**ASP.NET Core (via env var — recommended):**
+**Create a device key once, on each machine:**
 
 ```sh
-export BELLA_BAXTER_PRIVATE_KEY="$(cat ~/.bella/device-key.pem)"
+bella auth setup
 ```
 
-The SDK reads `BELLA_BAXTER_PRIVATE_KEY` automatically. No code change required.
+This creates a P-256 key on the machine, stores it encrypted under `~/.config/bella-cli`, and registers the public half with Bella. It prints the device's fingerprint, not the key. The private key stays on the machine.
 
-**Or set it in options:**
+**Run your app under `bella sdk run`:**
+
+```sh
+bella sdk run -- dotnet run
+```
+
+`bella sdk run` sets `BELLA_BAXTER_PRIVATE_KEY` in the process it starts. The SDK reads that variable automatically, so no code change is required. If you sign in with an API key (`bax-...`), the CLI sets it only when the server confirms that this machine's device is the one recorded against the key.
+
+**Or set it in options.** `PrivateKey` takes a PKCS#8 PEM:
 
 ```csharp
 builder.Configuration.AddBellaSecrets(o =>

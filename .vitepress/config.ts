@@ -22,6 +22,8 @@ const enNav = [
       { text: 'Secret Leases', link: '/features/secret-leases' },
       { text: 'Dynamic Secrets', link: '/features/dynamic-secrets' },
       { text: 'Secure Shares', link: '/features/secure-shares' },
+      { text: 'Connect with Bella Baxter', link: '/features/connected-apps' },
+      { text: 'Manage connected apps', link: '/features/connected-apps-manage' },
       { text: 'Webhooks', link: '/features/webhooks' },
       { text: 'Notifications', link: '/features/notifications' },
       {
@@ -107,6 +109,8 @@ const enSidebar = {
         { text: 'Secret Leases', link: '/features/secret-leases' },
         { text: 'Dynamic Secrets', link: '/features/dynamic-secrets' },
         { text: 'Secure Shares', link: '/features/secure-shares' },
+        { text: 'Connect with Bella Baxter', link: '/features/connected-apps' },
+        { text: 'Manage connected apps', link: '/features/connected-apps-manage' },
         { text: 'Webhooks', link: '/features/webhooks' },
         { text: 'Notifications', link: '/features/notifications' },
         {
@@ -155,6 +159,8 @@ const esNav = [
       { text: 'Proyectos', link: '/es/features/projects' },
       { text: 'Entornos', link: '/es/features/environments' },
       { text: 'API keys', link: '/es/features/api-keys' },
+      { text: 'Conectar con Bella Baxter', link: '/es/features/connected-apps' },
+      { text: 'Gestionar aplicaciones conectadas', link: '/es/features/connected-apps-manage' },
     ],
   },
   {
@@ -204,6 +210,8 @@ const esSidebar = {
         { text: 'API keys', link: '/es/features/api-keys' },
         { text: 'SPIFFE y ZKE', link: '/es/features/spiffe-zke' },
         { text: 'Revocar un dispositivo', link: '/es/features/device-revocation' },
+        { text: 'Conectar con Bella Baxter', link: '/es/features/connected-apps' },
+        { text: 'Gestionar aplicaciones conectadas', link: '/es/features/connected-apps-manage' },
       ],
     },
   ],
@@ -248,6 +256,8 @@ const caNav = [
       { text: 'API keys', link: '/features/api-keys' },
       { text: 'SPIFFE i ZKE', link: '/ca/features/spiffe-zke' },
       { text: 'Revocar un dispositiu', link: '/ca/features/device-revocation' },
+      { text: 'Connecta amb Bella Baxter', link: '/ca/features/connected-apps' },
+      { text: 'Gestiona les aplicacions connectades', link: '/ca/features/connected-apps-manage' },
     ],
   },
   {
@@ -297,6 +307,8 @@ const caSidebar = {
         { text: 'API keys', link: '/features/api-keys' },
         { text: 'SPIFFE i ZKE', link: '/ca/features/spiffe-zke' },
         { text: 'Revocar un dispositiu', link: '/ca/features/device-revocation' },
+        { text: 'Connecta amb Bella Baxter', link: '/ca/features/connected-apps' },
+        { text: 'Gestiona les aplicacions connectades', link: '/ca/features/connected-apps-manage' },
       ],
     },
   ],

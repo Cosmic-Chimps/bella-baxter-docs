@@ -18,7 +18,7 @@ A **Provider** is a connection to an external secret store. You configure it onc
 
 Every tenant automatically gets a **System Provider** — a Bella-managed OpenBao instance. It requires no configuration. Use it immediately after signing up.
 
-The system provider's ID is well-known (`00000000-0000-0000-0000-000000000001`) and is pre-assigned to every new project.
+The system provider's ID is well-known (`00000000-0000-0000-0000-000000000001`). A new project has no providers: you assign the system provider to a project and to its environments in the same way as any other provider.
 
 ## Create a Provider
 
@@ -26,11 +26,8 @@ The system provider's ID is well-known (`00000000-0000-0000-0000-000000000001`) 
 
 ```sh [CLI]
 bella providers create \
-  --name "AWS Production" \
-  --type AwsSecretsManager \
-  --region us-east-1 \
-  --access-key-id AKIAXXXXXXXX \
-  --secret-access-key secret
+  --name "Team Vault" \
+  --type Vault
 ```
 
 ```http [API]
@@ -42,15 +39,20 @@ Content-Type: application/json
   "type": "AwsSecretsManager",
   "configuration": {
     "region": "us-east-1",
-    "accessKeyId": "AKIAXXXXXXXX",
-    "secretAccessKey": "***"
+    "auth_method": "role",
+    "role_arn": "arn:aws:iam::123456789012:role/bella-baxter",
+    "external_id": "bella-baxter-..."
   }
 }
 ```
 
 :::
 
-Sensitive configuration values (access keys, tokens, client secrets) are **encrypted at rest** using ASP.NET Data Protection before storing. They are masked in all API responses as `***ENCRYPTED***`.
+The CLI takes only `--type`, `-n|--name`, `-d|--description` and `--json`. It offers these types: `AwsSecretsManager`, `AwsParameterStore`, `AzureKeyVault`, `GoogleSecretManager` and `Vault`. In a terminal it then asks for the settings of the type you chose. When it runs without a terminal (a script or a CI job) it sends no settings at all, so use the REST API to create a provider non-interactively. The `VaultDatabase` and `HttpRest` types are created from the WebApp or the REST API.
+
+Configuration keys are written in `snake_case` (`access_key_id`, `role_arn`, `server_url`). The sections below list the keys for each type.
+
+Sensitive configuration values (access keys, tokens, client secrets) are not kept in Bella's database. Bella writes them to your organisation's secret store (OpenBao) when you create or update the provider, and removes them when you delete it. API responses mask them as `***ENCRYPTED***`.
 
 ## Provider Scoping
 
@@ -85,7 +87,9 @@ bella environments add-provider production \
   --provider aws-production
 ```
 
-Multiple providers can be assigned to one environment — Bella reads from the primary provider and optionally syncs to others.
+Multiple providers can be assigned to one environment. There is no primary provider and Bella does not sync between them. When you read the environment's secrets, Bella reads every provider assigned to it and merges the results. If two providers hold the same key, the provider that was assigned to the environment later wins.
+
+Project-wide ("global") secrets are the base layer of that merge. A secret with the same key in one of the environment's providers overrides the project-wide value.
 
 ## Test a Provider Connection
 
@@ -105,16 +109,16 @@ Verifies that credentials are valid and the API is reachable.
 {
   "type": "Vault",
   "configuration": {
-    "url": "https://vault.example.com",
-    "mountPath": "secret",
-    "authMethod": "AppRole",
-    "roleId": "...",
-    "secretId": "..."
+    "server_url": "https://vault.example.com",
+    "mount_path": "secret",
+    "auth_method": "approle",
+    "role_id": "...",
+    "secret_id": "..."
   }
 }
 ```
 
-Supported Vault auth methods: `AppRole`, `Token`, `Kubernetes`, `GitHub`.
+Supported Vault auth methods: `approle` (with `role_id` and `secret_id`) and `token` (with `root_token`).
 
 ## AWS Secrets Manager Configuration
 
@@ -123,13 +127,20 @@ Supported Vault auth methods: `AppRole`, `Token`, `Kubernetes`, `GitHub`.
   "type": "AwsSecretsManager",
   "configuration": {
     "region": "us-east-1",
-    "accessKeyId": "AKIAXXXXXXXX",
-    "secretAccessKey": "***"
+    "auth_method": "role",
+    "role_arn": "arn:aws:iam::123456789012:role/bella-baxter",
+    "external_id": "bella-baxter-..."
   }
 }
 ```
 
-IAM role-based auth is also supported — omit `accessKeyId`/`secretAccessKey` when running on EC2 or ECS with an instance role.
+The default `auth_method` is `role`: Bella assumes an IAM role in your AWS account. To set it up:
+
+1. Ask Bella for an external ID. The console does this for you when you create the provider; with the REST API call `POST /api/v1/providers/aws/external-id`. You cannot choose the value yourself, and it cannot be edited once the provider is saved.
+2. Create an IAM role that trusts Bella Baxter's AWS account and requires that value as `sts:ExternalId` in its trust policy.
+3. Create the provider with the role's ARN (`role_arn`) and the external ID.
+
+To use an IAM user's keys instead, set `auth_method` to `access_key` and provide `access_key_id` and `secret_access_key`.
 
 ## Azure Key Vault Configuration
 
@@ -137,15 +148,16 @@ IAM role-based auth is also supported — omit `accessKeyId`/`secretAccessKey` w
 {
   "type": "AzureKeyVault",
   "configuration": {
-    "vaultUrl": "https://my-vault.vault.azure.net",
-    "tenantId": "...",
-    "clientId": "...",
-    "clientSecret": "***"
+    "vault_url": "https://my-vault.vault.azure.net",
+    "auth_method": "service_principal",
+    "tenant_id": "...",
+    "client_id": "...",
+    "client_secret": "..."
   }
 }
 ```
 
-Managed Identity is supported — omit credentials when running on Azure resources with a system-assigned identity.
+An Azure Key Vault provider must use your own service principal. Creating a provider with `auth_method` set to `managed_identity` is refused with `400` and the problem title `azure-shared-identity-refused`.
 
 ## VaultDatabase (Dynamic Credentials) Configuration
 
@@ -248,7 +260,7 @@ Bella API
 | `delete` | `{ action, path, key, requestId }`               | `{ "success": true }`                 |
 | error    | —                                                | non-2xx + `{ "error": "message" }`    |
 
-The `path` is composed as `{namespace_prefix}/{environment_slug}` (e.g. `myapp/production`).
+The `path` is composed as `{namespace_prefix}/{project_slug}/{environment_slug}` (for example `myapp/billing/production`). If the provider has no `namespace_prefix`, it is `{project_slug}/{environment_slug}`. A project's project-wide secrets use `{project_slug}/_global`, with the prefix in front when there is one.
 
 ### Signature Verification
 
@@ -281,7 +293,7 @@ if (!valid) return { status: 401 };
     "signing_secret": "openssl-rand-hex-32-output",
     "api_key_header": "X-Api-Key",
     "api_key": "your-api-key-or-ref:SECRET_NAME",
-    "namespace_prefix": "myapp/production"
+    "namespace_prefix": "myapp"
   }
 }
 ```
@@ -292,7 +304,7 @@ if (!valid) return { status: 401 };
 | `signing_secret` | Recommended | HMAC-SHA256 signing secret. Generate with `openssl rand -hex 32` |
 | `api_key_header` | — | HTTP header name to send the API key in (e.g. `X-Api-Key`, `Authorization`) |
 | `api_key` | — | API key value, or `ref:SECRET_NAME` to read from the system OpenBao provider |
-| `namespace_prefix` | — | Prepended to all paths (e.g. `myapp/production`) |
+| `namespace_prefix` | — | Prepended to all paths (e.g. `myapp`) |
 
 The `api_key` field supports a secret reference. Use `ref:MY_API_KEY` to read the value from the system provider at `secret/data/_bella-baxter/provider-api-keys/{providerId}` — write it there via Vault CLI or Terraform to enable automatic rotation.
 

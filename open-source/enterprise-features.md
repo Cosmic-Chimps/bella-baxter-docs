@@ -34,10 +34,12 @@ There is no license key. Enterprise is a plan on the same API: it is not sold th
 
 | Feature | Rationale | Status |
 |---------|-----------|--------|
-| **SSO (SAML / OIDC login)** | Pure organizational feature — only relevant when IT centrally manages logins. Individuals use username+password or social login. | Partially implemented (SSO hint flow + SuperAdmin approval) |
 | **Audit log streaming / SIEM export** | Compliance requirement at company scale (SOC2, ISO27001). The in-app audit log viewer stays free. Streaming to Splunk/Datadog/Azure Monitor is enterprise. | Available on the Enterprise plan (contact us) |
-| **Advanced RBAC** | Fine-grained permission control beyond Owner/Manager/Member/Consumer. Only needed at large-team governance scale. | Contact us for availability |
-| **Multi-tenant (multiple orgs on one instance)** | Relevant when running Bella as an internal platform for multiple business units. The multi-tenant architecture is built; the gating is not. | Architecture built, gating pending |
+| **Advanced RBAC** | Fine-grained permission control beyond the built-in project and environment roles. Only needed at large-team governance scale. | Contact us for availability |
+
+Single sign-on (SAML or OIDC) is not an Enterprise feature. Every plan includes it. An organisation requests it, and a platform operator approves the request. See [Single sign-on](/features/sso).
+
+Running more than one organisation on one instance is not an Enterprise feature. Any signed-in person can create another organisation today.
 
 ## ❌ Will NOT Be Gated
 
