@@ -19,7 +19,7 @@ plataforma, así que nunca puede divergir de la topología real.
 - Un host Linux con Docker Engine + el plugin `docker compose`
 - Credenciales del registro de contenedores de Bella Baxter (te las damos al configurar tu instancia)
 - [`cosign`](https://docs.sigstore.dev) versión 3. El bundle verifica la firma de cada imagen antes de arrancar nada, y se niega a arrancar una imagen que no ha podido verificar
-- La CLI `aws` versión 2, solo si descargas las imágenes de nuestro registro ECR
+- El registro es GitHub Container Registry (`ghcr.io`): `./bella.sh login` te pide el usuario y el token de solo lectura que te damos
 - Tres puertos: `443` (aplicación), `8444` (plano de administración), `9443` (setup)
 
 ### Instalación
