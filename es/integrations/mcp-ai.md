@@ -24,7 +24,7 @@ Crea una API key en la consola. `bella mcp` no exige un tipo de clave concreto:
 
 claude.ai y Claude Desktop pueden conectarse a Bella sin `bella mcp` y sin API key. En su lugar, inicias sesión con tu cuenta de Bella:
 
-1. En claude.ai o Claude Desktop, abre **Settings → Connectors** y añade un conector personalizado.
+1. En claude.ai o Claude Desktop, abre **Settings → Connectors** y agrega un conector personalizado.
 2. Pon como dirección del conector la dirección de tu Bella seguida de `/mcp`, por ejemplo `https://tu-bella.ejemplo.com/mcp`.
 3. En los ajustes avanzados, pon `bella-mcp-connector` como OAuth Client ID. Deja vacío el client secret.
 4. Inicia sesión con tu cuenta de Bella cuando se te pida.

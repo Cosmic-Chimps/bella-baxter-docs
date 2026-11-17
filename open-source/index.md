@@ -98,3 +98,9 @@ Bella Baxter is released under the **Elastic License v2 (ELv2)**:
 This prevents cloud providers from wrapping Bella Baxter as a competing service while keeping self-hosting completely free.
 
 [→ Read the full license text](https://www.elastic.co/licensing/elastic-license)
+
+### Client libraries are MIT
+
+The Elastic License covers the Bella Baxter server: the product you self-host, and the one Cosmic Chimps runs as the cloud service.
+
+The client libraries are released under the **MIT License**. That covers the SDKs for every language, the `bella` CLI, the Terraform provider, the Ansible collection and the GitHub setup action. You can use them in your own software, open or closed, without restriction. Each one carries its own `LICENSE` file.

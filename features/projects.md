@@ -123,3 +123,7 @@ Over the API, preview with `GET /api/v1/projects/{projectRef}/deletion-preview`,
 `DELETE /api/v1/projects/{projectRef}?confirmProjectSlug=<slug>&previewDigest=<digest from the preview>`. A missing or
 wrong slug is refused with `422`, a digest from a preview the project has since outgrown with `409` (take a new preview),
 and nothing is deleted in either case.
+
+## Transfer a Project
+
+An organisation Owner who also owns another organisation can move a project to that other organisation. The project is copied there and then deleted here, so it cannot be undone, and its API keys and certificate authorities are replaced. See [Transfer a project to another organisation](/features/project-transfer).

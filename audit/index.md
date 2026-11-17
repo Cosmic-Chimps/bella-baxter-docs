@@ -86,6 +86,7 @@ The most common actions. This is not the full list: write rules against the acti
 | `member_role_changed`, `member_removed`, `member_suspended`, `member_restored` | A member's role or standing changed — see [Team members](/features/team-members) |
 | `security_insight_acknowledged`, `security_insight_acknowledgement_withdrawn` | A security finding was acknowledged, or the acknowledgement was undone |
 | `project_deleted` | A project was deleted |
+| `project_transfer_started`, `project_transferred_out`, `project_transferred_in`, `project_transfer_abandoned` | A [project transfer](/features/project-transfer) started, completed (one row in each organisation) or was abandoned |
 
 ## What is not recorded
 

@@ -86,3 +86,7 @@ bella secrets generate swift
 Java and Ansible are not supported.
 
 The generated code gives you IDE autocomplete, compile-time checking, and no more `process.env.MY_SECRET` magic strings.
+
+## License
+
+Every SDK is released under the MIT License, and so are the `bella` CLI, the Terraform provider and the Ansible collection. Only the Bella Baxter server is under the Elastic License. See [License](/open-source/#license).
