@@ -299,9 +299,9 @@ Haz esto en orden:
 6. **Vuelve a configurar lo que quitaste:** claves TOTP, destinos de despliegue de certificados, delegaciones DNS y ámbitos de escaneo de Scout.
 7. **Comprueba una lectura.** Lee un secreto con una clave nueva para confirmar que los servicios funcionan.
 
-## Cifrado de conocimiento cero
+## Organizaciones que exigen dispositivos registrados
 
-Puedes transferir un proyecto tanto si alguna de las dos organizaciones exige el cifrado de conocimiento cero como si no. Las rutas de la transferencia no piden un dispositivo registrado. Bella abre los valores en el servidor y los cifra de nuevo para el destino. Nunca te devuelve un valor ni una clave durante una transferencia.
+Puedes transferir un proyecto tanto si alguna de las dos organizaciones exige dispositivos registrados como si no. Las rutas de la transferencia no piden un dispositivo registrado. Bella abre los valores en el servidor y los cifra de nuevo para el destino. Nunca te devuelve un valor ni una clave durante una transferencia.
 
 Se rechaza un caso: el proyecto de origen está cifrado con una clave de organización y el destino no tiene clave de organización. El propietario del destino configura primero las claves de cifrado de la organización. La copia se cifra entonces con una clave nueva en el destino.
 

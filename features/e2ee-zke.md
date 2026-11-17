@@ -1,18 +1,19 @@
-# End-to-End Encryption & Zero-Knowledge Encryption
+# Device-bound encryption
 
-Secrets fetched through a Bella Baxter SDK are **encrypted end-to-end** between the server and your application — not just protected by TLS. Every SDK does this out of the box except Go, which needs a device key or `EnableE2EE: true` (see [Per-SDK Reference](#per-sdk-reference)). Zero-Knowledge Encryption (ZKE) extends this with a persistent device key for stronger audit trails and DEK lease caching.
+This feature was formerly called Zero-Knowledge Encryption (ZKE).
 
-::: warning What "zero-knowledge" does and does not mean here
-**Bella can read your secret values.** The server decrypts them to serve a request, and it is the
-server that wraps the environment key.
+Secrets fetched through a Bella Baxter SDK are **encrypted end-to-end** between the server and your application — not just protected by TLS. Every SDK does this out of the box except Go, which needs a device key or `EnableE2EE: true` (see [Per-SDK Reference](#per-sdk-reference)). Device-bound encryption extends this with a persistent device key for stronger audit trails and DEK lease caching.
 
-What ZKE gives you is **device identity**: which machine read which secret, an audit trail that names
-it, and the ability to withdraw one machine without rotating anything else. It is *not* a claim that
-the platform is unable to read your secrets.
+::: warning What device-bound encryption does and does not do
+**What it does.** Each device has its own key, and a person registers that key. Bella releases a
+secret only to a registered device. So you can see which machine read a secret, and you can withdraw
+one machine without rotating anything else.
 
-If you need that stronger property — encryption the server genuinely cannot reverse — it is separate
-work and not what this page describes. This also appears at the end of the page; it is repeated here
-because it belongs *before* you decide, not after.
+**What it does not do.** It does not stop Bella's servers from reading your secret values. The server
+decrypts them to serve a request, and it is the server that wraps the environment key.
+
+If you need encryption that the server cannot reverse, this feature does not provide it. This also
+appears at the end of the page. It is repeated here because you should read it before you decide.
 :::
 
 ---
@@ -51,12 +52,12 @@ the exchange is fresh for every response. No configuration is needed; this is th
 **except Go**, which sends no key and receives plaintext over TLS unless you set `EnableE2EE: true` or
 supply a device key.
 
-An ephemeral key is not a registered device, so under [ZKE enforcement](#zke-enforcement) these reads
+An ephemeral key is not a registered device, so when [registered devices are required](#zke-enforcement) these reads
 are refused.
 
-### Optional: ZKE with Persistent Device Key
+### Optional: a persistent device key
 
-With ZKE, you supply a **persistent PKCS#8 P-256 private key** (your "device key"). The server uses the same key for every request from that device:
+With device-bound encryption, you supply a **persistent PKCS#8 P-256 private key** (your "device key"). The server uses the same key for every request from that device:
 
 ```
 App                        Bella API
@@ -84,7 +85,7 @@ App                        Bella API
 
 ---
 
-## Getting Started with ZKE
+## Getting started with device-bound encryption
 
 ### 1. Register this machine
 
@@ -177,7 +178,7 @@ const client = await createBaxterClient({
 ## Registered devices
 
 A **device** is one machine's public key, registered by a person. Registration is what makes the
-setting below mean something: before it existed, "ZKE enforcement" accepted any key a client happened
+setting below mean something. Before registration existed, the check accepted any key a client happened
 to send, including one generated seconds earlier by a machine nobody had ever set up.
 
 ```sh
@@ -190,7 +191,7 @@ bella auth devices revoke <id|fingerprint> --rotate   # also put its projects on
 The console shows the same list under **Settings → Devices**.
 
 **Revocation is effective on that machine's next request** — there is no cache to wait out. What it does
-*not* do is un-share knowledge: a key already handed to that machine still decrypts the values it
+*not* do is make the machine forget: a key already handed to that machine still decrypts the values it
 decrypted before. Revoking offers to **rotate the keys** of every project the device received keys for,
 so the old keys open no current value. Rotation does not make the device forget what it already read, so
 rotate those secrets as well. See [What revoking a device does, and rotating its keys](/features/device-revocation).
@@ -201,17 +202,17 @@ console marks it "no registered key".
 
 ---
 
-## ZKE enforcement
+## Requiring registered devices {#zke-enforcement}
 
 A tenant Owner can require a registered device for every secret read **and for every credential the
-platform issues** (**Settings → Encryption → ZKE enforcement**). With it on:
+platform issues** (**Settings → Encryption → Device-bound encryption**). With it on:
 
 - a CLI or SDK presenting a **registered** device key reads and obtains credentials normally;
 - anything else — no key, a malformed key, an unregistered key, a revoked device, or a device whose
   owner has left the tenant — is refused with `403` and told to run `bella auth setup`;
 - the console is exempt (a browser session holds no device key);
 - an assistant connected over MCP reads only through an API key with a registered public key;
-- a SPIFFE workload's lease reads metadata and hashes but never values: see [SPIFFE and zero-knowledge encryption](/features/spiffe-ec2#spiffe-and-zero-knowledge-encryption).
+- a SPIFFE workload's lease reads metadata and hashes but never values: see [SPIFFE and registered devices](/features/spiffe-ec2#spiffe-and-registered-devices).
 
 ### What "credential" covers
 
@@ -246,12 +247,12 @@ Before enabling it, the console shows how many members and API keys would be loc
 
 ## Backward Compatibility
 
-ZKE is **opt-in** unless the tenant turns on [enforcement](#zke-enforcement). If no device key is
+A device key is **opt-in** unless the tenant [requires registered devices](#zke-enforcement). If no device key is
 supplied (no `BELLA_BAXTER_PRIVATE_KEY` and no key option):
 - every SDK except Go uses ephemeral E2EE, as it always has;
 - Go reads over plain TLS, as it always has, unless `EnableE2EE: true` is set;
 - no code changes or configuration are needed, and existing applications keep working, **unless the
-  tenant enforces ZKE**: then every secrets read without a registered key is refused with `403`.
+  tenant requires registered devices**: then every secrets read without a registered key is refused with `403`.
 
 If a device key **is** supplied, every SDK presents it and decrypts with it. A key that is set but
 cannot be read is an error (see the [Per-SDK Reference](#per-sdk-reference) for when it is raised). No
@@ -260,16 +261,16 @@ would then fail with a `403` whose cause is invisible from inside the applicatio
 
 ---
 
-## What ZKE Does NOT Change
+## What device-bound encryption does not change
 
-- **The server still authorizes every request** via your API key — ZKE is a transport and device-identity
-  layer, not an auth bypass, and enforcement narrows who may read rather than widening it.
+- **The server still authorizes every request** via your API key. A device key is a transport and device-identity
+  layer, not an auth bypass, and requiring registered devices narrows who may read rather than widening it.
 - **Secret values are decrypted by the SDK** before being returned to your app code in both modes — your
   application always receives plaintext strings.
-- **TLS is still required** — E2EE and ZKE complement TLS, they don't replace it.
-- **The platform can still read your secrets.** Bella decrypts values server-side to serve them, and the
-  environment key is wrapped *by* the server. ZKE gives you device identity, an attributable audit trail
-  and revocation; it is not a claim that Bella cannot see your secrets. Anything that says otherwise is
+- **TLS is still required** — E2EE and device keys complement TLS, they don't replace it.
+- **Bella's servers can still read your secrets.** Bella decrypts values server-side to serve them, and the
+  environment key is wrapped *by* the server. Device-bound encryption gives you device identity, an attributable audit trail
+  and revocation. It does not stop Bella from reading your secrets. Anything that says otherwise is
   wrong.
 
 ---

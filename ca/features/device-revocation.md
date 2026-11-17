@@ -127,5 +127,5 @@ revocat no és un error.
 
 ## Vegeu també
 
-- [Xifratge de coneixement zero](/features/e2ee-zke)
+- [Xifratge lligat al dispositiu](/features/e2ee-zke)
 - [Projectes](/features/projects)

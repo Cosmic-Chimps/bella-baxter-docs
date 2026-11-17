@@ -4,7 +4,7 @@ Official Bella Baxter SDKs for every major platform. Each SDK provides:
 - Secret loading at application startup
 - HMAC-signed requests with automatic retry
 - **End-to-end encrypted transport** (E2EE) — secrets are encrypted between server and SDK before TLS
-- **Zero-Knowledge Encryption (ZKE)** — optional persistent device key for audit trails
+- **Device-bound encryption** — optional persistent device key for audit trails
 - `bella sdk run` passes your credentials to the SDK in the process it starts; `bella run` needs no SDK
 - Typed secret code generation via `bella secrets generate <lang>` for most languages (see [below](#typed-secrets-code-generation))
 - A `User-Agent` of the form `bella-{lang}-sdk/1.0` on every request, visible in your audit log (the .NET SDK sends its own package version instead of `1.0`)
@@ -32,7 +32,7 @@ Official Bella Baxter SDKs for every major platform. Each SDK provides:
 
 ## Comparison
 
-| Language | Package | Framework Integrations | Typed Secrets | ZKE |
+| Language | Package | Framework Integrations | Typed Secrets | Device key |
 |----------|---------|----------------------|---------------|-----|
 | [JavaScript / TypeScript](/sdks/javascript) | `@bella-baxter/sdk` | Express, NestJS, Next.js, Fastify, AdonisJS | ✅ | ✅ |
 | [.NET](/sdks/dotnet) | `BellaBaxter.AspNet.Configuration`, `BellaBaxter.Aspire.Configuration` | ASP.NET Core, Aspire | ✅ Source Generator | ✅ |
@@ -45,7 +45,7 @@ Official Bella Baxter SDKs for every major platform. Each SDK provides:
 | [Dart](/sdks/dart) | `bella_baxter` (pub.dev) | Flutter, Dart CLI, Shelf | ✅ | ✅ |
 | [Ansible](/sdks/ansible) | `jjchiw.bella_baxter` | Playbooks, lookup plugins | — | — |
 
-→ [Zero-Knowledge Encryption (ZKE)](/features/e2ee-zke) — how E2EE transport and persistent device keys work
+→ [Device-bound encryption](/features/e2ee-zke) — how E2EE transport and persistent device keys work
 
 ---
 

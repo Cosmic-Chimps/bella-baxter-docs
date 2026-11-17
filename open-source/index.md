@@ -4,7 +4,7 @@ Bella Baxter is open-core, source-available under the [ELv2 License](https://www
 
 ## The Guiding Principle
 
-> **Cap organizational features (audit streaming, multi-team governance) — not operational features (resources you need to do your job).**
+> **Cap organizational features (SSO, audit streaming, multi-team governance) — not operational features (resources you need to do your job).**
 
 A solo developer or a 3-person startup should never hit a wall while doing legitimate work.
 
@@ -36,10 +36,14 @@ These are gated because they're only relevant at **organisational scale** — sm
 
 | Feature | Why it's paid |
 |---------|--------------|
-| **Audit log streaming / SIEM export** | Compliance at company scale (SOC2, ISO27001). The audit log UI stays free — only streaming to Splunk/Datadog/Azure Monitor is gated. |
 | **Advanced RBAC** | Fine-grained permissions beyond the built-in project and environment roles. Relevant when security teams need granular control across dozens of teams. |
 
-Single sign-on (SAML or OIDC) is not gated. Every plan includes it. An organisation requests it, and a platform operator approves the request. See [Single sign-on](/features/sso).
+Two features are paid modules, available on every plan at extra cost:
+
+- **Single sign-on (SAML or OIDC).** An organisation requests it, and a platform operator approves the request. See [Single sign-on](/features/sso).
+- **Audit log streaming to a SIEM** (Splunk, Datadog, Azure Monitor). The audit log in the console stays free. A platform operator switches streaming on for the organisation. See [Audit Logs](/audit/).
+
+To add either one, contact us: [enterprise@cosmic-chimps.io](mailto:enterprise@cosmic-chimps.io).
 
 Running more than one organisation on one instance is not gated. Any signed-in person can create another organisation today.
 
@@ -82,8 +86,8 @@ You pay more when you ship more (or your AI agents are very busy). The bill grow
 | Cost | Free forever | $0 to start, $0.005/req overage |
 | Infrastructure | You manage (Docker/Aspire/K8s) | Managed by Cosmic Chimps |
 | Data residency | Your infrastructure | Cosmic Chimps (EU / US) |
-| SSO | Included. The operator of the installation approves each request | Included on every plan. Cosmic Chimps approves each request |
-| Audit streaming | No plan check. The operator of the installation switches it on per organisation | Enterprise plan |
+| SSO | Paid module. The operator of the installation approves each request | Available on every plan, at extra cost. Cosmic Chimps approves each request |
+| Audit streaming | Paid module. The operator of the installation switches it on per organisation | Available on every plan, at extra cost |
 | Updates | Manual | Automatic |
 
 ## License

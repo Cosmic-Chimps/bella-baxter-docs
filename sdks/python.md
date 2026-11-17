@@ -92,9 +92,9 @@ app = FastAPI(lifespan=lifespan)
 
 → [Full FastAPI sample](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/python/samples/05-fastapi)
 
-## Zero-Knowledge Encryption (ZKE)
+## Device-bound encryption
 
-By default the SDK generates a fresh P-256 keypair per request (ephemeral E2EE). With ZKE the app presents a **persistent device key**. The server audits which host fetched each secret. The SDK passes the wrapped DEK it receives to your `on_wrapped_dek_received` callback, so you can cache it.
+By default the SDK generates a fresh P-256 keypair per request (ephemeral E2EE). With device-bound encryption the app presents a **persistent device key**. The server audits which host fetched each secret. The SDK passes the wrapped DEK it receives to your `on_wrapped_dek_received` callback, so you can cache it.
 
 **Create a device key once, on each machine:**
 

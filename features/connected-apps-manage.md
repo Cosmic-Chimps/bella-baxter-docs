@@ -43,7 +43,7 @@ If you choose **Decline**, or you close the page, nothing is shared. Bella then 
 An organisation can appear greyed out, with a reason. You cannot pick it. The reasons are:
 
 - **Connected apps are switched off.** An Owner or Admin turned connected apps off for that organisation.
-- **Zero-knowledge encryption is enforced.** The organisation enforces zero-knowledge encryption, so apps cannot read its secrets.
+- **Registered devices are required.** The organisation requires registered devices, and a connected app has none, so apps cannot read its secrets.
 - **The organisation is not active.**
 
 If no organisation is available, or none has an environment you can read, the page says there is no environment you can share. Nothing can be connected from that page.
@@ -73,7 +73,7 @@ A connection has one of three statuses:
 - **Active.** The app can read now.
 - **Stopped.** The connection exists, but Bella refuses the app's reads for now. The row says why. A stopped connection can start serving again when its cause ends. The reasons are:
   - The app was suspended by the platform operator.
-  - The organisation now enforces zero-knowledge encryption.
+  - The organisation now requires registered devices.
   - Connected apps are switched off for the organisation.
   - The person who connected it is suspended.
   - The connection expired.
@@ -104,9 +104,9 @@ Below the switch, the tab lists every connection that members of the organisatio
 - **A member is removed, or leaves the organisation.** Bella revokes every connection that member made.
 - **A member is suspended.** Bella refuses reads through their connections while the suspension lasts. The connections show as **Stopped**, with the reason "The person who connected it is suspended". Nothing is revoked, so the connections work again when the member is restored.
 
-## Zero-knowledge encryption
+## Organisations that require registered devices
 
-An organisation that enforces zero-knowledge encryption cannot take connected apps. A connected app has no registered device, so it cannot read secrets that only a registered device may read. Members cannot connect an app to that organisation, and its existing connections show as **Stopped**.
+An organisation that requires registered devices cannot take connected apps. A connected app has no registered device, so it cannot read secrets that only a registered device may read. Members cannot connect an app to that organisation, and its existing connections show as **Stopped**.
 
 ## Who pays
 

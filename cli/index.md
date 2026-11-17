@@ -106,7 +106,7 @@ The CLI reads the following environment variables. They take precedence over sto
 | `BELLA_BAXTER_PROJECT` | Project slug (session override) | Set by `bella context use` via shell function |
 | `BELLA_BAXTER_ENV` | Environment slug (session override) | Set by `bella context use` via shell function |
 | `BELLA_BAXTER_TENANT` | Org/tenant slug (session override) | Used alongside `BELLA_BAXTER_PROJECT`/`BELLA_BAXTER_ENV` |
-| `BELLA_BAXTER_PRIVATE_KEY` | Device private key (PEM) | Identifies this machine as a registered device — see [ZKE and device keys](/features/e2ee-zke) |
+| `BELLA_BAXTER_PRIVATE_KEY` | Device private key (PEM) | Identifies this machine as a registered device — see [Device-bound encryption](/features/e2ee-zke) |
 | `BELLA_BAXTER_APP_CLIENT` | App client identifier | Forwarded as a context header; useful for MCP/SDK integrations |
 | `BELLA_BAXTER_DEBUG` | Enable debug HTTP logging | Set to `1` (any other value leaves it off) |
 
@@ -199,7 +199,7 @@ bella run --watch --signal sighup -- gunicorn app:app   # reload without restart
 Use this when your app has a Bella SDK installed (e.g. `@bella-baxter/express`, `BellaBaxter.AspNetCore`).
 Instead of fetching secrets itself, `bella sdk run` resolves the right credentials and injects them into
 the child process environment. The SDK inside your app then fetches secrets at runtime — enabling
-lazy loading, caching, and [ZKE device keys](/features/e2ee-zke).
+lazy loading, caching, and [device keys](/features/e2ee-zke).
 
 ```sh
 bella sdk run -- node server.js
@@ -220,7 +220,7 @@ bella sdk run -p myapp -e production -- ./start.sh
    - API key path → `BELLA_BAXTER_API_KEY` + `BELLA_API_KEY` + `BELLA_BAXTER_URL`
    - OAuth path → `BELLA_BAXTER_ACCESS_TOKEN` + `BELLA_BAXTER_PROJECT` + `BELLA_BAXTER_ENV` + `BELLA_BAXTER_URL`
 
-4. **Injects the ZKE device key** — if a device private key is configured (and no service-account key is used), `BELLA_BAXTER_PRIVATE_KEY` is set so the SDK can decrypt secrets end-to-end without the server ever seeing plaintext values. With a `bax-` API key it is set only when the server confirms this machine's device key is the one recorded against that key; otherwise it is left out (see [ZKE: an SDK that uses an API key](/features/e2ee-zke#_2-hand-the-key-to-your-sdk-process)). The Go, Python, PHP, Ruby and Swift SDKs accept only a `bax-` key (no access-token mode).
+4. **Injects the device key** — if a device private key is configured (and no service-account key is used), `BELLA_BAXTER_PRIVATE_KEY` is set so the SDK can decrypt the encrypted response inside your app. With a `bax-` API key it is set only when the server confirms this machine's device key is the one recorded against that key; otherwise it is left out (see [Device-bound encryption: an SDK that uses an API key](/features/e2ee-zke#_2-hand-the-key-to-your-sdk-process)). The Go, Python, PHP, Ruby and Swift SDKs accept only a `bax-` key (no access-token mode).
 
 5. **Spawns the subprocess** and returns its exit code — the child process has everything it needs; `bella sdk run` itself makes no secret API calls.
 
@@ -232,14 +232,14 @@ recommended name — it makes clear that the child process must have a Bella SDK
 | | `bella run` | `bella sdk run` |
 |---|---|---|
 | SDK required in child | No | Yes |
-| What's injected | All secrets as env vars | Credentials + URL (+ ZKE key) |
-| ZKE support | ✅ (the CLI decrypts) | ✅ (the SDK decrypts) |
+| What's injected | All secrets as env vars | Credentials + URL (+ device key) |
+| Device key support | ✅ (the CLI decrypts) | ✅ (the SDK decrypts) |
 | Workload identity (CI/CD) | ✅ | ✅ |
 | Credential scrubbing | ✅ | ✅ |
 | Watch / auto-reload | ✅ `--watch` | ❌ |
-| Best for | Scripts, legacy apps | SDK-powered apps, ZKE workloads |
+| Best for | Scripts, legacy apps | SDK-powered apps, workloads with a device key |
 
-Both support zero-knowledge secrets. With `bella run` the CLI decrypts them (use `--private-key` or `BELLA_BAXTER_PRIVATE_KEY`). With `bella sdk run` the SDK decrypts them inside your app.
+Both work with a device key. With `bella run` the CLI decrypts the secrets (use `--private-key` or `BELLA_BAXTER_PRIVATE_KEY`). With `bella sdk run` the SDK decrypts the secrets inside your app.
 
 ### `bella pull`
 
@@ -474,7 +474,7 @@ bella issue --scope <names>   Issue short-lived scoped token
 
 bella run -- <cmd>            Inject secrets, run command
 bella run --watch -- <cmd>    Auto-restart on secret changes
-bella sdk run -- <cmd>        Inject credentials only (SDK fetches inside app, enables ZKE)
+bella sdk run -- <cmd>        Inject credentials only (SDK fetches inside app, uses a device key)
 bella exec -- <cmd>           Deprecated alias for bella sdk run
 
 bella usage                   Show API usage and billing status
@@ -542,7 +542,7 @@ TOKEN=$(bella issue --scope stripe)         # capture token
 
 ### When your tenant requires registered devices
 
-If ZKE enforcement is on, a token has to say **which machine** will use it, or the reads it was issued
+If your organisation requires registered devices, a token has to say **which machine** will use it, or the reads it was issued
 for are refused. Give the machine a keypair and hand `bella issue` the **public** half:
 
 ```sh
@@ -571,7 +571,7 @@ Two things that surprise people, both intentional:
   deliberately no way to bootstrap from an unregistered machine — that exemption would be a hole in the
   control this feature exists to satisfy.
 
-Without enforcement, none of the above applies and `bella issue --scope …` behaves exactly as before.
+If your organisation does not require registered devices, none of the above applies and `bella issue --scope …` behaves exactly as before.
 
 A scoped token only reads secrets **tagged with one of its scopes**, so the tags have to exist first.
 Tag them as you write them:

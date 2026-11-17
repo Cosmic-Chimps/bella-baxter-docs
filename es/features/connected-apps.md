@@ -196,7 +196,7 @@ La concesión pertenece a la sesión de inicio de sesión que hizo la configurac
 
 ## Rechazos
 
-- **`403` `connected-app-grant-refused`.** Todos los rechazos son la misma respuesta, con el mismo estado, las mismas cabeceras y el mismo cuerpo. Ocurre cuando la conexión se revocó, caducó o nunca existió. También ocurre cuando la aplicación está suspendida, la persona que la conectó fue eliminada de la organización o está suspendida, la persona ya no puede leer el entorno, el entorno ya no existe, la organización desactivó las aplicaciones conectadas, o la organización exige cifrado de conocimiento cero. La aplicación no puede saber cuál fue, por diseño, así que no sirve para averiguar cosas de la organización. Trátalo como "pide a la persona que se conecte de nuevo". No reintentes en bucle.
+- **`403` `connected-app-grant-refused`.** Todos los rechazos son la misma respuesta, con el mismo estado, las mismas cabeceras y el mismo cuerpo. Ocurre cuando la conexión se revocó, caducó o nunca existió. También ocurre cuando la aplicación está suspendida, la persona que la conectó fue eliminada de la organización o está suspendida, la persona ya no puede leer el entorno, el entorno ya no existe, la organización desactivó las aplicaciones conectadas, o la organización exige dispositivos registrados. La aplicación no puede saber cuál fue, por diseño, así que no sirve para averiguar cosas de la organización. Trátalo como "pide a la persona que se conecte de nuevo". No reintentes en bucle.
 - **`503` `connected-app-unavailable`.** Bella no pudo decidir en este momento. No se concedió nada. Inténtalo más tarde.
 - **`429` `monthly-quota-exceeded`.** Tu organización superó su cuota de API. Consulta [Quién paga](#quien-paga).
 - **`400` `connected-app-redirect-invalid`.** La dirección de redirección de la petición de configuración no es una de tus direcciones registradas.
@@ -218,7 +218,7 @@ Cada lectura aparece en el log de auditoría de la organización que concedió e
 
 ## Para organizaciones
 
-Un propietario o administrador puede desactivar las aplicaciones conectadas para la organización. Mientras estén desactivadas, nadie puede conectar una aplicación y se rechazan todas las conexiones existentes. Una organización que exige cifrado de conocimiento cero no puede aceptar aplicaciones conectadas. Consulta [Gestionar aplicaciones conectadas](/es/features/connected-apps-manage).
+Un propietario o administrador puede desactivar las aplicaciones conectadas para la organización. Mientras estén desactivadas, nadie puede conectar una aplicación y se rechazan todas las conexiones existentes. Una organización que exige dispositivos registrados no puede aceptar aplicaciones conectadas. Consulta [Gestionar aplicaciones conectadas](/es/features/connected-apps-manage).
 
 ## Véase también
 

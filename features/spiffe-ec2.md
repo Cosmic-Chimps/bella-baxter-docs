@@ -82,9 +82,9 @@ After a release, the next valid document for that instance binds afresh, to whic
 - **First use wins.** Someone who holds both an instance's document and the environment's bootstrap token can claim an instance that has **never** attested. The genuine agent is then refused, and the unexpected binding shows in the listing. Release it, and rotate the bootstrap token.
 - **The machine itself.** Anyone who can read the agent's state directory on the instance can present its credential. Protect the instance the way you protect any credential on it.
 
-## SPIFFE and zero-knowledge encryption
+## SPIFFE and registered devices
 
-In a tenant that [enforces zero-knowledge encryption](/features/e2ee-zke#zke-enforcement), a workload that signs in with an SVID gets a lease that can read **metadata and hashes**, and **cannot read secret values**. This is intended.
+In a tenant that [requires registered devices](/features/e2ee-zke#zke-enforcement), a workload that signs in with an SVID gets a lease that can read **metadata and hashes**, and **cannot read secret values**. This is intended.
 
 **What works**
 
@@ -96,8 +96,8 @@ In a tenant that [enforces zero-knowledge encryption](/features/e2ee-zke#zke-enf
 
 - Reading a secret value, or anything that returns one. The request is refused with `403` and the problem code `zke-required`. For a SPIFFE lease the message says the lease can read metadata and hashes but not values; it does not ask you to run `bella auth setup`, because a workload cannot.
 
-**Why.** Enforcement releases a value only to a caller whose device key is registered. A lease is minted from an SVID and records no device key, so there is no key for Bella to release a value to.
+**Why.** When registered devices are required, Bella releases a value only to a caller whose device key is registered. A lease is minted from an SVID and records no device key, so there is no key for Bella to release a value to.
 
-**What to use instead.** A workload that needs values should use a credential that carries a registered device key: an [API key](/features/api-keys) created under enforcement together with its public key, or a [keyless](/features/keyless#_3-tenants-that-require-registered-devices) sign-in, which binds a device key to the key it issues.
+**What to use instead.** A workload that needs values should use a credential that carries a registered device key: an [API key](/features/api-keys) created while registered devices are required, together with its public key, or a [keyless](/features/keyless#_3-tenants-that-require-registered-devices) sign-in, which binds a device key to the key it issues.
 
-The environment's **Workload Identities** tab in the console shows the same notice when the tenant enforces ZKE.
+The environment's **Workload Identities** tab in the console shows the same notice when the tenant requires registered devices.

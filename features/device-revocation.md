@@ -116,5 +116,5 @@ revoked device is not an error.
 
 ## See also
 
-- [Zero-Knowledge Encryption](/features/e2ee-zke)
+- [Device-bound encryption](/features/e2ee-zke)
 - [Projects](/features/projects)

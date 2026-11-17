@@ -88,9 +88,9 @@ r.GET("/health", func(c *gin.Context) {
 
 → [Full Gin sample](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/go/samples/04-gin)
 
-## Zero-Knowledge Encryption (ZKE)
+## Device-bound encryption
 
-With ZKE the app presents a **persistent device key**. The server audits which host fetched each secret, and under ZKE enforcement the key is what lets the app read at all: a secrets request that presents no registered key is refused with a 403. The SDK passes the wrapped DEK it receives to your `OnWrappedDEK` callback, so you can cache it.
+With device-bound encryption the app presents a **persistent device key**. The server audits which host fetched each secret, and when the organisation requires registered devices the key is what lets the app read at all: a secrets request that presents no registered key is refused with a 403. The SDK passes the wrapped DEK it receives to your `OnWrappedDEK` callback, so you can cache it.
 
 Supplying the key is all it takes. The client then presents it as `X-E2E-Public-Key` on every secrets request and decrypts the response with it. You do **not** need `EnableE2EE`; that option is only for end-to-end encryption *without* a device key, using an ephemeral key per client.
 
@@ -125,7 +125,7 @@ client, err := bellabaxter.New(bellabaxter.Options{
 ```
 
 - **A key that is set but unreadable is an error.** `New` returns one naming `BELLA_BAXTER_PRIVATE_KEY` (or `Options.PrivateKeyPEM`) and never continues with a throwaway key in its place.
-- **Opting out:** `DisableE2EE: true` keeps the key off the wire. `New` logs one warning through the standard `log` package when a key is supplied anyway, because under enforcement every read will then be refused. Setting both `EnableE2EE` and `DisableE2EE` is an error.
+- **Opting out:** `DisableE2EE: true` keeps the key off the wire. `New` logs one warning through the standard `log` package when a key is supplied anyway, because when the organisation requires registered devices every read will then be refused. Setting both `EnableE2EE` and `DisableE2EE` is an error.
 - **No key:** the SDK behaves as before. Secrets responses are plaintext over TLS unless you set `EnableE2EE: true`, which uses an ephemeral key per client.
 
 ## Typed Secrets

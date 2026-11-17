@@ -79,9 +79,9 @@ Secrets are loaded into `$_ENV` and `putenv()` by a `KernelEvents::REQUEST` even
 
 → [Full Symfony sample](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/php/samples/04-symfony)
 
-## Zero-Knowledge Encryption (ZKE)
+## Device-bound encryption
 
-By default the SDK generates an ephemeral P-256 keypair (ephemeral E2EE). With ZKE the app presents a **persistent device key**. The server audits which host fetched each secret. The SDK passes the wrapped DEK it receives to your `onWrappedDekReceived` callback, so you can cache it.
+By default the SDK generates an ephemeral P-256 keypair (ephemeral E2EE). With device-bound encryption the app presents a **persistent device key**. The server audits which host fetched each secret. The SDK passes the wrapped DEK it receives to your `onWrappedDekReceived` callback, so you can cache it.
 
 **Create a device key once, on each machine:**
 

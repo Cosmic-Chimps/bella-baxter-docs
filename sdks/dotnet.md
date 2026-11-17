@@ -98,9 +98,9 @@ var api = builder.AddProject<Projects.MyApi>("api")
 
 → [Full self-hosted Aspire sample](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dotnet/samples/05-aspire-selfhosted)
 
-## Zero-Knowledge Encryption (ZKE)
+## Device-bound encryption
 
-By default each poll generates a fresh P-256 keypair (ephemeral E2EE). With ZKE the app presents a **persistent device key**, so the server can audit which host fetched secrets. The SDK keeps the wrapped DEK lease it receives in memory. It does not persist it.
+By default each poll generates a fresh P-256 keypair (ephemeral E2EE). With device-bound encryption the app presents a **persistent device key**, so the server can audit which host fetched secrets. The SDK keeps the wrapped DEK lease it receives in memory. It does not persist it.
 
 **Create a device key once, on each machine:**
 
@@ -127,7 +127,7 @@ builder.Configuration.AddBellaSecrets(o =>
     o.ApiKey          = builder.Configuration["BELLA_BAXTER_API_KEY"]!;
     o.ProjectSlug     = "my-project";
     o.EnvironmentSlug = "production";
-    // Optional — use persistent ZKE key instead of ephemeral E2EE
+    // Optional — use a persistent device key instead of ephemeral E2EE
     o.PrivateKey      = builder.Configuration["BELLA_BAXTER_PRIVATE_KEY"];
 });
 ```
@@ -153,7 +153,7 @@ Generates a strongly-typed `AppSecrets` record. Full IDE autocomplete, no magic 
 | `EnvironmentSlug` | — | Environment slug |
 | `PollingInterval` | `60s` | How often to reload secrets |
 | `FallbackOnError` | `true` | Serve cached values on transient errors |
-| `PrivateKey` | `null` | PKCS#8 PEM for ZKE; `null` = ephemeral E2EE |
+| `PrivateKey` | `null` | PKCS#8 PEM device key; `null` = ephemeral E2EE |
 | `AppClient` | `null` | Sent as `X-App-Client` header for audit logs |
 
 ## All Samples

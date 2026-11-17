@@ -128,5 +128,5 @@ ya revocado no es un error.
 
 ## Véase también
 
-- [Cifrado de conocimiento cero](/features/e2ee-zke)
+- [Cifrado ligado al dispositivo](/features/e2ee-zke)
 - [Proyectos](/es/features/projects)

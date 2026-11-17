@@ -194,7 +194,7 @@ The grant belongs to the sign-in session that ran the setup. If you sign the per
 
 ## Refusals
 
-- **`403` `connected-app-grant-refused`.** Every refusal is the same answer, with the same status, headers and body. It happens when the connection was revoked, expired or never existed. It also happens when the app is suspended, the person who connected it was removed from the organisation or is suspended, the person can no longer read the environment, the environment is gone, the organisation turned connected apps off, or the organisation enforces zero-knowledge encryption. The app cannot tell which, by design, so it cannot be used to learn about the organisation. Treat it as "ask the person to connect again". Do not retry in a loop.
+- **`403` `connected-app-grant-refused`.** Every refusal is the same answer, with the same status, headers and body. It happens when the connection was revoked, expired or never existed. It also happens when the app is suspended, the person who connected it was removed from the organisation or is suspended, the person can no longer read the environment, the environment is gone, the organisation turned connected apps off, or the organisation requires registered devices. The app cannot tell which, by design, so it cannot be used to learn about the organisation. Treat it as "ask the person to connect again". Do not retry in a loop.
 - **`503` `connected-app-unavailable`.** Bella could not decide right now. Nothing was granted. Try again later.
 - **`429` `monthly-quota-exceeded`.** Your organisation is over its API quota. See [Who pays](#who-pays).
 - **`400` `connected-app-redirect-invalid`.** The redirect address on the setup request is not one of your registered addresses.
@@ -216,7 +216,7 @@ Every read appears in the audit log of the organisation that granted access, wit
 
 ## For organisations
 
-An Owner or Admin can switch connected apps off for the organisation. While it is off, nobody can connect an app, and every existing connection is refused. An organisation that enforces zero-knowledge encryption cannot take connected apps at all. See [Manage connected apps](/features/connected-apps-manage).
+An Owner or Admin can switch connected apps off for the organisation. While it is off, nobody can connect an app, and every existing connection is refused. An organisation that requires registered devices cannot take connected apps at all. See [Manage connected apps](/features/connected-apps-manage).
 
 ## See also
 

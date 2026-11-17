@@ -45,7 +45,7 @@ Si tries **Rebutja**, o tanques la pàgina, no es comparteix res. Després Bella
 Una organització pot aparèixer atenuada, amb un motiu. No la pots triar. Els motius són:
 
 - **Les aplicacions connectades estan desactivades.** Un propietari o administrador ha desactivat les aplicacions connectades en aquella organització.
-- **S'exigeix xifratge de coneixement zero.** L'organització exigeix xifratge de coneixement zero, de manera que les aplicacions no en poden llegir els secrets.
+- **S'exigeixen dispositius registrats.** L'organització exigeix dispositius registrats i una aplicació connectada no en té cap, de manera que les aplicacions no en poden llegir els secrets.
 - **L'organització no està activa.**
 
 Si cap organització no està disponible, o cap no té un entorn que puguis llegir, la pàgina diu que no hi ha cap entorn que puguis compartir. Des d'aquesta pàgina no es pot connectar res.
@@ -75,7 +75,7 @@ Una connexió té un de tres estats:
 - **Activa.** L'aplicació pot llegir ara.
 - **Aturada.** La connexió existeix, però Bella rebutja per ara les lectures de l'aplicació. La fila diu per què. Una connexió aturada pot tornar a atendre lectures quan acabi la seva causa. Els motius són:
   - L'operador de la plataforma ha suspès l'aplicació.
-  - L'organització ara exigeix xifratge de coneixement zero.
+  - L'organització ara exigeix dispositius registrats.
   - Les aplicacions connectades estan desactivades a l'organització.
   - La persona que l'ha connectada està suspesa.
   - La connexió ha vençut.
@@ -106,9 +106,9 @@ Sota l'interruptor, la pestanya llista totes les connexions que han fet els memb
 - **Un membre és eliminat, o se'n va de l'organització.** Bella revoca totes les connexions que ha fet aquest membre.
 - **Un membre és suspès.** Bella rebutja les lectures per les seves connexions mentre duri la suspensió. Les connexions apareixen com a **Aturada**, amb el motiu "La persona que l'ha connectada està suspesa". No es revoca res, així que les connexions tornen a funcionar quan es restaura el membre.
 
-## Xifratge de coneixement zero
+## Organitzacions que exigeixen dispositius registrats
 
-Una organització que exigeix xifratge de coneixement zero no pot acceptar aplicacions connectades. Una aplicació connectada no té dispositiu registrat, així que no pot llegir secrets que només pot llegir un dispositiu registrat. Els membres no poden connectar una aplicació a aquella organització, i les seves connexions existents apareixen com a **Aturada**.
+Una organització que exigeix dispositius registrats no pot acceptar aplicacions connectades. Una aplicació connectada no té dispositiu registrat, així que no pot llegir secrets que només pot llegir un dispositiu registrat. Els membres no poden connectar una aplicació a aquella organització, i les seves connexions existents apareixen com a **Aturada**.
 
 ## Qui paga
 

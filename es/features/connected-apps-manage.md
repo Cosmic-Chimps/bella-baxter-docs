@@ -45,7 +45,7 @@ Si eliges **Rechazar**, o cierras la página, no se comparte nada. Después Bell
 Una organización puede aparecer atenuada, con un motivo. No puedes elegirla. Los motivos son:
 
 - **Las aplicaciones conectadas están desactivadas.** Un propietario o administrador desactivó las aplicaciones conectadas en esa organización.
-- **Se exige cifrado de conocimiento cero.** La organización exige cifrado de conocimiento cero, así que las aplicaciones no pueden leer sus secretos.
+- **Se exigen dispositivos registrados.** La organización exige dispositivos registrados y una aplicación conectada no tiene ninguno, así que las aplicaciones no pueden leer sus secretos.
 - **La organización no está activa.**
 
 Si ninguna organización está disponible, o ninguna tiene un entorno que puedas leer, la página dice que no hay ningún entorno que puedas compartir. Desde esa página no se puede conectar nada.
@@ -75,7 +75,7 @@ Una conexión tiene uno de tres estados:
 - **Activa.** La aplicación puede leer ahora.
 - **Detenida.** La conexión existe, pero Bella rechaza por ahora las lecturas de la aplicación. La fila dice por qué. Una conexión detenida puede volver a atender lecturas cuando termine su causa. Los motivos son:
   - El operador de la plataforma suspendió la aplicación.
-  - La organización ahora exige cifrado de conocimiento cero.
+  - La organización ahora exige dispositivos registrados.
   - Las aplicaciones conectadas están desactivadas en la organización.
   - La persona que la conectó está suspendida.
   - La conexión venció.
@@ -106,9 +106,9 @@ Debajo del interruptor, la pestaña lista todas las conexiones que hicieron los 
 - **Un miembro es eliminado, o se va de la organización.** Bella revoca todas las conexiones que hizo ese miembro.
 - **Un miembro es suspendido.** Bella rechaza las lecturas por sus conexiones mientras dure la suspensión. Las conexiones aparecen como **Detenida**, con el motivo "La persona que la conectó está suspendida". No se revoca nada, así que las conexiones vuelven a funcionar cuando se restaura al miembro.
 
-## Cifrado de conocimiento cero
+## Organizaciones que exigen dispositivos registrados
 
-Una organización que exige cifrado de conocimiento cero no puede aceptar aplicaciones conectadas. Una aplicación conectada no tiene dispositivo registrado, así que no puede leer secretos que solo puede leer un dispositivo registrado. Los miembros no pueden conectar una aplicación a esa organización, y sus conexiones existentes aparecen como **Detenida**.
+Una organización que exige dispositivos registrados no puede aceptar aplicaciones conectadas. Una aplicación conectada no tiene dispositivo registrado, así que no puede leer secretos que solo puede leer un dispositivo registrado. Los miembros no pueden conectar una aplicación a esa organización, y sus conexiones existentes aparecen como **Detenida**.
 
 ## Quién paga
 

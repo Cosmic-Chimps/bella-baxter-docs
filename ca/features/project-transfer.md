@@ -299,9 +299,9 @@ Fes això en ordre:
 6. **Torna a configurar el que has tret:** claus TOTP, destinacions de desplegament de certificats, delegacions DNS i àmbits d'escaneig de Scout.
 7. **Comprova una lectura.** Llegeix un secret amb una clau nova per confirmar que els serveis funcionen.
 
-## Xifratge de coneixement zero
+## Organitzacions que exigeixen dispositius registrats
 
-Pots transferir un projecte tant si alguna de les dues organitzacions exigeix el xifratge de coneixement zero com si no. Les rutes de la transferència no demanen un dispositiu registrat. Bella obre els valors al servidor i els xifra de nou per a la destinació. Mai no et retorna un valor ni una clau durant una transferència.
+Pots transferir un projecte tant si alguna de les dues organitzacions exigeix dispositius registrats com si no. Les rutes de la transferència no demanen un dispositiu registrat. Bella obre els valors al servidor i els xifra de nou per a la destinació. Mai no et retorna un valor ni una clau durant una transferència.
 
 Es rebutja un cas: el projecte d'origen està xifrat amb una clau d'organització i la destinació no té clau d'organització. El propietari de la destinació configura primer les claus de xifratge de l'organització. La còpia es xifra llavors amb una clau nova a la destinació.
 

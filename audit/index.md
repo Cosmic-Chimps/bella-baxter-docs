@@ -145,7 +145,7 @@ The audit log supports common compliance requirements:
 - **HIPAA** — audit controls for covered entities
 - **GDPR** — data access trail for subject access requests
 
-Audit log streaming to SIEM systems (Splunk, Datadog, Azure Monitor) is an Enterprise feature.
+Audit log streaming to SIEM systems (Splunk, Datadog, Azure Monitor) is a paid module. It can be added to any plan, at extra cost. To add it, contact us: [enterprise@cosmic-chimps.io](mailto:enterprise@cosmic-chimps.io). A platform operator then switches it on for your organisation.
 
 ### What a SIEM receives, and what CEF cannot carry
 

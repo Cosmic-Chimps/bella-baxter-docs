@@ -165,9 +165,9 @@ fastify.get('/db', (req, reply) => reply.send({ url: fastify.bella.get('DATABASE
 
 → [Full Fastify sample](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/js/samples/06-fastify)
 
-## Zero-Knowledge Encryption (ZKE)
+## Device-bound encryption
 
-By default the SDK generates a fresh P-256 keypair each time the client starts (ephemeral E2EE over TLS). With ZKE the app presents a **persistent device key**, so the server can audit _which device_ fetched each secret. The SDK passes the wrapped DEK it receives to your `onWrappedDekReceived` callback, so you can cache it.
+By default the SDK generates a fresh P-256 keypair each time the client starts (ephemeral E2EE over TLS). With device-bound encryption the app presents a **persistent device key**, so the server can audit _which device_ fetched each secret. The SDK passes the wrapped DEK it receives to your `onWrappedDekReceived` callback, so you can cache it.
 
 **Create a device key once, on each machine:**
 

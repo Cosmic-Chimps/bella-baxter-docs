@@ -34,10 +34,14 @@ There is no license key. Enterprise is a plan on the same API: it is not sold th
 
 | Feature | Rationale | Status |
 |---------|-----------|--------|
-| **Audit log streaming / SIEM export** | Compliance requirement at company scale (SOC2, ISO27001). The in-app audit log viewer stays free. Streaming to Splunk/Datadog/Azure Monitor is enterprise. | Available on the Enterprise plan (contact us) |
 | **Advanced RBAC** | Fine-grained permission control beyond the built-in project and environment roles. Only needed at large-team governance scale. | Contact us for availability |
 
-Single sign-on (SAML or OIDC) is not an Enterprise feature. Every plan includes it. An organisation requests it, and a platform operator approves the request. See [Single sign-on](/features/sso).
+Two features are not limited to the Enterprise plan. Every plan can add them, at extra cost:
+
+- **Single sign-on (SAML or OIDC).** An organisation requests it, and a platform operator approves the request. See [Single sign-on](/features/sso).
+- **Audit log streaming to a SIEM** (Splunk, Datadog, Azure Monitor). The audit log viewer in the console stays free. A platform operator switches streaming on for the organisation. See [Audit Logs](/audit/).
+
+To add either one, [contact us](#getting-enterprise).
 
 Running more than one organisation on one instance is not an Enterprise feature. Any signed-in person can create another organisation today.
 

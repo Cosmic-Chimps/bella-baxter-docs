@@ -196,7 +196,7 @@ La concessió pertany a la sessió d'inici de sessió que ha fet la configuraci�
 
 ## Rebuigs
 
-- **`403` `connected-app-grant-refused`.** Tots els rebuigs són la mateixa resposta, amb el mateix estat, les mateixes capçaleres i el mateix cos. Passa quan la connexió s'ha revocat, ha caducat o no ha existit mai. També passa quan l'aplicació està suspesa, la persona que l'ha connectada ha estat eliminada de l'organització o està suspesa, la persona ja no pot llegir l'entorn, l'entorn ja no existeix, l'organització ha desactivat les aplicacions connectades, o l'organització exigeix xifratge de coneixement zero. L'aplicació no pot saber quina ha estat, per disseny, així que no serveix per esbrinar coses de l'organització. Tracta-ho com "demana a la persona que es connecti de nou". No tornis a provar en bucle.
+- **`403` `connected-app-grant-refused`.** Tots els rebuigs són la mateixa resposta, amb el mateix estat, les mateixes capçaleres i el mateix cos. Passa quan la connexió s'ha revocat, ha caducat o no ha existit mai. També passa quan l'aplicació està suspesa, la persona que l'ha connectada ha estat eliminada de l'organització o està suspesa, la persona ja no pot llegir l'entorn, l'entorn ja no existeix, l'organització ha desactivat les aplicacions connectades, o l'organització exigeix dispositius registrats. L'aplicació no pot saber quina ha estat, per disseny, així que no serveix per esbrinar coses de l'organització. Tracta-ho com "demana a la persona que es connecti de nou". No tornis a provar en bucle.
 - **`503` `connected-app-unavailable`.** Bella no ha pogut decidir en aquest moment. No s'ha concedit res. Torna-ho a provar més tard.
 - **`429` `monthly-quota-exceeded`.** La teva organització ha superat la seva quota d'API. Consulta [Qui paga](#qui-paga).
 - **`400` `connected-app-redirect-invalid`.** L'adreça de redirecció de la petició de configuració no és una de les teves adreces registrades.
@@ -218,7 +218,7 @@ Cada lectura apareix al log d'auditoria de l'organització que ha concedit l'acc
 
 ## Per a organitzacions
 
-Un propietari o administrador pot desactivar les aplicacions connectades per a l'organització. Mentre estiguin desactivades, ningú no pot connectar una aplicació i es rebutgen totes les connexions existents. Una organització que exigeix xifratge de coneixement zero no pot acceptar aplicacions connectades. Consulta [Gestiona les aplicacions connectades](/ca/features/connected-apps-manage).
+Un propietari o administrador pot desactivar les aplicacions connectades per a l'organització. Mentre estiguin desactivades, ningú no pot connectar una aplicació i es rebutgen totes les connexions existents. Una organització que exigeix dispositius registrats no pot acceptar aplicacions connectades. Consulta [Gestiona les aplicacions connectades](/ca/features/connected-apps-manage).
 
 ## Vegeu també
 

@@ -87,9 +87,9 @@ await io.serve(handler, 'localhost', 8080);
 
 → [Full Shelf sample](https://github.com/cosmic-chimps/bella-baxter/tree/main/apps/sdk/dart/example/04-dart-shelf)
 
-## Zero-Knowledge Encryption (ZKE)
+## Device-bound encryption
 
-By default the SDK generates a fresh P-256 keypair per client (ephemeral E2EE). With ZKE the app presents a **persistent device key**. The server audits which host fetched each secret. The SDK passes the wrapped DEK it receives to your `onWrappedDekReceived` callback, so you can cache it.
+By default the SDK generates a fresh P-256 keypair per client (ephemeral E2EE). With device-bound encryption the app presents a **persistent device key**. The server audits which host fetched each secret. The SDK passes the wrapped DEK it receives to your `onWrappedDekReceived` callback, so you can cache it.
 
 **Create a device key once, on each machine:**
 
@@ -139,7 +139,7 @@ If `privateKey` is null the SDK uses ephemeral E2EE.
 | `connectTimeout` | `10s` | HTTP connection timeout |
 | `receiveTimeout` | `30s` | HTTP receive timeout |
 | `cache` | `null` | Optional `SecretCache` for offline-first fallback |
-| `privateKey` | `null` | PKCS#8 DER bytes for ZKE; `null` = ephemeral E2EE |
+| `privateKey` | `null` | PKCS#8 DER bytes for the device key; `null` = ephemeral E2EE |
 
 ## Typed Secrets
 

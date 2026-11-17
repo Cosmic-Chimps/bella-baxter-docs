@@ -1,10 +1,10 @@
 # Single Sign-On
 
-The Owner of an organisation whose plan includes single sign-on can connect the organisation's own identity provider, over OIDC or SAML, so the team signs in with it. Every current plan includes it. This page covers what Bella does when you connect one, what each message means, and what to do about it.
+The Owner of an organisation that has single sign-on can connect the organisation's own identity provider, over OIDC or SAML, so the team signs in with it. It can be added to any plan, at extra cost. This page covers what Bella does when you connect one, what each message means, and what to do about it.
 
 ## Before you start
 
-- Your organisation's plan includes single sign-on. Every current plan does.
+- Your organisation has single sign-on. It can be added to any plan, at extra cost. To add it, contact us: [enterprise@cosmic-chimps.io](mailto:enterprise@cosmic-chimps.io).
 - You are the Owner of the organisation. An Admin can request SSO access, but only the Owner can connect, update, enforce or remove the connection.
 - Your SSO access is approved. Request it from **Single Sign-On (SSO)**, under **Administration** in the console menu. An Owner or an Admin can send the request. A platform administrator decides it, and a rejected request can be made again.
 - SSO is offered by default. The operator of your installation can switch it off. If a request or an approval is refused with `sso-not-offered`, SSO has been switched off for your installation, so ask your operator.

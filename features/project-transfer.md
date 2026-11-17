@@ -297,9 +297,9 @@ Do these in order:
 6. **Set up again what you removed:** TOTP keys, certificate deployment targets, DNS delegations and Scout scan scopes.
 7. **Check a read.** Read one secret with a new key to confirm the services work.
 
-## Zero-knowledge encryption
+## Organisations that require registered devices
 
-You can transfer a project whether or not either organisation enforces zero-knowledge encryption. The transfer routes do not ask for a registered device. Bella opens the values on the server and encrypts them again for the target. It never returns a value or a key to you during a transfer.
+You can transfer a project whether or not either organisation requires registered devices. The transfer routes do not ask for a registered device. Bella opens the values on the server and encrypts them again for the target. It never returns a value or a key to you during a transfer.
 
 One case is refused: the source project is encrypted with an organisation key, and the target has no organisation key. The target's Owner sets up the organisation's encryption keys first. The copy is then encrypted with a new key in the target.
 
