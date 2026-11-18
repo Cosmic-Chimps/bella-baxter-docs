@@ -21,7 +21,9 @@ const enNav = [
       { text: 'TOTP', link: '/features/totp' },
       { text: 'Keyless / Workload Identity', link: '/features/keyless' },
       { text: 'Secret Leases', link: '/features/secret-leases' },
-      { text: 'Dynamic Secrets', link: '/features/dynamic-secrets' },
+      { text: 'Secrets at Runtime', link: '/features/dynamic-secrets' },
+
+      { text: 'Dynamic Database Credentials', link: '/features/dynamic-database-credentials' },
       { text: 'Secure Shares', link: '/features/secure-shares' },
       { text: 'Connect with Bella Baxter', link: '/features/connected-apps' },
       { text: 'Manage connected apps', link: '/features/connected-apps-manage' },
@@ -109,7 +111,9 @@ const enSidebar = {
         { text: 'Workload Identity on EC2', link: '/features/spiffe-ec2' },
         { text: 'Workload Identity on Nomad', link: '/features/spiffe-nomad' },
         { text: 'Secret Leases', link: '/features/secret-leases' },
-        { text: 'Dynamic Secrets', link: '/features/dynamic-secrets' },
+        { text: 'Secrets at Runtime', link: '/features/dynamic-secrets' },
+
+        { text: 'Dynamic Database Credentials', link: '/features/dynamic-database-credentials' },
         { text: 'Secure Shares', link: '/features/secure-shares' },
         { text: 'Connect with Bella Baxter', link: '/features/connected-apps' },
         { text: 'Manage connected apps', link: '/features/connected-apps-manage' },

@@ -1,6 +1,10 @@
-# Dynamic Secrets
+# Secrets at Runtime
 
-Dynamic secrets are secrets that are fetched **at runtime** by your application (not written to a `.env` file at startup). They update automatically when they change in the provider.
+::: tip
+Looking for dynamic secrets (short-lived database credentials)? See [Dynamic database credentials](/features/dynamic-database-credentials).
+:::
+
+This page is about fetching secrets **at runtime** in your application, instead of writing them to a `.env` file at startup. The secrets keep their value; your application sees a new value when it changes in the provider.
 
 ## The Three Approaches
 
@@ -130,77 +134,4 @@ The agent sidecar uses a lightweight endpoint, `GET /api/v1/projects/{projectRef
 
 ## Database Credentials {#database-credentials}
 
-> **VaultDatabase provider** — generate ephemeral database credentials via OpenBao's Database secrets engine.
-
-`VaultDatabase` providers work differently from other provider types. Instead of storing static
-secrets, they **generate short-lived database usernames and passwords** on demand. Credentials
-expire automatically at the end of the lease — no manual revocation required.
-
-### Prerequisites
-
-1. A `VaultDatabase` provider configured in Bella (see [VaultDatabase configuration](/features/providers#vaultdatabase-dynamic-credentials-configuration))
-2. The provider assigned to your environment (Environment → Providers tab)
-3. OpenBao Database secrets engine enabled with at least one role
-
-### Generate credentials via WebApp
-
-Navigate to **Environment → Dynamic Credentials**. Bella shows all `VaultDatabase` providers
-assigned to the environment. Select a role, optionally set a TTL, and click **Generate Credentials**.
-
-The UI displays:
-- `DATABASE_URL` (if `connection_url_template` is configured) — with copy button and masked reveal
-- `username` and `password` — individual copy buttons
-- Live TTL countdown (green → amber → red as expiry approaches)
-- Lease ID for manual revocation if needed
-
-### Generate credentials via API
-
-```http
-POST /api/v1/projects/{projectRef}/environments/{envSlug}/providers/{providerSlug}/credentials/generate
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "role": "app-readwrite",
-  "ttlSeconds": 3600
-}
-```
-
-```json
-{
-  "username": "v-approle-app-readwri-XXXXXX",
-  "password": "A1B2-C3D4-E5F6",
-  "expiresAt": "2026-03-17T17:00:00Z",
-  "leaseDurationSeconds": 3600,
-  "leaseId": "database/creds/app-readwrite/XXXX",
-  "connectionUrl": "postgres://v-approle-app-readwri-XXXXXX:A1B2-C3D4-E5F6@db:5432/myapp"
-}
-```
-
-Leave `role` null to use the provider's `default_role`.
-
-### List available roles
-
-```http
-GET /api/v1/projects/{projectRef}/environments/{envSlug}/providers/{providerSlug}/credentials/roles
-```
-
-Returns the list of role names configured in OpenBao's database engine mount.
-
-### Using the credentials in your app
-
-Dynamic credentials are generated through the API (the `credentials/generate` endpoint above). Your SDK or your application calls it and uses the returned `username` and `password` until the lease expires.
-
-`bella sdk run` does not generate dynamic credentials. It starts your process with the connection details the SDK needs to authenticate, and makes no secrets API calls itself. See the [CLI reference](/cli/).
-
-### Security characteristics
-
-| Property | Value |
-|----------|-------|
-| Credentials stored by Bella | ❌ Never |
-| Credentials stored in `.env` | ❌ Only if you write them there |
-| Rotation on each call | ✅ Always — every call is a new user |
-| Revocation on expiry | ✅ Automatic (by OpenBao) |
-| Audit trail | ✅ Access log entry per generation |
-| Security scan | ✅ Skipped — ephemeral creds are not flagged |
-
+Short-lived database credentials have their own page: [Dynamic database credentials](/features/dynamic-database-credentials).

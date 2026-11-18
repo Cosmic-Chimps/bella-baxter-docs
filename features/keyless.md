@@ -109,7 +109,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v6
-      - uses: cosmic-chimps/bella-baxter-setup-action@v0.1.1-preview.147
+      - uses: cosmic-chimps/bella-baxter-setup-action@v0
         with:
           oidc: 'true'
           tenant: my-org          # slugs of the environment the trust domain belongs to

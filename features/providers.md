@@ -229,7 +229,7 @@ path "database/roles/*" {
 }
 ```
 
-See [Dynamic Database Credentials](/features/dynamic-secrets#database-credentials) for usage.
+See [Dynamic database credentials](/features/dynamic-database-credentials) for usage.
 
 ## HttpRest — Custom HTTP Provider
 
