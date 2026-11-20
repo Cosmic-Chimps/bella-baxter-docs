@@ -64,6 +64,28 @@ When the wizard finishes:
 
 and open `https://<your-ip>`.
 
+### Air-gapped installation
+
+A host with no route to a registry installs from files. Each release carries its images as
+one signed archive, `bella-selfhosted-<version>-images.tar`. Carry these across to the host:
+the bundle (`bella-selfhosted-<version>.tar.gz` and its `.sigstore.json`), the images
+archive, its `.sha256` and the two `.sigstore.json` files beside them, and Bella's public
+key (`cosign.pub`). Then, from the unpacked bundle folder:
+
+```sh
+./bella.sh load-images ../bella-selfhosted-<version>-images.tar
+./bella.sh up
+```
+
+`load-images` checks the archive's signature, then every image inside it, with no network. It
+loads the images into Docker and points `.env` at them by content digest. To upgrade,
+load the next release's archive the same way.
+
+Things to know: the archive is linux/amd64 only and about 1.7 GB for v1.1.4; mirroring the
+images into your own registry is not supported yet, because the signatures do not travel with
+`cosign load`; and Docker's containerd image store is untested. The exact commands and
+checks are in the bundle's `INSTALL.md`, section "Air-gapped install".
+
 ### After a reboot
 
 The seal vault re-seals on every host reboot by design. Open the wizard URL,

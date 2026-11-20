@@ -60,6 +60,30 @@ Quan l'assistent acabi:
 
 i obre `https://<la-teva-ip>`.
 
+### Instal·lació aïllada (air-gapped)
+
+Un host sense accés a un registre s'instal·la a partir de fitxers. Cada versió inclou les
+seves imatges en un únic arxiu signat, `bella-selfhosted-<version>-images.tar`. Porta
+aquests fitxers al host: el bundle (`bella-selfhosted-<version>.tar.gz` i el seu
+`.sigstore.json`), l'arxiu d'imatges, el seu `.sha256` i els dos `.sigstore.json` que
+l'acompanyen, i la clau pública de Bella (`cosign.pub`). Després, des de la carpeta del
+bundle ja descomprimit:
+
+```sh
+./bella.sh load-images ../bella-selfhosted-<version>-images.tar
+./bella.sh up
+```
+
+`load-images` comprova la signatura de l'arxiu i després la de cada imatge que conté, sense
+xarxa. Carrega les imatges a Docker i apunta `.env` cap a elles pel seu digest de contingut.
+Per actualitzar, carrega l'arxiu de la versió següent de la mateixa manera.
+
+Convé saber que l'arxiu és només linux/amd64 i pesa uns 1.7 GB a la v1.1.4; que encara no es
+poden replicar les imatges al teu propi registre, perquè les signatures no viatgen amb
+`cosign load`; i que l'emmagatzematge d'imatges containerd de Docker no està provat. Les
+ordres exactes i les comprovacions són a l'`INSTALL.md` del bundle, secció
+"Air-gapped install".
+
 ### Després d'un reinici del host
 
 El vault de segellat es torna a segellar a cada reinici, per disseny. Obre la

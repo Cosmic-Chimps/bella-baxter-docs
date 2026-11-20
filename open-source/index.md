@@ -107,4 +107,10 @@ This prevents cloud providers from wrapping Bella Baxter as a competing service 
 
 The Elastic License covers the Bella Baxter server: the product you self-host, and the one Cosmic Chimps runs as the cloud service.
 
-The client libraries are released under the **MIT License**. That covers the SDKs for every language, the `bella` CLI, the Terraform provider, the Ansible collection and the GitHub setup action. You can use them in your own software, open or closed, without restriction. Each one carries its own `LICENSE` file.
+The client libraries are released under the **MIT License**. That covers the SDKs for every language, the shared cryptography library `BellaBaxter.Crypto`, the `bella` CLI, the Terraform provider, the Ansible collection and the GitHub setup action. You can use them in your own software, open or closed, without restriction. Each one carries its own `LICENSE` file.
+
+Releases of the Swift package published before 16 November 2026 still carry the Elastic License in their `LICENSE` file. Later releases carry MIT.
+
+### Third-party software
+
+Bella Baxter runs on open-source software that keeps its own licence, including OpenBao (MPL 2.0), Keycloak (Apache 2.0), PostgreSQL, Redis and the .NET runtime. The `NOTICE` file in the self-hosted bundle lists each one, with its licence.
