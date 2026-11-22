@@ -40,7 +40,7 @@ public-docs/
 ├── integrations/        # GitHub Actions, MCP/AI
 ├── audit/               # Audit logs
 ├── api-reference/       # Interactive API docs (Scalar)
-├── open-source/         # Source-available: Community vs Enterprise
+├── open-source/         # Source-available: plans and licence
 └── es/                  # Spanish translations (mirror of EN)
 ```
 

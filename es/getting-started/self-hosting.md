@@ -17,9 +17,8 @@ plataforma, así que nunca puede divergir de la topología real.
 ### Requisitos
 
 - Un host Linux con Docker Engine + el plugin `docker compose`
-- Credenciales del registro de contenedores de Bella Baxter (te las damos al configurar tu instancia)
 - [`cosign`](https://docs.sigstore.dev) versión 3. El bundle verifica la firma de cada imagen antes de arrancar nada, y se niega a arrancar una imagen que no ha podido verificar
-- El registro es GitHub Container Registry (`ghcr.io`): `./bella.sh login` te pide el usuario y el token de solo lectura que te damos
+- Las imágenes son públicas en GitHub Container Registry (`ghcr.io`), así que no piden login
 - Tres puertos: `443` (aplicación), `8444` (plano de administración), `9443` (setup)
 
 ### Instalación
@@ -63,13 +62,15 @@ y abre `https://<tu-ip>`.
 ### Instalación aislada (air-gapped)
 
 Un host sin acceso a un registro se instala desde archivos. Cada versión incluye sus imágenes
-en un único archivo firmado, `bella-selfhosted-<version>-images.tar`. Lleva estos archivos al
-host: el bundle (`bella-selfhosted-<version>.tar.gz` y su `.sigstore.json`), el archivo de
-imágenes, su `.sha256` y los dos `.sigstore.json` que lo acompañan, y la clave pública de
-Bella (`cosign.pub`). Después, desde la carpeta del bundle ya descomprimido:
+en un archivo firmado por plataforma: `bella-selfhosted-<version>-images-amd64.tar` para un
+host x86-64 y `bella-selfhosted-<version>-images-arm64.tar` para un host ARM64. Lleva estos
+archivos al host: el bundle (`bella-selfhosted-<version>.tar.gz` y su `.sigstore.json`), el
+archivo de imágenes de la plataforma del host, su `.sha256` y los dos `.sigstore.json` que lo
+acompañan, y la clave pública de Bella (`cosign.pub`). Después, desde la carpeta del bundle ya
+descomprimido (`<platform>` es `amd64` o `arm64`):
 
 ```sh
-./bella.sh load-images ../bella-selfhosted-<version>-images.tar
+./bella.sh load-images ../bella-selfhosted-<version>-images-<platform>.tar
 ./bella.sh up
 ```
 
@@ -77,11 +78,13 @@ Bella (`cosign.pub`). Después, desde la carpeta del bundle ya descomprimido:
 red. Carga las imágenes en Docker y apunta `.env` a ellas por su digest de contenido. Para
 actualizar, carga el archivo de la versión siguiente de la misma forma.
 
-Conviene saber que el archivo es solo linux/amd64 y pesa unos 1.7 GB en la v1.1.4; que aún
-no se pueden replicar las imágenes en tu propio registro, porque las firmas no viajan con
-`cosign load`; y que el almacén de imágenes containerd de Docker no está probado. Los
-comandos exactos y las comprobaciones están en el `INSTALL.md` del bundle, sección
-"Air-gapped install".
+Conviene saber que Bella funciona en linux/amd64 y linux/arm64, y que `load-images` rechaza un
+archivo que no contiene la plataforma de tu máquina; que cada archivo pesa unos 1.7 GB; que el
+bundle para ARM64 aún no se ha instalado de punta a punta en un servidor ARM64, así que
+considera la primera instalación en ARM64 como un piloto; que aún no se pueden replicar las
+imágenes en tu propio registro, porque las firmas no viajan con `cosign load`; y que el
+almacén de imágenes containerd de Docker no está probado. Los comandos exactos y las
+comprobaciones están en el `INSTALL.md` del bundle, sección "Air-gapped install".
 
 ### Tras un reinicio del host
 

@@ -143,9 +143,9 @@ const enSidebar = {
     {
       text: 'Source-available',
       items: [
-        { text: 'Community vs Enterprise', link: '/open-source/' },
+        { text: 'Plans and licence', link: '/open-source/' },
         {
-          text: 'Enterprise Features',
+          text: 'Features by plan',
           link: '/open-source/enterprise-features',
         },
       ],
@@ -242,13 +242,19 @@ const esSidebar = {
   '/es/open-source/': [
     {
       text: 'Source-available',
-      items: [{ text: 'Comunidad vs Enterprise', link: '/es/open-source/' }],
+      items: [
+        { text: 'Planes y licencia', link: '/es/open-source/' },
+        {
+          text: 'Funcionalidades por plan',
+          link: '/es/open-source/enterprise-features',
+        },
+      ],
     },
   ],
 };
 
 // Catalan (#1478). Only the pages that are really translated live under /ca/.
-// The six feature pages, github-actions and open-source are untranslated stubs in
+// The six feature pages and github-actions are untranslated stubs in
 // `es`; Catalan carries no stubs, so those entries point at the English page.
 const caNav = [
   { text: 'Primers passos', link: '/ca/getting-started/' },
@@ -278,7 +284,7 @@ const caNav = [
     ],
   },
   { text: "Referència de l'API", link: '/ca/api-reference/' },
-  { text: 'Source-available', link: '/open-source/' },
+  { text: 'Source-available', link: '/ca/open-source/' },
   { text: 'Consola →', link: 'https://console.bella-baxter.io' },
 ];
 
@@ -336,6 +342,18 @@ const caSidebar = {
     {
       text: 'Auditoria',
       items: [{ text: "Logs d'auditoria", link: '/ca/audit/' }],
+    },
+  ],
+  '/ca/open-source/': [
+    {
+      text: 'Source-available',
+      items: [
+        { text: 'Plans i llicència', link: '/ca/open-source/' },
+        {
+          text: 'Funcionalitats per pla',
+          link: '/ca/open-source/enterprise-features',
+        },
+      ],
     },
   ],
   '/ca/api-reference/': [

@@ -1,14 +1,60 @@
-# Community vs Enterprise
+# Plans and licence
 
-Bella Baxter is open-core, source-available under the [ELv2 License](https://www.elastic.co/licensing/elastic-license). The self-hosted Community edition is free forever. Enterprise features are part of the Enterprise plan; contact us to enable them.
+Bella Baxter is open-core, source-available under the [ELv2 License](https://www.elastic.co/licensing/elastic-license). The core is free. Paid plans add modules on top of it, on the cloud and on your own infrastructure.
 
 ## The Guiding Principle
 
-> **Cap organizational features (SSO, audit streaming, multi-team governance) — not operational features (resources you need to do your job).**
+> **The core is never capped and never priced per seat. We charge for organisational modules, and for cloud automation: never for the resources you need to do your job.**
 
 A solo developer or a 3-person startup should never hit a wall while doing legitimate work.
 
+## Two ways to run Bella, four plans each
+
+You can use the managed **cloud**, run it **self-hosted** on your own infrastructure, or both. Each has four plans. Each plan holds everything in the one before it.
+
+### Cloud
+
+| Plan | What you get | How it is charged |
+|------|--------------|-------------------|
+| **Pay as you go** | The core. Automation is metered: 2,000 calls a month are free on a person's first organisation, then each call is charged. | $0.005 per request over the 2,000 free. |
+| **Pro** | Pay as you go, plus single sign-on (SSO) and SIEM export. | Contact us. |
+| **Enterprise** | Pro, plus no metering and 24/7 support. | By contract. |
+
+Pay as you go is the default for every organisation. People's own sessions in the console and the CLI are never metered.
+
+### Self-hosted
+
+| Plan | What you get | How it is charged |
+|------|--------------|-------------------|
+| **Community Edition (CE)** | The core. Free, no cap, never metered. | Free. |
+| **Pro** | CE, plus SSO and SIEM export. | Contact us. |
+| **Premium** | Pro, plus certificate rotation (including ACME and vendor appliances) and Scout certificate discovery. | Contact us. |
+| **Enterprise** | Premium, plus 24/7 support. | By contract. |
+
+## What holds on every plan
+
+- **The core is never capped and never priced per seat.** Projects, environments, secrets, API keys, providers and the rest of the list below have no limit on any plan.
+- **Self-hosted is never metered.** Metering exists only on the cloud, where it can bill.
+- **"Free" means the core and Community Edition.** It does not apply to the paid plans.
+- **Certificate rotation and Scout are self-hosted only, for now.** They need a route into your network, and a shared cloud service must not have one. A cloud Premium plan waits for an outbound agent that you run inside your network. It is not built yet.
+
+## What exists today and what is coming
+
+**Today**
+
+- The cloud is live, with Pay as you go. Pro and Enterprise are arranged by contacting us: [enterprise@cosmic-chimps.io](mailto:enterprise@cosmic-chimps.io). There is no self-serve checkout for them yet.
+- SSO and SIEM export work on the cloud and on self-hosted. An organisation asks for them, and an operator approves SSO or switches streaming on. See [Single sign-on](/features/sso) and [Audit Logs](/audit/).
+- On self-hosted, the operator of the installation switches the paid modules on, once you have a contract with us.
+
+**Coming**
+
+- A licence key for self-hosted. There is no licence key yet.
+- Self-serve checkout for Pro on the cloud.
+- Certificate rotation and Scout on the cloud, through the outbound agent.
+
 ## Always Free (Community)
+
+These are in the core. Community Edition runs all of them free with no cap. On the cloud they are included in every plan, and only automation calls are metered.
 
 | Feature | Why it's always free |
 |---------|---------------------|
@@ -30,64 +76,55 @@ A solo developer or a 3-person startup should never hit a wall while doing legit
 | Security Intelligence scans | Detecting `password123` is a basic right, not a paid upgrade |
 | .NET Aspire integration | Developer workflow |
 
-## Enterprise Features
-
-These are gated because they're only relevant at **organisational scale** — small teams never need them.
-
-| Feature | Why it's paid |
-|---------|--------------|
-| **Advanced RBAC** | Fine-grained permissions beyond the built-in project and environment roles. Relevant when security teams need granular control across dozens of teams. |
-
-Two features are paid modules, available on every plan at extra cost:
-
-- **Single sign-on (SAML or OIDC).** An organisation requests it, and a platform operator approves the request. See [Single sign-on](/features/sso).
-- **Audit log streaming to a SIEM** (Splunk, Datadog, Azure Monitor). The audit log in the console stays free. A platform operator switches streaming on for the organisation. See [Audit Logs](/audit/).
-
-To add either one, contact us: [enterprise@cosmic-chimps.io](mailto:enterprise@cosmic-chimps.io).
-
 Running more than one organisation on one instance is not gated. Any signed-in person can create another organisation today.
 
-## Cloud Pricing (PAYG)
+For the paid modules, see [Features by plan](/open-source/enterprise-features).
 
-The Bella Baxter managed cloud runs on a **pay-as-you-go** model:
+## Cloud usage
 
-- **Free**: 2,000 API requests per month, no credit card required
+The Bella Baxter managed cloud meters automation, not people.
+
+- **Free allowance**: 2,000 API requests per month, no credit card required.
   The free allowance belongs to the first organisation a person creates. An organisation they create afterwards starts with none, and its API key requests return `429` until a payment method is added. A person's own console and CLI sessions are never metered.
-  When the free allowance is used up and no payment method is on file, API key requests return `429` until you add one. Signing in to the console or the CLI is not metered.
-- **Overage**: $0.005 per request beyond 2,000 (~$5 per 1,000 requests)
-- **Enterprise**: Contact us — flat monthly, custom volume, SLA, dedicated support
+  When the free allowance is used up and no payment method is on file, API key requests return `429` until you add one.
+- **Overage**: $0.005 per request beyond 2,000 (~$5 per 1,000 requests).
+- **Enterprise**: no metering. Arranged by contract.
+
+The free allowance and the rate are the defaults. An operator may set others for an organisation by contract.
 
 A "request" = one HTTP call to the secrets API made by a machine identity (API key). This includes:
-- `bella pull` / `bella run` — counts as **one request** regardless of how many secrets are returned
+- `bella pull` / `bella run`: counts as **one request** regardless of how many secrets are returned
 - CI/CD pipeline fetches (each deploy = one request)
 - AI agent / MCP tool calls (each `get_secret` or `list_secret_keys` = one request)
 
-The CLI MCP server uses ETag-based caching — when secrets haven't changed, subsequent AI tool calls return cached results without hitting the API, so a long AI session typically burns only 1–2 metered requests.
+The CLI MCP server uses ETag-based caching. When secrets haven't changed, subsequent AI tool calls return cached results without hitting the API, so a long AI session typically burns only 1–2 metered requests.
 
 Human workflows (WebApp, project management, user management) are **never metered**.
 
 ### What typical usage costs
 
-| Team | Activity | Monthly requests | Cost |
-|------|----------|-----------------|------|
-| Solo developer | Active development | ~200 | $0 |
-| 3-person startup | Dev + CI/CD (20 deploys/day) | ~600 | $0 |
-| 3-person startup + AI | CI/CD + daily MCP sessions | ~1,800 | $0 |
-| 10-person team | Heavy CI/CD (100 deploys/day) | ~3,000 | $5 |
-| 10-person team | 500 deploys/day | ~15,000 | $65 |
-| 50-person company | 2,000 deploys/day | ~60,000 | $290 |
+| Team | Activity | Monthly requests | Inside the 2,000 free? | Cost |
+|------|----------|-----------------|------------------------|------|
+| Solo developer | Active development | ~200 | Yes | $0 |
+| 3-person startup | Dev + CI/CD (20 deploys/day) | ~600 | Yes | $0 |
+| 3-person startup + AI | CI/CD + daily MCP sessions | ~1,800 | Yes | $0 |
+| 10-person team | Heavy CI/CD (100 deploys/day) | ~3,000 | No | $5 |
+| 10-person team | 500 deploys/day | ~15,000 | No | $65 |
+| 50-person company | 2,000 deploys/day | ~60,000 | No | $290 |
 
 You pay more when you ship more (or your AI agents are very busy). The bill growing is a signal that the team is growing.
 
 ## Self-Hosted vs Cloud
 
-| | Self-Hosted (Community) | Cloud (PAYG) |
-|--|------------------------|-------------|
-| Cost | Free forever | $0 to start, $0.005/req overage |
+| | Self-Hosted | Cloud |
+|--|-------------|-------|
+| Plans | Community Edition, Pro, Premium, Enterprise | Pay as you go, Pro, Enterprise |
+| Core cost | Free, no cap, never metered | $0 to start, $0.005 per request over 2,000 |
 | Infrastructure | You manage (Docker/Aspire/K8s) | Managed by Cosmic Chimps |
 | Data residency | Your infrastructure | Cosmic Chimps (EU / US) |
-| SSO | Paid module. The operator of the installation approves each request | Available on every plan, at extra cost. Cosmic Chimps approves each request |
-| Audit streaming | Paid module. The operator of the installation switches it on per organisation | Available on every plan, at extra cost |
+| SSO and SIEM export | Pro and above | Pro and above |
+| Certificate rotation and Scout | Premium and above | Not available yet |
+| 24/7 support | Enterprise | Enterprise |
 | Updates | Manual | Automatic |
 
 ## License

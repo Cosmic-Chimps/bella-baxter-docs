@@ -1,9 +1,9 @@
-# Enterprise Features
+# Features by plan
 
-Reference for which features are part of the Enterprise plan and which are always free.
+Reference for which features are in the core, which are paid modules, and which plan holds each one. For the plans themselves, see [Plans and licence](/open-source/).
 
-::: info How Enterprise is enabled
-There is no license key. Enterprise is a plan on the same API: it is not sold through checkout, and we assign it to your organization after you contact us.
+::: info How paid plans are enabled
+Pro and Enterprise are arranged by contacting us. There is no self-serve checkout yet. On the cloud, an operator enables your modules. On self-hosted, the operator of the installation switches them on, once you have a contract with us. A licence key for self-hosted is coming. There is no licence key yet.
 :::
 
 ## ✅ Always Free
@@ -30,20 +30,24 @@ There is no license key. Enterprise is a plan on the same API: it is not sold th
 
 **Test:** *"Would a solo developer or 3-person startup hit this while doing legitimate work?"* → If yes, it must be free.
 
-## 🔒 Enterprise Only
+## Paid modules
 
-| Feature | Rationale | Status |
-|---------|-----------|--------|
-| **Advanced RBAC** | Fine-grained permission control beyond the built-in project and environment roles. Only needed at large-team governance scale. | Contact us for availability |
+These are only relevant at **organisational scale**, so small teams never need them.
 
-Two features are not limited to the Enterprise plan. Every plan can add them, at extra cost:
+| Module | Cloud | Self-hosted |
+|--------|-------|-------------|
+| **Single sign-on (SAML or OIDC)** | Pro and Enterprise | Pro, Premium and Enterprise |
+| **SIEM export** (Splunk, Datadog, Azure Monitor) | Pro and Enterprise | Pro, Premium and Enterprise |
+| **Certificate rotation** (including ACME and vendor appliances) | Not available yet | Premium and Enterprise |
+| **Scout certificate discovery** | Not available yet | Premium and Enterprise |
+| **No metering** | Enterprise | Never metered on any plan |
+| **24/7 support** | Enterprise | Enterprise |
 
-- **Single sign-on (SAML or OIDC).** An organisation requests it, and a platform operator approves the request. See [Single sign-on](/features/sso).
-- **Audit log streaming to a SIEM** (Splunk, Datadog, Azure Monitor). The audit log viewer in the console stays free. A platform operator switches streaming on for the organisation. See [Audit Logs](/audit/).
+- **SSO.** An organisation requests it, and an operator approves the request. See [Single sign-on](/features/sso).
+- **SIEM export.** The audit log viewer in the console stays free. An operator switches streaming on for the organisation. See [Audit Logs](/audit/).
+- **Certificate rotation and Scout** are self-hosted only for now. Cloud Premium waits for an outbound agent that you run inside your network. It is not built yet.
 
-To add either one, [contact us](#getting-enterprise).
-
-Running more than one organisation on one instance is not an Enterprise feature. Any signed-in person can create another organisation today.
+Running more than one organisation on one instance is not gated. Any signed-in person can create another organisation today.
 
 ## ❌ Will NOT Be Gated
 
@@ -56,14 +60,14 @@ Running more than one organisation on one instance is not an Enterprise feature.
 | Drift detection | Punishes good practices |
 | Security scans | Detecting weak passwords is a basic security right |
 
-## Getting Enterprise
+## Getting a paid plan
 
 Contact us: [enterprise@cosmic-chimps.io](mailto:enterprise@cosmic-chimps.io)
 
-Enterprise includes:
-- The Enterprise plan features listed above
-- SLA with defined response times
-- Dedicated support channel
-- Custom volume pricing for the managed cloud
+- **Pro:** SSO and SIEM export, on the cloud or self-hosted.
+- **Premium (self-hosted):** Pro, plus certificate rotation and Scout.
+- **Enterprise:** everything in Pro (cloud) or Premium (self-hosted), plus 24/7 support under a contract. On the cloud it also means no metering.
+
+We do not publish prices here. Contact us and we will send you the terms.
 
 Self-hosting is available on request; see [Self-hosting](/getting-started/self-hosting).

@@ -17,9 +17,8 @@ application model, so it can never drift from the real topology.
 ### Requirements
 
 - A Linux host with Docker Engine + the `docker compose` plugin
-- Credentials for the Bella Baxter container registry (we provide them when we set up your instance)
 - [`cosign`](https://docs.sigstore.dev) version 3. The bundle verifies the signature of every image before it starts anything, and it refuses to start an image it could not verify
-- The registry is GitHub Container Registry (`ghcr.io`): `./bella.sh login` asks for the username and the read-only token we give you
+- The images are public on GitHub Container Registry (`ghcr.io`), so they need no login
 - Three host ports: `443` (application), `8444` (admin plane), `9443` (setup)
 
 ### Install
@@ -67,13 +66,15 @@ and open `https://<your-ip>`.
 ### Air-gapped installation
 
 A host with no route to a registry installs from files. Each release carries its images as
-one signed archive, `bella-selfhosted-<version>-images.tar`. Carry these across to the host:
-the bundle (`bella-selfhosted-<version>.tar.gz` and its `.sigstore.json`), the images
-archive, its `.sha256` and the two `.sigstore.json` files beside them, and Bella's public
-key (`cosign.pub`). Then, from the unpacked bundle folder:
+one signed archive per platform: `bella-selfhosted-<version>-images-amd64.tar` for an x86-64
+host and `bella-selfhosted-<version>-images-arm64.tar` for an ARM64 host. Carry these across
+to the host: the bundle (`bella-selfhosted-<version>.tar.gz` and its `.sigstore.json`), the
+images archive for the host's platform, its `.sha256` and the two `.sigstore.json` files
+beside them, and Bella's public key (`cosign.pub`). Then, from the unpacked bundle folder
+(`<platform>` is `amd64` or `arm64`):
 
 ```sh
-./bella.sh load-images ../bella-selfhosted-<version>-images.tar
+./bella.sh load-images ../bella-selfhosted-<version>-images-<platform>.tar
 ./bella.sh up
 ```
 
@@ -81,10 +82,13 @@ key (`cosign.pub`). Then, from the unpacked bundle folder:
 loads the images into Docker and points `.env` at them by content digest. To upgrade,
 load the next release's archive the same way.
 
-Things to know: the archive is linux/amd64 only and about 1.7 GB for v1.1.4; mirroring the
-images into your own registry is not supported yet, because the signatures do not travel with
-`cosign load`; and Docker's containerd image store is untested. The exact commands and
-checks are in the bundle's `INSTALL.md`, section "Air-gapped install".
+Things to know: Bella runs on linux/amd64 and linux/arm64, and `load-images` refuses an
+archive that does not hold your machine's platform; each archive is about 1.7 GB; the ARM64
+bundle has not yet been installed end to end on an ARM64 server, so treat a first ARM64
+install as a pilot; mirroring the images into your own registry is not supported yet, because
+the signatures do not travel with `cosign load`; and Docker's containerd image store is
+untested. The exact commands and checks are in the bundle's `INSTALL.md`, section
+"Air-gapped install".
 
 ### After a reboot
 
