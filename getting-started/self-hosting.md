@@ -17,8 +17,9 @@ application model, so it can never drift from the real topology.
 ### Requirements
 
 - A Linux host with Docker Engine + the `docker compose` plugin
+- Credentials for the Bella Baxter container registry (we provide them when we set up your instance)
 - [`cosign`](https://docs.sigstore.dev) version 3. The bundle verifies the signature of every image before it starts anything, and it refuses to start an image it could not verify
-- The images are public on GitHub Container Registry (`ghcr.io`), so they need no login
+- The registry is GitHub Container Registry (`ghcr.io`): `./bella.sh login` asks for the username and the read-only token we give you
 - Three host ports: `443` (application), `8444` (admin plane), `9443` (setup)
 
 ### Install
