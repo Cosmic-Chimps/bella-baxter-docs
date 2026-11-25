@@ -5,7 +5,7 @@
 Referencia de qué funcionalidades están en el núcleo, cuáles son módulos de pago y qué plan incluye cada una. Para los planes en sí, consulta [Planes y licencia](/es/open-source/).
 
 ::: info Cómo se activan los planes de pago
-Pro y Enterprise se acuerdan contactándonos. Todavía no hay compra en línea. En la nube, un operador activa tus módulos. En auto-alojado, el operador de la instalación los activa, una vez que tienes un contrato con nosotros. Una clave de licencia para auto-alojado está en camino. Todavía no hay clave de licencia.
+Pro y Enterprise se acuerdan contactándonos. Todavía no hay compra en línea. En la nube, un operador activa tus módulos. En auto-alojado, te emitimos una clave de licencia que incluye los módulos de tu contrato. El operador de la instalación la configura y luego activa cada módulo para las organizaciones que lo usan. Consulta [La clave de licencia para auto-alojado](/es/open-source/#la-clave-de-licencia-para-auto-alojado).
 :::
 
 ## ✅ Siempre gratis
@@ -39,14 +39,15 @@ Solo importan a **escala de organización**, así que los equipos pequeños nunc
 | Módulo | Nube | Auto-alojado |
 |--------|------|--------------|
 | **Inicio de sesión único (SAML u OIDC)** | Pro y Enterprise | Pro, Premium y Enterprise |
-| **Exportación a SIEM** (Splunk, Datadog, Azure Monitor) | Pro y Enterprise | Pro, Premium y Enterprise |
+| **Exportación SIEM** (Splunk, Datadog, Azure Monitor) | Pro y Enterprise | Pro, Premium y Enterprise |
 | **Rotación de certificados** (incluidos ACME y appliances de proveedores) | Todavía no disponible | Premium y Enterprise |
 | **Descubrimiento de certificados con Scout** | Todavía no disponible | Premium y Enterprise |
 | **Sin medición** | Enterprise | Nunca se mide en ningún plan |
 | **Soporte 24/7** | Enterprise | Enterprise |
 
 - **SSO.** Una organización lo solicita, y un operador aprueba la solicitud. Consulta [Inicio de sesión único](/features/sso).
-- **Exportación a SIEM.** El visor del log de auditoría de la consola sigue siendo gratis. Un operador activa el envío para la organización. Consulta [Logs de auditoría](/es/audit/).
+- **Exportación SIEM.** El visor del log de auditoría de la consola sigue siendo gratis. Un operador activa el envío para la organización. Consulta [Logs de auditoría](/es/audit/).
+- **La clave de licencia de auto-alojado.** Un token firmado con ES256 que la instalación verifica sin conexión, sin ninguna llamada de red. Incluye los tres módulos anteriores (SSO, exportación SIEM y rotación de certificados, que incluye Scout). Una clave cubre las versiones hasta su fecha `upgrades_until` y todos los parches de esas líneas de versiones. Una línea posterior necesita una clave renovada, y mientras tanto los tres módulos se ejecutan como Community, sin bajar ningún control. Consulta [Planes y licencia](/es/open-source/#la-clave-de-licencia-para-auto-alojado) y la [política de soporte](/es/open-source/support-policy).
 - **La rotación de certificados y Scout** son solo para auto-alojado, por ahora. Premium en la nube espera un agente de salida que ejecutas dentro de tu red. Todavía no está construido.
 
 Ejecutar más de una organización en una instancia no tiene restricción. Cualquier persona con sesión iniciada puede crear otra organización hoy.
@@ -66,7 +67,7 @@ Ejecutar más de una organización en una instancia no tiene restricción. Cualq
 
 Contáctanos: [enterprise@cosmic-chimps.io](mailto:enterprise@cosmic-chimps.io)
 
-- **Pro:** SSO y exportación a SIEM, en la nube o auto-alojado.
+- **Pro:** SSO y exportación SIEM, en la nube o auto-alojado.
 - **Premium (auto-alojado):** Pro, más rotación de certificados y Scout.
 - **Enterprise:** todo lo de Pro (nube) o de Premium (auto-alojado), más soporte 24/7 bajo contrato. En la nube también significa sin medición.
 

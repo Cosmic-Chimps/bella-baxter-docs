@@ -5,7 +5,7 @@
 Referència de quines funcionalitats són al nucli, quines són mòduls de pagament i quin pla inclou cadascuna. Per als plans en si, consulta [Plans i llicència](/ca/open-source/).
 
 ::: info Com s'activen els plans de pagament
-Pro i Enterprise s'acorden contactant amb nosaltres. Encara no hi ha compra en línia. Al núvol, un operador activa els teus mòduls. En autoallotjat, l'operador de la instal·lació els activa, un cop tens un contracte amb nosaltres. Una clau de llicència per a autoallotjat és en camí. Encara no hi ha clau de llicència.
+Pro i Enterprise s'acorden contactant amb nosaltres. Encara no hi ha compra en línia. Al núvol, un operador activa els teus mòduls. En autoallotjat, t'emetem una clau de llicència que inclou els mòduls del teu contracte. L'operador de la instal·lació la configura i després activa cada mòdul per a les organitzacions que l'usen. Consulta [La clau de llicència per a autoallotjat](/ca/open-source/#la-clau-de-llicencia-per-a-autoallotjat).
 :::
 
 ## ✅ Sempre gratis
@@ -47,6 +47,7 @@ Només importen a **escala d'organització**, així que els equips petits mai no
 
 - **SSO.** Una organització el sol·licita, i un operador aprova la sol·licitud. Consulta [Inici de sessió únic](/features/sso).
 - **Exportació a SIEM.** El visor del log d'auditoria de la consola continua sent gratis. Un operador activa l'enviament per a l'organització. Consulta [Logs d'auditoria](/ca/audit/).
+- **La clau de llicència d'autoallotjat.** Un token signat amb ES256 que la instal·lació verifica sense connexió, sense cap crida de xarxa. Inclou els tres mòduls anteriors (SSO, exportació a SIEM i rotació de certificats, que inclou Scout). Una clau cobreix les versions fins a la seva data `upgrades_until` i tots els pedaços d'aquestes línies de versions. Una línia posterior necessita una clau renovada, i mentrestant els tres mòduls s'executen com Community, sense baixar cap control. Consulta [Plans i llicència](/ca/open-source/#la-clau-de-llicencia-per-a-autoallotjat) i la [política de suport](/ca/open-source/support-policy).
 - **La rotació de certificats i Scout** són només per a autoallotjat, de moment. Premium al núvol espera un agent de sortida que executes dins la teva xarxa. Encara no està construït.
 
 Executar més d'una organització en una instància no té restricció. Qualsevol persona amb la sessió iniciada pot crear una altra organització avui.

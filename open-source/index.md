@@ -44,13 +44,24 @@ Pay as you go is the default for every organisation. People's own sessions in th
 
 - The cloud is live, with Pay as you go. Pro and Enterprise are arranged by contacting us: [enterprise@cosmic-chimps.io](mailto:enterprise@cosmic-chimps.io). There is no self-serve checkout for them yet.
 - SSO and SIEM export work on the cloud and on self-hosted. An organisation asks for them, and an operator approves SSO or switches streaming on. See [Single sign-on](/features/sso) and [Audit Logs](/audit/).
-- On self-hosted, the operator of the installation switches the paid modules on, once you have a contract with us.
+- On self-hosted, a paid module works when your licence key lists it and the operator of the installation has switched it on for an organisation. See [The licence key for self-hosted](#the-licence-key-for-self-hosted).
 
 **Coming**
 
-- A licence key for self-hosted. There is no licence key yet.
 - Self-serve checkout for Pro on the cloud.
 - Certificate rotation and Scout on the cloud, through the outbound agent.
+
+## The licence key for self-hosted
+
+A self-hosted installation turns on the paid modules with a **licence key**. We issue it when you take a paid plan.
+
+- **What it turns on.** Three modules: single sign-on (SSO), SIEM export (audit streaming) and certificate rotation, which includes Scout certificate discovery. A Pro key lists the first two. A Premium or Enterprise key lists all three. The operator of the installation still decides which organisations get each module.
+- **How it is checked.** The key is a signed token (ES256). The installation verifies the signature on its own, offline, against public keys built into the release. It makes no network call for it, so it works on a host with no route to the internet, and nothing about your key or your installation is sent to us.
+- **Where you set it.** As deployment configuration, in the `BELLA_LICENSE` setting. In the self-hosted bundle the setup wizard writes it and `./bella.sh apply` carries it to the containers. See the bundle's installation guide.
+- **What a key covers.** The same model as JetBrains tools. A key covers the releases up to the date printed on it (`upgrades_until`). A version line first released on or before that date keeps working with the key, with no end date, and so does every patch of that line. A later version line needs a renewed key. See the [support policy](/open-source/support-policy).
+- **With a key, nothing switches off by date.** When a key does not cover the release you run, the core is untouched, and so is everything in [Always Free](#always-free-community). A control that is already on is never lowered: enforced SSO stays enforced, and scheduled certificate rotations carry on. The three modules stop accepting new configuration and new work, and nothing is deleted. Renew the key, or go back to a covered release, and they resume with no reconfiguration. Audit streaming to a SIEM is suspended while it is not licensed: one `stream suspended` control message is sent to the destination, nothing is queued, and your audit log in Bella Baxter stays complete. Streaming resumes on its own when the licence lists the module again.
+- **One-time 30-day grace when you upgrade without a key.** An installation that already uses SSO, audit streaming or certificate rotation and upgrades into this version with no key keeps each of those modules for 30 days, counted from the first start of a build that can verify a production key. A module you were not using is not part of it. A mistyped or truncated key does not end the grace; a valid key does, and the modules it lists keep working.
+- **A key problem never stops the installation.** A missing, mistyped or unreadable key never stops the installation from starting or from serving secrets. The paid modules behave as Community until the key is fixed, and the operator console says why.
 
 ## Always Free (Community)
 

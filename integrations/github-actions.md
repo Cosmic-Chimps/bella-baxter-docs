@@ -228,22 +228,49 @@ Issue a short-lived SSH certificate via Bella's SSH CA for passwordless access t
 
 ## Matrix Deployments
 
-Deploy to multiple environments in parallel:
+Deploy to multiple environments in parallel.
+
+An [API key belongs to one environment](/features/api-keys), so one key cannot serve every leg of the matrix.
+Create one key per Bella environment and store each one as an environment secret named `BELLA_BAXTER_API_KEY`
+in the GitHub environment of the same name (**Settings → Environments** in the repository). The job-level
+`environment:` line makes each leg read its own secret:
 
 ```yaml
-strategy:
-  matrix:
-    environment: [staging, production]
-steps:
-  - uses: cosmic-chimps/bella-baxter-setup-action@v0
-    with:
-      bella-url: ${{ vars.BELLA_BAXTER_URL }}
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [staging, production]
+    # The GitHub environment of the same name holds the key of that Bella environment.
+    environment: ${{ matrix.environment }}
+    steps:
+      - uses: actions/checkout@v6
 
-  # The CLI reads BELLA_BAXTER_API_KEY from the environment. A key passed as a command
-  # argument is visible in the runner's process list and in its command log (#833).
-  - run: bella run -p my-api -e ${{ matrix.environment }} -- ./deploy.sh
-    env:
-      BELLA_BAXTER_API_KEY: ${{ secrets.BELLA_BAXTER_API_KEY }}
+      - uses: cosmic-chimps/bella-baxter-setup-action@v0
+        with:
+          bella-url: ${{ vars.BELLA_BAXTER_URL }}
+
+      # The CLI reads BELLA_BAXTER_API_KEY from the environment. A key passed as a command
+      # argument is visible in the runner's process list and in its command log (#833).
+      - run: bella run -p my-api -e ${{ matrix.environment }} -- ./deploy.sh
+        env:
+          BELLA_BAXTER_API_KEY: ${{ secrets.BELLA_BAXTER_API_KEY }}
+```
+
+A single repository secret shared by both legs works for one environment only.
+
+With `oidc: 'true'` there is no stored key to separate. Pass the matrix value to the action's `environment` input
+instead; each Bella environment needs its own [Trust Domain](/features/keyless):
+
+```yaml
+      - uses: cosmic-chimps/bella-baxter-setup-action@v0
+        with:
+          oidc: 'true'
+          tenant: my-org
+          project: my-api
+          environment: ${{ matrix.environment }}
+      - run: bella run -- ./deploy.sh
 ```
 
 ## Pin a specific CLI version

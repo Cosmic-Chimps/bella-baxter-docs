@@ -416,12 +416,21 @@ export default defineConfig({
     ],
   ],
 
+  // Generates /sitemap.xml at build time, with the pages of every locale.
+  // README.md is the contributor note of this folder, not a page for readers.
+  sitemap: {
+    hostname: 'https://docs.bella-baxter.io',
+    transformItems: (items) =>
+      items.filter((item) => !item.url.endsWith('README.html')),
+  },
+
   locales: {
     root: {
       label: 'English',
       lang: 'en',
       title: 'Bella Baxter',
-      description: 'Unified secret management gateway',
+      description:
+        'Documentation for Bella Baxter, the control plane for your secrets: CLI, SDKs, integrations, API reference and self-hosting.',
       themeConfig: {
         nav: enNav,
         sidebar: enSidebar,
@@ -431,7 +440,8 @@ export default defineConfig({
       label: 'Español',
       lang: 'es',
       title: 'Bella Baxter',
-      description: 'Gestor unificado de secretos',
+      description:
+        'Documentación de Bella Baxter, el plano de control de tus secrets: CLI, SDK, integraciones, referencia de la API y auto-alojamiento.',
       themeConfig: {
         nav: esNav,
         sidebar: esSidebar,
@@ -441,7 +451,8 @@ export default defineConfig({
       label: 'Català',
       lang: 'ca',
       title: 'Bella Baxter',
-      description: 'Passarel·la unificada de gestió de secrets',
+      description:
+        "Documentació de Bella Baxter, el pla de control dels teus secrets: CLI, SDK, integracions, referència de l'API i autoallotjament.",
       themeConfig: {
         nav: caNav,
         sidebar: caSidebar,

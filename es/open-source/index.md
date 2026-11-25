@@ -19,7 +19,7 @@ Puedes usar la **nube** administrada, alojar Bella tú mismo (**auto-alojado**) 
 | Plan | Qué incluye | Cómo se cobra |
 |------|-------------|---------------|
 | **Pago por uso** | El núcleo. La automatización se mide: 2,000 llamadas al mes son gratis en la primera organización de una persona, y después se cobra cada llamada. | $0.005 por petición después de las 2,000 gratis. |
-| **Pro** | Pago por uso, más inicio de sesión único (SSO) y exportación a SIEM. | Contáctanos. |
+| **Pro** | Pago por uso, más inicio de sesión único (SSO) y exportación SIEM. | Contáctanos. |
 | **Enterprise** | Pro, sin medición y con soporte 24/7. | Por contrato. |
 
 Pago por uso es el plan por defecto de cada organización. Las sesiones de las personas en la consola y en la CLI nunca se miden.
@@ -29,7 +29,7 @@ Pago por uso es el plan por defecto de cada organización. Las sesiones de las p
 | Plan | Qué incluye | Cómo se cobra |
 |------|-------------|---------------|
 | **Community Edition (CE)** | El núcleo. Gratis, sin tope y sin medición. | Gratis. |
-| **Pro** | CE, más SSO y exportación a SIEM. | Contáctanos. |
+| **Pro** | CE, más SSO y exportación SIEM. | Contáctanos. |
 | **Premium** | Pro, más rotación de certificados (incluidos ACME y appliances de proveedores) y descubrimiento de certificados con Scout. | Contáctanos. |
 | **Enterprise** | Premium, más soporte 24/7. | Por contrato. |
 
@@ -45,14 +45,25 @@ Pago por uso es el plan por defecto de cada organización. Las sesiones de las p
 **Hoy**
 
 - La nube está activa, con Pago por uso. Pro y Enterprise se acuerdan contactándonos: [enterprise@cosmic-chimps.io](mailto:enterprise@cosmic-chimps.io). Todavía no hay compra en línea para ellos.
-- SSO y la exportación a SIEM funcionan en la nube y en auto-alojado. Una organización los solicita, y un operador aprueba el SSO o activa el envío. Consulta [Inicio de sesión único](/features/sso) y [Logs de auditoría](/es/audit/).
-- En auto-alojado, el operador de la instalación activa los módulos de pago, una vez que tienes un contrato con nosotros.
+- SSO y la exportación SIEM funcionan en la nube y en auto-alojado. Una organización los solicita, y un operador aprueba el SSO o activa el envío. Consulta [Inicio de sesión único](/features/sso) y [Logs de auditoría](/es/audit/).
+- En auto-alojado, un módulo de pago funciona cuando tu clave de licencia lo incluye y el operador de la instalación lo ha activado para una organización. Consulta [La clave de licencia para auto-alojado](#la-clave-de-licencia-para-auto-alojado).
 
 **Lo que viene**
 
-- Una clave de licencia para auto-alojado. Todavía no hay clave de licencia.
 - Compra en línea del plan Pro en la nube.
 - Rotación de certificados y Scout en la nube, mediante el agente de salida.
+
+## La clave de licencia para auto-alojado
+
+Una instalación auto-alojada activa los módulos de pago con una **clave de licencia**. La emitimos cuando contratas un plan de pago.
+
+- **Qué activa.** Tres módulos: inicio de sesión único (SSO), exportación SIEM (envío del registro de auditoría) y rotación de certificados, que incluye el descubrimiento de certificados con Scout. Una clave Pro incluye los dos primeros. Una clave Premium o Enterprise incluye los tres. El operador de la instalación sigue decidiendo qué organizaciones reciben cada módulo.
+- **Cómo se comprueba.** La clave es un token firmado (ES256). La instalación verifica la firma por sí sola, sin conexión, con claves públicas incluidas en la versión. No hace ninguna llamada de red para ello, así que funciona en un equipo sin salida a internet, y no nos envía nada sobre tu clave ni sobre tu instalación.
+- **Dónde se configura.** Como configuración del despliegue, en el ajuste `BELLA_LICENSE`. En el paquete auto-alojado, el asistente de instalación la escribe y `./bella.sh apply` la lleva a los contenedores. Consulta la guía de instalación del paquete.
+- **Qué cubre una clave.** El mismo modelo que las herramientas de JetBrains. Una clave cubre las versiones hasta la fecha impresa en ella (`upgrades_until`). Una línea de versiones publicada por primera vez en esa fecha o antes sigue funcionando con la clave, sin fecha de fin, igual que cada parche de esa línea. Una línea posterior necesita una clave renovada. Consulta la [política de soporte](/es/open-source/support-policy).
+- **Con una clave, nada se apaga por fecha.** Cuando una clave no cubre la versión que ejecutas, el núcleo no cambia, ni nada de lo que figura en [Siempre gratis](#siempre-gratis-community). Un control que ya está activo nunca se baja: el SSO obligatorio sigue siendo obligatorio y las rotaciones de certificados programadas continúan. Los tres módulos dejan de aceptar configuración nueva y trabajo nuevo, y no se borra nada. Renueva la clave, o vuelve a una versión cubierta, y se reanudan sin reconfigurar. El envío del registro de auditoría a un SIEM se suspende mientras el módulo no tiene licencia: se envía un único mensaje de control `stream suspended` al destino, no se pone nada en cola y tu registro de auditoría en Bella Baxter sigue completo. El envío se reanuda solo cuando la licencia vuelve a incluir el módulo.
+- **Una única gracia de 30 días si actualizas sin clave.** Una instalación que ya usa SSO, envío de auditoría o rotación de certificados y actualiza a esta versión sin clave conserva cada uno de esos módulos durante 30 días, contados desde el primer arranque de una versión que puede verificar una clave de producción. Un módulo que no usabas no forma parte de la gracia. Una clave con una errata o cortada no termina la gracia; una clave válida sí, y los módulos que lista siguen funcionando.
+- **Un problema con la clave nunca detiene la instalación.** Una clave ausente, mal escrita o ilegible nunca impide que la instalación arranque ni que sirva secretos. Los módulos de pago se comportan como Community hasta que se corrija la clave, y la consola del operador dice por qué.
 
 ## Siempre gratis (Community)
 
@@ -124,7 +135,7 @@ Pagas más cuando despliegas más (o cuando tus agentes de IA están muy activos
 | Costo del núcleo | Gratis, sin tope y sin medición | $0 para empezar, $0.005 por petición después de 2,000 |
 | Infraestructura | La administras tú (Docker/Aspire/K8s) | La administra Cosmic Chimps |
 | Residencia de datos | Tu infraestructura | Cosmic Chimps (UE / EE. UU.) |
-| SSO y exportación a SIEM | Pro y superiores | Pro y superiores |
+| SSO y exportación SIEM | Pro y superiores | Pro y superiores |
 | Rotación de certificados y Scout | Premium y superiores | Todavía no disponible |
 | Soporte 24/7 | Enterprise | Enterprise |
 | Actualizaciones | Manuales | Automáticas |

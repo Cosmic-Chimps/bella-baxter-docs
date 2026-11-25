@@ -3,7 +3,7 @@
 Reference for which features are in the core, which are paid modules, and which plan holds each one. For the plans themselves, see [Plans and licence](/open-source/).
 
 ::: info How paid plans are enabled
-Pro and Enterprise are arranged by contacting us. There is no self-serve checkout yet. On the cloud, an operator enables your modules. On self-hosted, the operator of the installation switches them on, once you have a contract with us. A licence key for self-hosted is coming. There is no licence key yet.
+Pro and Enterprise are arranged by contacting us. There is no self-serve checkout yet. On the cloud, an operator enables your modules. On self-hosted, we issue you a licence key that lists the modules you have a contract for. The operator of the installation sets it and then switches each module on for the organisations that use it. See [The licence key for self-hosted](/open-source/#the-licence-key-for-self-hosted).
 :::
 
 ## ✅ Always Free
@@ -45,6 +45,7 @@ These are only relevant at **organisational scale**, so small teams never need t
 
 - **SSO.** An organisation requests it, and an operator approves the request. See [Single sign-on](/features/sso).
 - **SIEM export.** The audit log viewer in the console stays free. An operator switches streaming on for the organisation. See [Audit Logs](/audit/).
+- **The self-hosted licence key.** A signed ES256 token that the installation verifies offline, with no network call. It lists the three modules above (SSO, SIEM export and certificate rotation, which includes Scout). A key covers the releases up to its `upgrades_until` date and every patch of those version lines. A later version line needs a renewed key, and until then the three modules run as Community, with no control lowered. See [Plans and licence](/open-source/#the-licence-key-for-self-hosted) and the [support policy](/open-source/support-policy).
 - **Certificate rotation and Scout** are self-hosted only for now. Cloud Premium waits for an outbound agent that you run inside your network. It is not built yet.
 
 Running more than one organisation on one instance is not gated. Any signed-in person can create another organisation today.

@@ -46,13 +46,24 @@ Pagament per ús és el pla per defecte de cada organització. Les sessions de l
 
 - El núvol és actiu, amb Pagament per ús. Pro i Enterprise s'acorden contactant amb nosaltres: [enterprise@cosmic-chimps.io](mailto:enterprise@cosmic-chimps.io). Encara no hi ha compra en línia per a aquests plans.
 - SSO i l'exportació a SIEM funcionen al núvol i en autoallotjat. Una organització els sol·licita, i un operador aprova l'SSO o activa l'enviament. Consulta [Inici de sessió únic](/features/sso) i [Logs d'auditoria](/ca/audit/).
-- En autoallotjat, l'operador de la instal·lació activa els mòduls de pagament, un cop tens un contracte amb nosaltres.
+- En autoallotjat, un mòdul de pagament funciona quan la teva clau de llicència l'inclou i l'operador de la instal·lació l'ha activat per a una organització. Consulta [La clau de llicència per a autoallotjat](#la-clau-de-llicencia-per-a-autoallotjat).
 
 **El que ve**
 
-- Una clau de llicència per a autoallotjat. Encara no hi ha clau de llicència.
 - Compra en línia del pla Pro al núvol.
 - Rotació de certificats i Scout al núvol, mitjançant l'agent de sortida.
+
+## La clau de llicència per a autoallotjat
+
+Una instal·lació autoallotjada activa els mòduls de pagament amb una **clau de llicència**. L'emetem quan contractes un pla de pagament.
+
+- **Què activa.** Tres mòduls: inici de sessió únic (SSO), exportació a SIEM (enviament del registre d'auditoria) i rotació de certificats, que inclou el descobriment de certificats amb Scout. Una clau Pro inclou els dos primers. Una clau Premium o Enterprise inclou els tres. L'operador de la instal·lació continua decidint quines organitzacions reben cada mòdul.
+- **Com es comprova.** La clau és un token signat (ES256). La instal·lació verifica la signatura per ella mateixa, sense connexió, amb claus públiques incloses a la versió. No fa cap crida de xarxa per a això, així que funciona en un equip sense sortida a internet, i no ens envia res sobre la teva clau ni sobre la teva instal·lació.
+- **On es configura.** Com a configuració del desplegament, a l'ajust `BELLA_LICENSE`. Al paquet autoallotjat, l'assistent d'instal·lació l'escriu i `./bella.sh apply` la porta als contenidors. Consulta la guia d'instal·lació del paquet.
+- **Què cobreix una clau.** El mateix model que les eines de JetBrains. Una clau cobreix les versions fins a la data impresa en ella (`upgrades_until`). Una línia de versions publicada per primera vegada en aquesta data o abans continua funcionant amb la clau, sense data de fi, igual que cada pedaç d'aquesta línia. Una línia posterior necessita una clau renovada. Consulta la [política de suport](/ca/open-source/support-policy).
+- **Amb una clau, res no s'apaga per data.** Quan una clau no cobreix la versió que executes, el nucli no canvia, ni res del que figura a [Sempre gratis](#sempre-gratis-community). Un control que ja està actiu mai no es baixa: l'SSO obligatori continua sent obligatori i les rotacions de certificats programades continuen. Els tres mòduls deixen d'acceptar configuració nova i feina nova, i no s'esborra res. Renova la clau, o torna a una versió coberta, i es reprenen sense reconfigurar. L'enviament del registre d'auditoria a un SIEM se suspèn mentre el mòdul no té llicència: s'envia un únic missatge de control `stream suspended` al destí, no es posa res a la cua i el teu registre d'auditoria a Bella Baxter continua complet. L'enviament es reprèn tot sol quan la llicència torni a incloure el mòdul.
+- **Una única gràcia de 30 dies si actualitzes sense clau.** Una instal·lació que ja fa servir SSO, enviament d'auditoria o rotació de certificats i actualitza a aquesta versió sense clau conserva cadascun d'aquests mòduls durant 30 dies, comptats des de la primera arrencada d'una versió que pot verificar una clau de producció. Un mòdul que no feies servir no forma part de la gràcia. Una clau amb una errada o tallada no acaba la gràcia; una clau vàlida sí, i els mòduls que llista continuen funcionant.
+- **Un problema amb la clau mai no atura la instal·lació.** Una clau absent, mal escrita o il·legible mai no impedeix que la instal·lació arrenqui ni que serveixi secrets. Els mòduls de pagament es comporten com Community fins que es corregeixi la clau, i la consola de l'operador diu per què.
 
 ## Sempre gratis (Community)
 
