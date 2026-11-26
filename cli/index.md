@@ -44,6 +44,8 @@ bella login   # opens browser
 The token encodes no project/environment — you need a `.bella` file or `-p`/`-e` flags.  
 **Not billed** under the pay-as-you-go model.
 
+A `bella login` session lasts **at most a day**: 24 hours in total and 12 hours without use, then `bella login` opens the browser again. Expect to sign in daily. The limit is set on the server, so it applies to older CLI versions too. A login is for a person at a keyboard: use an API key (below) or workload identity for CI, scripts and anything unattended. The sign-in client allows no password grant, so a username and password cannot be exchanged for a token directly.
+
 ### API Key (for CI/CD and MCP)
 
 ```sh

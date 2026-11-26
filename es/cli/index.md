@@ -53,6 +53,10 @@ rotación de certificados y a Scout. Esa pasarela solo reenvía `/api/**`, y `be
 | `bella usage` | Ver uso de API y estado de facturación del mes actual |
 | `bella context use <project/env>` | Cambiar contexto activo |
 
+## Duración de la sesión de `bella login`
+
+Una sesión de `bella login` dura **como máximo un día**: 24 horas en total y 12 horas sin uso. Después, `bella login` abre de nuevo el navegador, así que cuenta con iniciar sesión a diario. El límite lo fija el servidor, por lo que también vale para las versiones antiguas de la CLI. El inicio de sesión es para una persona frente al teclado: para CI, scripts y todo lo desatendido usa una clave de API o la identidad de carga de trabajo. El cliente de inicio de sesión no admite el flujo de contraseña, así que un usuario y una contraseña no se pueden cambiar directamente por un token.
+
 ## Identidad de carga de trabajo (sin claves)
 
 En GitHub Actions (con `id-token: write`) o Kubernetes, `bella run`, `bella sdk run`, `bella exec` y `bella auth oidc` intercambian el token OIDC de la plataforma por una clave Bella de corta duración. El intercambio necesita la organización, el proyecto y el entorno: `-t`/`--tenant`, `-p`/`--project` y `-e`/`--env` (o `BELLA_BAXTER_TENANT`, `BELLA_BAXTER_PROJECT` y `BELLA_BAXTER_ENV`, o un archivo `.bella`):
