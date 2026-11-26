@@ -74,7 +74,7 @@ X-Bella-Signature: t=1720000000,v1=abc123...
 }
 ```
 
-`newHandle` is optional. If returned, Bella stores it and passes it as `oldHandle` in the revoke call.
+`newHandle` is optional. If returned, Bella stores it and passes it as `oldHandle` in the revoke call. `newHandle` identifies the key at the provider (its id or resource name); it must never be the key value.
 
 **Revoke request** (after sunset period, only if `newHandle` was returned):
 
